@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		6C944CBA2F0ACF9F007D9AB5 /* Then in Frameworks */ = {isa = PBXBuildFile; productRef = 6C944CB92F0ACF9F007D9AB5 /* Then */; };
+		6C944CBD2F0AD02D007D9AB5 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6C944CBC2F0AD02D007D9AB5 /* SnapKit */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		6C944CA02F0ACF42007D9AB5 /* Forday.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Forday.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -36,6 +41,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6C944CBA2F0ACF9F007D9AB5 /* Then in Frameworks */,
+				6C944CBD2F0AD02D007D9AB5 /* SnapKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +85,8 @@
 			);
 			name = Forday;
 			packageProductDependencies = (
+				6C944CB92F0ACF9F007D9AB5 /* Then */,
+				6C944CBC2F0AD02D007D9AB5 /* SnapKit */,
 			);
 			productName = Forday;
 			productReference = 6C944CA02F0ACF42007D9AB5 /* Forday.app */;
@@ -107,6 +116,10 @@
 			);
 			mainGroup = 6C944C972F0ACF42007D9AB5;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				6C944CB82F0ACF9F007D9AB5 /* XCRemoteSwiftPackageReference "Then" */,
+				6C944CBB2F0AD02D007D9AB5 /* XCRemoteSwiftPackageReference "SnapKit" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6C944CA12F0ACF42007D9AB5 /* Products */;
 			projectDirPath = "";
@@ -150,7 +163,7 @@
 				INFOPLIST_FILE = Forday/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -182,7 +195,7 @@
 				INFOPLIST_FILE = Forday/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -345,6 +358,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		6C944CB82F0ACF9F007D9AB5 /* XCRemoteSwiftPackageReference "Then" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/devxoul/Then.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.0;
+			};
+		};
+		6C944CBB2F0AD02D007D9AB5 /* XCRemoteSwiftPackageReference "SnapKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		6C944CB92F0ACF9F007D9AB5 /* Then */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6C944CB82F0ACF9F007D9AB5 /* XCRemoteSwiftPackageReference "Then" */;
+			productName = Then;
+		};
+		6C944CBC2F0AD02D007D9AB5 /* SnapKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6C944CBB2F0AD02D007D9AB5 /* XCRemoteSwiftPackageReference "SnapKit" */;
+			productName = SnapKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 6C944C982F0ACF42007D9AB5 /* Project object */;
 }
