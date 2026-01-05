@@ -1,0 +1,145 @@
+//
+//  HobbySelectionViewController.swift
+//  Forday
+//
+//  Created by Subeen on 1/5/26.
+//
+
+
+import UIKit
+import Combine
+
+class HobbySelectionViewController: BaseOnboardingViewController {
+    
+    // Properties
+    
+    private let hobbyView = HobbySelectionView()
+    private let viewModel = HobbySelectionViewModel()
+    
+    // Lifecycle
+    
+    override func loadView() {
+        view = hobbyView
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setNavigationTitle("취미 선택")
+        setupCollectionView()
+        setupActions()
+        bind()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        updateProgress(0.2)
+    }
+    
+    // Actions
+    
+    override func nextButtonTapped() {
+        // TODO: 다음 화면으로 이동 (Coordinator 연결)
+        print("Selected hobby: \(viewModel.selectedHobby?.title ?? "None")")
+    }
+}
+
+// MARK: - Setup
+
+extension HobbySelectionViewController {
+    private func setupCollectionView() {
+        hobbyView.collectionView.delegate = self
+        hobbyView.collectionView.dataSource = self
+    }
+    
+    private func setupActions() {
+        hobbyView.customInputButton.addTarget(
+            self,
+            action: #selector(customInputButtonTapped),
+            for: .touchUpInside
+        )
+    }
+    
+    private func bind() {
+        // 취미 목록 변경 시 CollectionView 리로드
+        viewModel.$hobbies
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.hobbyView.collectionView.reloadData()
+            }
+            .store(in: &cancellables)
+        
+        // 선택된 취미 변경 시 CollectionView 업데이트
+        viewModel.$selectedHobby
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.hobbyView.collectionView.reloadData()
+            }
+            .store(in: &cancellables)
+        
+        // 다음 버튼 활성화 상태 변경
+        viewModel.$isNextButtonEnabled
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isEnabled in
+                self?.setNextButtonEnabled(isEnabled)
+            }
+            .store(in: &cancellables)
+    }
+    
+    @objc private func customInputButtonTapped() {
+        showCustomInputPopup()
+    }
+    
+    private func showCustomInputPopup() {
+        // TODO: HobbyInputPopupViewController 표시
+        print("Show custom input popup")
+    }
+}
+
+// MARK: - UICollectionViewDataSource
+
+extension HobbySelectionViewController: UICollectionViewDataSource {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return viewModel.hobbies.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: HobbyCollectionViewCell.identifier,
+            for: indexPath
+        ) as? HobbyCollectionViewCell else {
+            return UICollectionViewCell()
+        }
+        
+        let hobby = viewModel.hobbies[indexPath.item]
+        let isSelected = viewModel.isSelected(at: indexPath.item)
+        cell.configure(with: hobby, isSelected: isSelected)
+        
+        return cell
+    }
+}
+
+// UICollectionViewDelegate
+
+extension HobbySelectionViewController: UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        viewModel.selectHobby(at: indexPath.item)
+    }
+}
+
+// UICollectionViewDelegateFlowLayout
+
+extension HobbySelectionViewController: UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let horizontalPadding: CGFloat = 20
+        let interItemSpacing: CGFloat = 12
+        let availableWidth = collectionView.bounds.width - (horizontalPadding * 2) - interItemSpacing
+        let itemWidth = availableWidth / 2
+        let itemHeight: CGFloat = 160
+        
+        return CGSize(width: itemWidth, height: itemHeight)
+    }
+}
+
+#Preview {
+    UINavigationController(rootViewController: HobbySelectionViewController())
+}
