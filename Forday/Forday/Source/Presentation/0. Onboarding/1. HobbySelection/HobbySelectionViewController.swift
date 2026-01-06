@@ -14,7 +14,18 @@ class HobbySelectionViewController: BaseOnboardingViewController {
     // Properties
     
     private let hobbyView = HobbySelectionView()
-    private let viewModel = HobbySelectionViewModel()
+    private let viewModel: HobbySelectionViewModel
+    
+    // Initialization
+    
+    init(viewModel: HobbySelectionViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     // Lifecycle
     
@@ -38,12 +49,15 @@ class HobbySelectionViewController: BaseOnboardingViewController {
     // Actions
     
     override func nextButtonTapped() {
-        // TODO: 다음 화면으로 이동 (Coordinator 연결)
-        print("Selected hobby: \(viewModel.selectedHobby?.title ?? "None")")
+        coordinator?.next(from: .hobby)
+    }
+    
+    override func backButtonTapped() {
+        coordinator?.dismissOnboarding()
     }
 }
 
-// MARK: - Setup
+// Setup
 
 extension HobbySelectionViewController {
     private func setupCollectionView() {

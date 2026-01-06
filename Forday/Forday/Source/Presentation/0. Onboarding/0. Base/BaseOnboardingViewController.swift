@@ -19,7 +19,10 @@ class BaseOnboardingViewController: UIViewController {
     private let progressBar = UIProgressView()
     var cancellables = Set<AnyCancellable>()
     
-    // Layout Constants (수정 가능)
+    // Coordinator
+    weak var coordinator: OnboardingCoordinator?
+    
+    // Layout Constants
     
     var horizontalPadding: CGFloat = 16
     var nextButtonVerticalPadding: CGFloat = 18
@@ -153,5 +156,5 @@ extension BaseOnboardingViewController {
 }
 
 #Preview {
-    UINavigationController(rootViewController: HobbySelectionViewController())
+    UINavigationController(rootViewController: HobbySelectionViewController(viewModel: .init()))
 }
