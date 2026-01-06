@@ -13,11 +13,13 @@ class TimeSelectionViewModel {
     
     // Published Properties
     
+    @Published var selectedTime: String?
     @Published var isNextButtonEnabled: Bool = false
     
-    // Initialization
+    // Methods
     
-    init() {
-        // TODO: 구현
+    func selectTime(_ time: String) {
+        selectedTime = time
+        isNextButtonEnabled = true
     }
 }

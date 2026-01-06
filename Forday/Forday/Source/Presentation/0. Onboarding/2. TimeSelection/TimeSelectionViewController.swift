@@ -36,17 +36,19 @@ class TimeSelectionViewController: BaseOnboardingViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setNavigationTitle("취미 시간")
+        setupSlider()
         bind()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        updateProgress(0.4)  // 2/5 = 40%
+        updateProgress(0.4)
     }
     
     // Actions
     
     override func nextButtonTapped() {
+        print("Selected time: \(viewModel.selectedTime ?? "None")")
         coordinator?.next(from: .time)
     }
 }
@@ -54,6 +56,12 @@ class TimeSelectionViewController: BaseOnboardingViewController {
 // Setup
 
 extension TimeSelectionViewController {
+    private func setupSlider() {
+        timeView.timeSlider.onValueChanged = { [weak self] time in
+            self?.viewModel.selectTime(time)
+        }
+    }
+    
     private func bind() {
         // 다음 버튼 활성화 상태 변경
         viewModel.$isNextButtonEnabled
@@ -66,5 +74,15 @@ extension TimeSelectionViewController {
 }
 
 #Preview {
-    TimeSelectionViewController(viewModel: .init())
+    let nav = UINavigationController()
+    let coordinator = OnboardingCoordinator(navigationController: nav)
+    coordinator.show(.time)
+    return nav
+}
+
+#Preview {
+    let nav = UINavigationController()
+    let coordinator = OnboardingCoordinator(navigationController: nav)
+    coordinator.show(.time)
+    return nav
 }
