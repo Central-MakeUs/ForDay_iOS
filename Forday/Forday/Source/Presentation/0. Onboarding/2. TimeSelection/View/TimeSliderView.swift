@@ -13,8 +13,17 @@ import Then
 class TimeSliderView: UIView {
     
     // Properties
+    // 시간을 분 단위로 저장
+    let timeOptions = [10, 20, 30, 60, 120]
     
-    let timeOptions = ["10", "20", "30분", "1시간", "2시간"]
+    private func formattedTime(minutes: Int) ->String {
+        if minutes < 60 {
+            return "\(minutes)분"
+        } else {
+            return "\(minutes / 60)시간"
+        }
+    }
+    
     var selectedIndex: Int = 0 {
         didSet {
             updateUI()
@@ -94,7 +103,7 @@ extension TimeSliderView {
         for time in timeOptions {
             let label = UILabel()
             label.do {
-                $0.text = time
+                $0.text = formattedTime(minutes: time)
                 $0.font = .systemFont(ofSize: 16, weight: .medium)
                 $0.textColor = .secondaryLabel
                 $0.textAlignment = .center
@@ -112,7 +121,7 @@ extension TimeSliderView {
         }
         
         thumbLabel.do {
-            $0.text = timeOptions[0]
+            $0.text = formattedTime(minutes: timeOptions[0])
             $0.font = .systemFont(ofSize: 16, weight: .bold)
             $0.textColor = .white
             $0.textAlignment = .center
@@ -149,7 +158,7 @@ extension TimeSliderView {
             $0.leading.trailing.equalToSuperview()
             $0.bottom.equalToSuperview()
         }
-
+        
         // Thumb (centerX 사용!)
         thumbView.snp.makeConstraints {
             $0.centerY.equalTo(trackView)
@@ -230,7 +239,7 @@ extension TimeSliderView {
         }
         
         // Callback
-        onValueChanged?(timeOptions[selectedIndex])
+        onValueChanged?(formattedTime(minutes: timeOptions[selectedIndex]))
     }
     
     private func updateUI() {
@@ -240,7 +249,7 @@ extension TimeSliderView {
         }
         
         // Thumb 라벨 업데이트
-        thumbLabel.text = timeOptions[selectedIndex]
+        thumbLabel.text = formattedTime(minutes: timeOptions[selectedIndex])
     }
 }
 
