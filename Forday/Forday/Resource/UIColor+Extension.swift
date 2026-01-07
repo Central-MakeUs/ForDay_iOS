@@ -9,6 +9,16 @@ import UIKit
 
 extension UIColor {
     
+    // Primary
+    static let primary001 = UIColor(hex: "F4A261")       /// F4A261
+    static let primary002 = UIColor(hex: "FFE6D1")       /// FFE6D1
+    static let primary003 = UIColor(hex: "FFF1E6")       /// FFF1E6
+    
+    // Secondary
+    static let secondary001 = UIColor(hex: "F77F78")       /// F77F78
+    static let secondary002 = UIColor(hex: "F8C8C0")       /// F8C8C0
+    static let secondary003 = UIColor(hex: "F25F59")       /// F25F59
+    
     // Action
     static let action001 = UIColor(hex: "EE9449")       /// EE9449
     static let action002 = UIColor(hex: "DB8843")       /// DB8843
