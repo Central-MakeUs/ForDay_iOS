@@ -156,13 +156,13 @@ extension TimeSliderView {
         timeOptionsStackView.snp.makeConstraints {
             $0.centerY.equalTo(trackView.snp.centerY)
             $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalToSuperview()
         }
         
         // Thumb (centerX 사용!)
         thumbView.snp.makeConstraints {
             $0.centerY.equalTo(trackView)
-            thumbCenterXConstraint = $0.centerX.equalTo(trackView.snp.leading).constraint
+            // TODO: thumbview 위치 조정
+            thumbCenterXConstraint = $0.centerX.equalTo(trackView.snp.leading).offset(20).constraint
         }
         
         // Thumb Label
