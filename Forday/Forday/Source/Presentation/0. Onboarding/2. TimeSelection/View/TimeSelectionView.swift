@@ -16,9 +16,11 @@ class TimeSelectionView: UIView {
     
     private let scrollView = UIScrollView()
     private let contentView = UIView()
+    private let hobbyView = UIView()
     
     let titleLabel = UILabel()
     let subtitleLabel = UILabel()
+    let selectedHobbyCard = SelectedHobbyCardView()
     let timeSlider = TimeSliderView()
     
     // Initialization
@@ -40,9 +42,11 @@ extension TimeSelectionView {
     private func style() {
         backgroundColor = .systemBackground
         
-        scrollView.do {
-            $0.showsVerticalScrollIndicator = false
-        }
+        selectedHobbyCard.configure(
+            iconName: "book.fill",
+            time: "30분",
+            title: "독서"
+        )
         
         titleLabel.do {
             $0.text = "한 번에 얼마나 할 수 있나요?"
@@ -57,26 +61,24 @@ extension TimeSelectionView {
             $0.textColor = .secondaryLabel
             $0.numberOfLines = 0
         }
+        
+        hobbyView.do {
+            $0.backgroundColor = .bg001
+        }
     }
     
     private func layout() {
-        addSubview(scrollView)
-        scrollView.addSubview(contentView)
+        addSubview(contentView)
         
         contentView.addSubview(titleLabel)
         contentView.addSubview(subtitleLabel)
+        contentView.addSubview(selectedHobbyCard)
+        contentView.addSubview(hobbyView)
         contentView.addSubview(timeSlider)
-        
-        // ScrollView
-        scrollView.snp.makeConstraints {
-            $0.top.equalTo(safeAreaLayoutGuide)
-            $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(safeAreaLayoutGuide).offset(-80)
-        }
         
         // ContentView
         contentView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
+            $0.edges.equalTo(safeAreaLayoutGuide)
             $0.width.equalToSuperview()
         }
         
@@ -94,12 +96,21 @@ extension TimeSelectionView {
             $0.trailing.equalToSuperview().offset(-20)
         }
         
+        selectedHobbyCard.snp.makeConstraints {
+            $0.top.equalTo(subtitleLabel.snp.bottom).offset(24)
+            $0.leading.equalToSuperview().offset(20)
+            $0.trailing.equalToSuperview().offset(-20)
+        }
+        
         // Time Slider
         timeSlider.snp.makeConstraints {
-            $0.top.equalTo(subtitleLabel.snp.bottom).offset(80)
-            $0.leading.equalToSuperview().offset(40)
-            $0.trailing.equalToSuperview().offset(-40)
-            $0.bottom.equalToSuperview().offset(-40)
+            $0.top.equalTo(selectedHobbyCard.snp.bottom).offset(40)
+            $0.leading.equalToSuperview().offset(20)
+            $0.trailing.equalToSuperview().offset(-20)
         }
     }
+}
+
+#Preview {
+    TimeSelectionViewController(viewModel: .init())
 }
