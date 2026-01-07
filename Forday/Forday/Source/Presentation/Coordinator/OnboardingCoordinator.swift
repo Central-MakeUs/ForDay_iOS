@@ -41,8 +41,8 @@ class OnboardingCoordinator: Coordinator {
             vc = TimeSelectionViewController(viewModel: viewModel)
             
         case .purpose:
-            // TODO: 나중에 구현
-            vc = UIViewController()
+            let viewModel = PurposeSelectionViewModel()
+            vc = PurposeSelectionViewController(viewModel: viewModel)
             
         case .frequency:
             // TODO: 나중에 구현
