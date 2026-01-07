@@ -37,8 +37,8 @@ extension UIView {
     static func gradient003() -> CAGradientLayer {
         makeGradient(
             colors: [
-                UIColor(hex: "#FFE6D1"),
-                UIColor(hex: "#F8C8C0")
+                UIColor(hex: "FFE6D1"),
+                UIColor(hex: "F8C8C0")
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -49,8 +49,8 @@ extension UIView {
     static func gradient004() -> CAGradientLayer {
         makeGradient(
             colors: [
-                UIColor(hex: "#FFE6D1"),
-                UIColor(hex: "#F77F78")
+                UIColor(hex: "FFE6D1"),
+                UIColor(hex: "F77F78")
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
