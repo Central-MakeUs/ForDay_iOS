@@ -15,7 +15,10 @@ class BaseOnboardingViewController: UIViewController {
     
     // Properties
     let nextButton = UIButton()
-    private let progressBar = UIProgressView()
+    
+    // Static으로 공유 (모든 VC가 같은 프로그래스바 사용)
+    private static var sharedProgressBar: GradientProgressView?
+    
     var cancellables = Set<AnyCancellable>()
     
     // Coordinator
@@ -32,11 +35,20 @@ class BaseOnboardingViewController: UIViewController {
         super.viewDidLoad()
         style()
         layout()
+        setupProgressBarIfNeeded()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        setupProgressBar()
+        // viewWillAppear에서는 아무것도 안 함 (이미 viewDidLoad에서 처리)
+    }
+    
+    deinit {
+        // 마지막 VC가 사라질 때 프로그래스바도 제거
+        if navigationController?.viewControllers.isEmpty == true {
+            BaseOnboardingViewController.sharedProgressBar?.removeFromSuperview()
+            BaseOnboardingViewController.sharedProgressBar = nil
+        }
     }
 }
 
@@ -57,19 +69,10 @@ extension BaseOnboardingViewController {
         navigationItem.leftBarButtonItem = backButton
         navigationController?.navigationBar.prefersLargeTitles = false
         
-        // 프로그래스바
-        progressBar.do {
-            $0.progressTintColor = .systemOrange
-            $0.trackTintColor = .systemGray5
-            $0.progress = 0
-        }
-        
         // 다음 버튼
         nextButton.do {
             var config = UIButton.Configuration.filled()
             config.title = "다음"
-//            config.baseBackgroundColor = .systemOrange
-//            config.baseForegroundColor = .white
             config.background.cornerRadius = 12
             config.contentInsets = NSDirectionalEdgeInsets(
                 top: nextButtonVerticalPadding,
@@ -94,19 +97,22 @@ extension BaseOnboardingViewController {
         }
     }
     
-    private func setupProgressBar() {
+    private func setupProgressBarIfNeeded() {
         guard let navigationBar = navigationController?.navigationBar else { return }
         
-        // 이미 추가되어 있으면 제거 (중복 방지)
-        progressBar.removeFromSuperview()
-        
-        navigationBar.addSubview(progressBar)
-        
-        progressBar.snp.makeConstraints {
-            $0.leading.equalToSuperview().offset(20)
-            $0.trailing.equalToSuperview().offset(-20)
-            $0.bottom.equalToSuperview().offset(16)
-            $0.height.equalTo(8)
+        // 이미 프로그래스바가 있으면 재사용
+        if BaseOnboardingViewController.sharedProgressBar == nil {
+            let progressBar = GradientProgressView()
+            BaseOnboardingViewController.sharedProgressBar = progressBar
+            
+            navigationBar.addSubview(progressBar)
+            
+            progressBar.snp.makeConstraints {
+                $0.leading.equalToSuperview().offset(20)
+                $0.trailing.equalToSuperview().offset(-20)
+                $0.bottom.equalToSuperview().offset(16)
+                $0.height.equalTo(8)
+            }
         }
     }
 }
@@ -133,9 +139,7 @@ extension BaseOnboardingViewController {
     
     /// 프로그래스바 업데이트
     func updateProgress(_ progress: Float) {
-        UIView.animate(withDuration: 0.3) {
-            self.progressBar.setProgress(progress, animated: true)
-        }
+        BaseOnboardingViewController.sharedProgressBar?.setProgress(progress, animated: true)
     }
 }
 
