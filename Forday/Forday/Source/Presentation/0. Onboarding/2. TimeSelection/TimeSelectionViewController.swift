@@ -79,10 +79,3 @@ extension TimeSelectionViewController {
     coordinator.show(.time)
     return nav
 }
-
-#Preview {
-    let nav = UINavigationController()
-    let coordinator = OnboardingCoordinator(navigationController: nav)
-    coordinator.show(.time)
-    return nav
-}
