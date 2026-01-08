@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6C698A092F0ECF2B001229A8 /* CombineMoya in Frameworks */ = {isa = PBXBuildFile; productRef = 6C698A082F0ECF2B001229A8 /* CombineMoya */; };
+		6C698A0B2F0ECF2B001229A8 /* Moya in Frameworks */ = {isa = PBXBuildFile; productRef = 6C698A0A2F0ECF2B001229A8 /* Moya */; };
 		6C944CBA2F0ACF9F007D9AB5 /* Then in Frameworks */ = {isa = PBXBuildFile; productRef = 6C944CB92F0ACF9F007D9AB5 /* Then */; };
 		6C944CBD2F0AD02D007D9AB5 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6C944CBC2F0AD02D007D9AB5 /* SnapKit */; };
 /* End PBXBuildFile section */
@@ -43,6 +45,8 @@
 			files = (
 				6C944CBA2F0ACF9F007D9AB5 /* Then in Frameworks */,
 				6C944CBD2F0AD02D007D9AB5 /* SnapKit in Frameworks */,
+				6C698A0B2F0ECF2B001229A8 /* Moya in Frameworks */,
+				6C698A092F0ECF2B001229A8 /* CombineMoya in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -87,6 +91,8 @@
 			packageProductDependencies = (
 				6C944CB92F0ACF9F007D9AB5 /* Then */,
 				6C944CBC2F0AD02D007D9AB5 /* SnapKit */,
+				6C698A082F0ECF2B001229A8 /* CombineMoya */,
+				6C698A0A2F0ECF2B001229A8 /* Moya */,
 			);
 			productName = Forday;
 			productReference = 6C944CA02F0ACF42007D9AB5 /* Forday.app */;
@@ -119,6 +125,7 @@
 			packageReferences = (
 				6C944CB82F0ACF9F007D9AB5 /* XCRemoteSwiftPackageReference "Then" */,
 				6C944CBB2F0AD02D007D9AB5 /* XCRemoteSwiftPackageReference "SnapKit" */,
+				6C698A072F0ECF2B001229A8 /* XCRemoteSwiftPackageReference "Moya" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6C944CA12F0ACF42007D9AB5 /* Products */;
@@ -362,6 +369,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		6C698A072F0ECF2B001229A8 /* XCRemoteSwiftPackageReference "Moya" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Moya/Moya.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 15.0.3;
+			};
+		};
 		6C944CB82F0ACF9F007D9AB5 /* XCRemoteSwiftPackageReference "Then" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/devxoul/Then.git";
@@ -381,6 +396,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		6C698A082F0ECF2B001229A8 /* CombineMoya */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6C698A072F0ECF2B001229A8 /* XCRemoteSwiftPackageReference "Moya" */;
+			productName = CombineMoya;
+		};
+		6C698A0A2F0ECF2B001229A8 /* Moya */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6C698A072F0ECF2B001229A8 /* XCRemoteSwiftPackageReference "Moya" */;
+			productName = Moya;
+		};
 		6C944CB92F0ACF9F007D9AB5 /* Then */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 6C944CB82F0ACF9F007D9AB5 /* XCRemoteSwiftPackageReference "Then" */;
