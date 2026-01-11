@@ -13,6 +13,7 @@ class OnboardingCoordinator: Coordinator {
     // Properties
     
     let navigationController: UINavigationController
+    weak var parentCoordinator: AuthCoordinator?  // 추가!
     
     // Initialization
     
@@ -45,12 +46,12 @@ class OnboardingCoordinator: Coordinator {
             vc = PurposeSelectionViewController(viewModel: viewModel)
             
         case .frequency:
-            let viewModel = FrequencySelectionViewModel()  // 추가!
+            let viewModel = FrequencySelectionViewModel()
             vc = FrequencySelectionViewController(viewModel: viewModel)
             
         case .period:
-                let viewModel = PeriodSelectionViewModel()
-                vc = PeriodSelectionViewController(viewModel: viewModel)
+            let viewModel = PeriodSelectionViewModel()
+            vc = PeriodSelectionViewController(viewModel: viewModel)
         }
         
         // Coordinator 주입
@@ -72,8 +73,10 @@ class OnboardingCoordinator: Coordinator {
     }
     
     func finish() {
-        // TODO: 온보딩 완료 후 MainTabBar로 이동
-        navigationController.dismiss(animated: true)
+        // 온보딩 완료 후 홈으로
+        navigationController.dismiss(animated: true) {
+            self.parentCoordinator?.completeOnboarding()
+        }
     }
     
     func dismissOnboarding() {
