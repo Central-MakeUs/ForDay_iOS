@@ -6,8 +6,6 @@
 //
 
 import Foundation
-
-import Foundation
 import OSLog
 
 public struct Log {
