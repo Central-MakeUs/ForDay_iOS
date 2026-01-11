@@ -7,4 +7,9 @@
 
 import Foundation
 
-protocol BaseResponse: Codable { }
+protocol BaseResponse: Decodable {
+    associatedtype DataType: Decodable
+    var status: Int { get }
+    var success: Bool { get }
+    var data: DataType { get }
+}

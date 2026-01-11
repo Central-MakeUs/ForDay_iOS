@@ -21,7 +21,7 @@ final class AuthRepository: AuthRepositoryInterface {
     func loginWithKakao(kakaoAccessToken: String) async throws -> AuthToken {
         let request = DTO.KakaoLoginRequest(kakaoAccessToken: kakaoAccessToken)
         let response = try await apiService.loginWithKakao(request: request)
-        return response.toDomain()
+        return response.data.toDomain()
     }
     
     // MARK: - Apple Login
