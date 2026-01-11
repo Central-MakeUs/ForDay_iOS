@@ -10,9 +10,9 @@ import Foundation
 
 final class AuthRepository: AuthRepositoryInterface {
     
-    private let apiService: AuthAPIService
+    private let apiService: AuthService
     
-    init(apiService: AuthAPIService = AuthAPIService()) {
+    init(apiService: AuthService = AuthService()) {
         self.apiService = apiService
     }
     

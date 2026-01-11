@@ -1,5 +1,5 @@
 //
-//  AuthAPIService.swift
+//  AuthService.swift
 //  Forday
 //
 //  Created by Subeen on 1/9/26.
@@ -9,7 +9,7 @@
 import Foundation
 import Moya
 
-final class AuthAPIService {
+final class AuthService {
     
     private let provider: MoyaProvider<AuthTarget>
     
