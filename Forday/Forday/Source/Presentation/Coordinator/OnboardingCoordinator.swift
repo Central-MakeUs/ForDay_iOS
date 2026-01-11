@@ -48,9 +48,9 @@ class OnboardingCoordinator: Coordinator {
             let viewModel = FrequencySelectionViewModel()  // 추가!
             vc = FrequencySelectionViewController(viewModel: viewModel)
             
-        case .goalDate:
-            // TODO: 나중에 구현
-            vc = UIViewController()
+        case .period:
+                let viewModel = PeriodSelectionViewModel()
+                vc = PeriodSelectionViewController(viewModel: viewModel)
         }
         
         // Coordinator 주입
@@ -66,8 +66,8 @@ class OnboardingCoordinator: Coordinator {
         case .hobby: show(.time)
         case .time: show(.purpose)
         case .purpose: show(.frequency)
-        case .frequency: show(.goalDate)
-        case .goalDate: finish()
+        case .frequency: show(.period)
+        case .period: finish()
         }
     }
     

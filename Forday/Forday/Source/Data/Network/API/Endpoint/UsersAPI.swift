@@ -14,7 +14,7 @@ enum UsersAPI {
         case .nicknameAvailability:
             return "/users/nickname/availability"
         case .settingNickname:
-            return "users/nickname"
+            return "/users/nickname"
         }
     }
 }

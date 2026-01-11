@@ -8,7 +8,7 @@
 import Foundation
 
 struct APIConstants {
-    static let baseURL = "http://forday-alb-1599562729.ap-northeast-2.elb.amazonaws.com/health_check"
+    static let baseURL = "http://forday-alb-1599562729.ap-northeast-2.elb.amazonaws.com"
     static let contentType = "Content-Type"
     static let applicationJson = "application/json"
 }

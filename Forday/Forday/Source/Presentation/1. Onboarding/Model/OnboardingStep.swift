@@ -13,5 +13,5 @@ enum OnboardingStep {
     case time
     case purpose
     case frequency
-    case goalDate
+    case period
 }

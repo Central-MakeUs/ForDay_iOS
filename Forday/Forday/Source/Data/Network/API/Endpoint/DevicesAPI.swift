@@ -13,7 +13,7 @@ enum DevicesAPI {
         switch self {
         case .enrollDevice,
                 .deleteDevice:
-            return "devices/"
+            return "/devices"
         }
     }
 }
