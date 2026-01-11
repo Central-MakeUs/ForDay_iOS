@@ -44,6 +44,9 @@ class AuthCoordinator: Coordinator {
     // 온보딩 시작
     func showOnboarding() {
         let onboardingNav = UINavigationController()
+        
+        onboardingNav.modalPresentationStyle = .fullScreen 
+        
         let onboardingCoordinator = OnboardingCoordinator(navigationController: onboardingNav)
         onboardingCoordinator.parentCoordinator = self
         onboardingCoordinator.start()
