@@ -49,7 +49,7 @@ class PeriodSelectionViewController: BaseOnboardingViewController {
     
     override func nextButtonTapped() {
         print("Selected period: \(viewModel.selectedPeriod?.title ?? "None")")
-        coordinator?.finish()
+        coordinator?.next(from: .period)
     }
 }
 
