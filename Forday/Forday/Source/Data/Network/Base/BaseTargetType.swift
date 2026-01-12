@@ -15,7 +15,16 @@ extension BaseTargetType {
         return URL(string: APIConstants.baseURL)!
     }
     
-    public var headers: [String : String]? {
-        return APIConstants.baseHeader
+    var headers: [String: String]? {
+        var headers = ["Content-Type": "application/json"]
+        
+        if let token = try? TokenStorage.shared.loadAccessToken() {
+            headers["Authorization"] = "Bearer \(token)"
+        }
+        
+        return headers
     }
 }
+
+
+

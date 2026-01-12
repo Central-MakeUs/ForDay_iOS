@@ -65,8 +65,7 @@ extension NicknameView {
         }
         
         nicknameLabel.do {
-            $0.text = "닉네임"
-            $0.font = .systemFont(ofSize: 14, weight: .medium)
+            $0.setTextWithTypography("닉네임", style: .label12)
             $0.textColor = .secondaryLabel
         }
         
@@ -87,9 +86,10 @@ extension NicknameView {
             config.baseBackgroundColor = .label
             config.baseForegroundColor = .systemBackground
             config.cornerStyle = .medium
-            config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+            config.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10)
             
             $0.configuration = config
+            $0.applyTypography(.label12)
         }
         
         validationLabel.do {
@@ -116,6 +116,7 @@ extension NicknameView {
             $0.top.equalTo(safeAreaLayoutGuide).offset(48)
             $0.leading.equalToSuperview().offset(20)
             $0.trailing.equalToSuperview().offset(-20)
+            $0.bottom.greaterThanOrEqualToSuperview()
         }
         
         // Title
@@ -138,28 +139,32 @@ extension NicknameView {
         
         // Nickname Label
         nicknameLabel.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(16)
+            $0.top.equalToSuperview().offset(8)
             $0.leading.equalToSuperview().offset(16)
         }
         
         // Nickname TextField
         nicknameTextField.snp.makeConstraints {
-            $0.top.equalTo(nicknameLabel.snp.bottom).offset(8)
+            $0.top.equalTo(nicknameLabel.snp.bottom).offset(4)
             $0.leading.equalToSuperview().offset(16)
-            $0.trailing.equalTo(duplicateCheckButton.snp.leading).offset(-12)
-            $0.bottom.equalToSuperview().offset(-16)
+            $0.trailing.equalTo(duplicateCheckButton.snp.leading).offset(-16)
+            $0.bottom.equalToSuperview().offset(-12)
+            $0.height.greaterThanOrEqualTo(44)
         }
         
         // Duplicate Check Button
         duplicateCheckButton.snp.makeConstraints {
             $0.trailing.equalToSuperview().offset(-16)
+            $0.bottom.equalToSuperview().offset(-8)
             $0.centerY.equalTo(nicknameTextField)
+            $0.height.equalTo(28)
         }
         
         // Validation Label
         validationLabel.snp.makeConstraints {
             $0.top.equalTo(inputContainerView.snp.bottom).offset(8)
             $0.leading.trailing.equalToSuperview()
+            $0.bottom.lessThanOrEqualToSuperview().offset(-20)
         }
     }
 }
@@ -169,7 +174,7 @@ extension NicknameView {
 extension NicknameView {
     func showValidationMessage(_ message: String?, isError: Bool = true) {
         validationLabel.text = message
-        validationLabel.textColor = isError ? .systemRed : .systemGreen
+        validationLabel.textColor = .red   // 커스텀 컬러
         validationLabel.isHidden = message == nil
     }
 }

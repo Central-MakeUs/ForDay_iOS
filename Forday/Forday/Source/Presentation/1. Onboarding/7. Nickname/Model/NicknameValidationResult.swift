@@ -12,7 +12,6 @@ enum NicknameValidationResult {
     case valid
     case empty
     case invalidCharacters
-    case tooLong
     case duplicate
     
     var message: String? {
@@ -20,11 +19,9 @@ enum NicknameValidationResult {
         case .valid:
             return nil
         case .empty:
-            return "닉네임을 입력해주세요."
+            return "필수 입력 항목입니다."
         case .invalidCharacters:
-            return "한글, 영어만 입력할 수 있습니다."
-        case .tooLong:
-            return "닉네임은 최대 10자까지 입력 가능합니다."
+            return "한글, 영어, 숫자만 사용할 수 있습니다."
         case .duplicate:
             return "이미 사용 중인 닉네임입니다."
         }
