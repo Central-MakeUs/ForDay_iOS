@@ -15,7 +15,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
 #if DEBUG
         if ProcessInfo.processInfo.environment["CLEAR_TOKENS_ON_LAUNCH"] == "YES" {
-            try? TokenStorage.shared.deleteTokens()
+            try? TokenStorage.shared.deleteAllTokens()
             print("🔧 [DEBUG] 토큰 삭제됨 - 로그인 화면으로 이동")
         }
 #endif
