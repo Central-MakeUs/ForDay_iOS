@@ -13,7 +13,6 @@ enum NicknameValidationResult {
     case empty
     case invalidCharacters
     case duplicate
-    case available
     
     var message: String? {
         switch self {
@@ -25,8 +24,6 @@ enum NicknameValidationResult {
             return "한글, 영어, 숫자만 사용할 수 있습니다."
         case .duplicate:
             return "이미 사용 중인 닉네임입니다."
-        case .available:
-            return ""
         }
     }
 }
