@@ -47,6 +47,8 @@ enum FontName: String {
 
 extension TypographyStyle {
     
+    // Header
+    
     /// header 24 - Pretendard SemiBold 24px 120%
     static let header24 = TypographyStyle(
         font: UIFont(name: FontName.pretendardSemiBold.rawValue, size: 24) ?? .systemFont(ofSize: 24, weight: .bold),
@@ -93,7 +95,7 @@ extension TypographyStyle {
     
     /// body 16px 120%
     static let body16 = TypographyStyle(
-        font: UIFont(name: FontName.pretendardMedium.rawValue, size: 16) ?? .systemFont(ofSize: 14, weight: .medium),
+        font: UIFont(name: FontName.pretendardMedium.rawValue, size: 16) ?? .systemFont(ofSize: 16, weight: .medium),
         lineHeight: 16 * 1.4,
         letterSpacing: 0
     )
@@ -116,14 +118,14 @@ extension TypographyStyle {
     
     /// label 16px 140%
     static let label16 = TypographyStyle(
-        font: UIFont(name: FontName.pretendardRegular.rawValue, size: 12) ?? .systemFont(ofSize: 16, weight: .regular),
+        font: UIFont(name: FontName.pretendardRegular.rawValue, size: 16) ?? .systemFont(ofSize: 16, weight: .regular),
         lineHeight: 16 * 1.4,
         letterSpacing: 0
     )
     
     /// label 14px 140%
     static let label14 = TypographyStyle(
-        font: UIFont(name: FontName.pretendardRegular.rawValue, size: 12) ?? .systemFont(ofSize: 14, weight: .regular),
+        font: UIFont(name: FontName.pretendardRegular.rawValue, size: 14) ?? .systemFont(ofSize: 14, weight: .regular),
         lineHeight: 14 * 1.4,
         letterSpacing: 0
     )
@@ -137,8 +139,8 @@ extension TypographyStyle {
     
     /// label 10px 140%
     static let label10 = TypographyStyle(
-        font: UIFont(name: FontName.pretendardRegular.rawValue, size: 12) ?? .systemFont(ofSize: 10, weight: .regular),
+        font: UIFont(name: FontName.pretendardRegular.rawValue, size: 10) ?? .systemFont(ofSize: 10, weight: .regular),
         lineHeight: 10 * 1.4,
         letterSpacing: 0
-    ) 
+    )
 }
