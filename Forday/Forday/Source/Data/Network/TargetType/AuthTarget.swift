@@ -7,7 +7,7 @@
 
 import Foundation
 import Moya
-internal import Alamofire
+import Alamofire
 
 enum AuthTarget {
     case kakaoLogin(request: DTO.KakaoLoginRequest)
