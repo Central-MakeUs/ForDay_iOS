@@ -48,7 +48,12 @@ class FrequencySelectionViewController: BaseOnboardingViewController {
     // Actions
     
     override func nextButtonTapped() {
-        print("Selected frequency: \(viewModel.selectedFrequency?.count ?? 0)")
+        guard let selectedFrequency = viewModel.selectedFrequency else { return }
+        
+        // Coordinator에게 데이터 전달
+        viewModel.onFrequencySelected?(selectedFrequency.count)
+        
+        // 다음 화면으로
         coordinator?.next(from: .frequency)
     }
 }

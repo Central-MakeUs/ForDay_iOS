@@ -47,6 +47,9 @@ class FrequencySelectionViewModel {
         
         selectedFrequency = frequencies[index]
         isNextButtonEnabled = true
+        
+        // 클로저 호출
+        onFrequencySelected?(frequencies[index].count)
     }
     
     /// 해당 인덱스가 선택되었는지 확인
