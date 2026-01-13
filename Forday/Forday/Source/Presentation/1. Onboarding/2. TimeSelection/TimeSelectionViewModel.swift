@@ -24,5 +24,20 @@ class TimeSelectionViewModel {
     func selectTime(_ time: String) {
         selectedTime = time
         isNextButtonEnabled = true
+        
+        // String → Int 변환 후 클로저 호출
+        let minutes = convertToMinutes(time)
+        onTimeSelected?(minutes)
+    }
+    
+    private func convertToMinutes(_ time: String) -> Int {
+        switch time {
+        case "10": return 10
+        case "20": return 20
+        case "30분": return 30
+        case "1시간": return 60
+        case "2시간": return 120
+        default: return 0
+        }
     }
 }

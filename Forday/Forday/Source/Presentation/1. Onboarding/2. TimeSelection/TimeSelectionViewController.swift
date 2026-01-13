@@ -48,7 +48,12 @@ class TimeSelectionViewController: BaseOnboardingViewController {
     // Actions
     
     override func nextButtonTapped() {
-        print("Selected time: \(viewModel.selectedTime ?? "None")")
+        guard let selectedTime = viewModel.selectedTime else { return }
+        
+        // Coordinator에게 데이터 전달
+        viewModel.selectTime(selectedTime)
+        
+        // 다음 화면으로
         coordinator?.next(from: .time)
     }
 }
