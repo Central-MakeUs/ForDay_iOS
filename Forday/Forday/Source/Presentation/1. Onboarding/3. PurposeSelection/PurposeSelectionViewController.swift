@@ -49,7 +49,13 @@ class PurposeSelectionViewController: BaseOnboardingViewController {
     // Actions
     
     override func nextButtonTapped() {
-        print("Selected purposes: \(viewModel.selectedPurposes.map { $0.title })")
+        // PurposeModel → String(title) 변환
+        let purposeTitles = viewModel.selectedPurposes.map { $0.title }
+        
+        // Coordinator에게 데이터 전달
+        viewModel.onPurposesSelected?(purposeTitles)
+        
+        // 다음 화면으로
         coordinator?.next(from: .purpose)
     }
 }

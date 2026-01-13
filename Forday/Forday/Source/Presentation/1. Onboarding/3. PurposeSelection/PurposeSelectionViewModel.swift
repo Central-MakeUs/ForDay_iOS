@@ -9,6 +9,9 @@
 import Foundation
 import Combine
 
+import Foundation
+import Combine
+
 class PurposeSelectionViewModel {
     
     // Published Properties
@@ -54,6 +57,10 @@ class PurposeSelectionViewModel {
         
         // 최소 1개 선택해야 다음 버튼 활성화
         isNextButtonEnabled = !selectedPurposes.isEmpty
+        
+        // 클로저 호출 (title만 추출)
+        let purposeTitles = selectedPurposes.map { $0.title }
+        onPurposesSelected?(purposeTitles)
     }
     
     /// 해당 인덱스가 선택되었는지 확인
