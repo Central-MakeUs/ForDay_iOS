@@ -13,7 +13,11 @@ class OnboardingCoordinator: Coordinator {
     // Properties
     
     let navigationController: UINavigationController
-    weak var parentCoordinator: AuthCoordinator?  // 추가!
+    weak var parentCoordinator: AuthCoordinator?
+    
+    // 온보딩 데이터 수집
+    private var onboardingData = OnboardingData()
+    private let storage = OnboardingDataStorage.shared
     
     // Initialization
     
@@ -35,32 +39,43 @@ class OnboardingCoordinator: Coordinator {
         switch step {
         case .hobby:
             let viewModel = HobbySelectionViewModel()
+            viewModel.onHobbySelected = { [weak self] hobbyCard in
+                self?.updateHobby(hobbyCard)
+            }
             vc = HobbySelectionViewController(viewModel: viewModel)
             
         case .time:
             let viewModel = TimeSelectionViewModel()
+            viewModel.onTimeSelected = { [weak self] minutes in
+                self?.updateTime(minutes)
+            }
             vc = TimeSelectionViewController(viewModel: viewModel)
             
         case .purpose:
             let viewModel = PurposeSelectionViewModel()
+            viewModel.onPurposesSelected = { [weak self] purposes in
+                self?.updatePurposes(purposes)
+            }
             vc = PurposeSelectionViewController(viewModel: viewModel)
             
         case .frequency:
             let viewModel = FrequencySelectionViewModel()
+            viewModel.onFrequencySelected = { [weak self] count in
+                self?.updateFrequency(count)
+            }
             vc = FrequencySelectionViewController(viewModel: viewModel)
             
         case .period:
             let viewModel = PeriodSelectionViewModel()
+            viewModel.onPeriodSelected = { [weak self] isDurationSet in
+                self?.updatePeriod(isDurationSet)
+            }
             vc = PeriodSelectionViewController(viewModel: viewModel)
             
         case .complete:
             vc = OnboardingCompleteViewController()
             (vc as? OnboardingCompleteViewController)?.coordinator = self
-            
-            
         }
-        
-        
         
         // Coordinator 주입
         if let baseVC = vc as? BaseOnboardingViewController {
@@ -90,7 +105,6 @@ class OnboardingCoordinator: Coordinator {
     // 닉네임 설정 화면으로
     func showNicknameSetup() {
         let vc = NicknameViewController()
-        vc.coordinator = self
         
         // Complete 화면 제거하고 Nickname만 남기기
         var viewControllers = navigationController.viewControllers
@@ -103,6 +117,10 @@ class OnboardingCoordinator: Coordinator {
     
     // 닉네임 설정 완료 후 홈으로
     func completeNicknameSetup() {
+        // 온보딩 데이터 저장
+        saveOnboardingData()
+        
+        // 온보딩 dismiss 후 홈으로
         navigationController.dismiss(animated: true) {
             self.parentCoordinator?.completeOnboarding()
         }
@@ -111,19 +129,51 @@ class OnboardingCoordinator: Coordinator {
     // 온보딩 단계들을 스택에서 제거
     private func removeOnboardingStepsFromStack() {
         if let completeVC = navigationController.viewControllers.last as? OnboardingCompleteViewController {
-            // 애니메이션 없이 조용히 스택 정리
             navigationController.setViewControllers([completeVC], animated: false)
-        }
-    }
-    
-    func finish() {
-        // 온보딩 완료 후 홈으로
-        navigationController.dismiss(animated: true) {
-            self.parentCoordinator?.completeOnboarding()
         }
     }
     
     func dismissOnboarding() {
         navigationController.dismiss(animated: true)
+    }
+}
+
+// MARK: - Data Collection
+
+extension OnboardingCoordinator {
+    
+    func updateHobby(_ hobbyCard: HobbyCard) {
+        onboardingData.selectedHobbyCard = hobbyCard
+        print("✅ 취미 저장: \(hobbyCard.name)")
+    }
+    
+    func updateTime(_ minutes: Int) {
+        onboardingData.timeMinutes = minutes
+        print("✅ 시간 저장: \(minutes)분")
+    }
+    
+    func updatePurposes(_ purposes: [String]) {
+        onboardingData.purposes = purposes
+        print("✅ 목적 저장: \(purposes)")
+    }
+    
+    func updateFrequency(_ count: Int) {
+        onboardingData.executionCount = count
+        print("✅ 횟수 저장: 주 \(count)회")
+    }
+    
+    func updatePeriod(_ isDurationSet: Bool) {
+        onboardingData.isDurationSet = isDurationSet
+        print("✅ 기간 저장: \(isDurationSet)")
+    }
+    
+    private func saveOnboardingData() {
+        do {
+            try storage.save(onboardingData)
+            print("✅ 온보딩 데이터 저장 완료")
+            print("저장된 데이터: \(onboardingData)")
+        } catch {
+            print("❌ 온보딩 데이터 저장 실패: \(error)")
+        }
     }
 }
