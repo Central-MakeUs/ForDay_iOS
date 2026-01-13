@@ -48,6 +48,12 @@ class HobbySelectionViewController: BaseOnboardingViewController {
     // Actions
     
     override func nextButtonTapped() {
+        guard let selectedHobby = viewModel.selectedHobby else { return }
+        
+        // Coordinator에게 데이터 전달
+        viewModel.onHobbySelected?(selectedHobby)
+        
+        // 다음 화면으로
         coordinator?.next(from: .hobby)
     }
     
