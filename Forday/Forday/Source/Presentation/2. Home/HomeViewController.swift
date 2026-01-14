@@ -124,32 +124,17 @@ extension HomeViewController {
         print("취미활동 추가하기 탭")
         showAIRecommendationModal()
     }
-    
+
     private func showAIRecommendationModal() {
-        // AI 추천 로딩 모달 표시
-        let loadingVC = AIRecommendationLoadingViewController()
-        loadingVC.modalPresentationStyle = .pageSheet
-//        loadingVC.modalTransitionStyle = .crossDissolve
+        let containerVC = AIRecommendationContainerViewController(viewModel: viewModel)
+        containerVC.modalPresentationStyle = .pageSheet
         
-        loadingVC.isModalInPresentation = true
-        
-        if let sheet = loadingVC.sheetPresentationController {
-            sheet.detents = [
-                .custom(identifier: .init("loading")) { _ in 236 }
-            ]
-            sheet.prefersGrabberVisible = false
+        if let sheet = containerVC.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
         }
         
-        present(loadingVC, animated: true) {
-            // 모달이 표시된 후 API 호출
-            Task {
-                do {
-                    try await self.viewModel.fetchAIRecommendations()
-                } catch {
-                    
-                }
-            }
-        }
+        present(containerVC, animated: true)
     }
 }
 
