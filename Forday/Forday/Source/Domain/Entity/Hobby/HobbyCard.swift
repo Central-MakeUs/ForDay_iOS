@@ -26,8 +26,33 @@ enum HobbyImageAsset: String, Codable {
     case photo = "photo.png"
     case writing = "writing.png"
     
-    var image: UIImage? {
-        let assetName = self.rawValue.replacingOccurrences(of: ".png", with: "")
-        return UIImage(named: assetName)
+//    var image: UIImage? {
+//        let assetName = self.rawValue.replacingOccurrences(of: ".png", with: "")
+//        return UIImage(named: assetName)
+//    }
+    
+    var image: UIImage {
+        switch self {
+        case .drawing:
+                .Hobbycard.drawing
+        case .gym:
+                .Hobbycard.gym
+        case .reading:
+                .Hobbycard.reading
+        case .music:
+                .Hobbycard.listeningmusic
+        case .running:
+                .Hobbycard.running
+        case .cooking:
+                .Hobbycard.cooking
+        case .cafe:
+                .Hobbycard.cafe
+        case .movie:
+                .Hobbycard.watchingmovie
+        case .photo:
+                .Hobbycard.pictures
+        case .writing:
+                .Hobbycard.writing
+        }
     }
 }

@@ -38,6 +38,15 @@ class HobbySelectionViewController: BaseOnboardingViewController {
         setupCollectionView()
         setupActions()
         bind()
+        
+        // API 호출
+        loadHobbies()
+    }
+    
+    private func loadHobbies() {
+        Task {
+            await viewModel.fetchHobbies()
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -102,6 +111,15 @@ extension HobbySelectionViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isEnabled in
                 self?.setNextButtonEnabled(isEnabled)
+            }
+            .store(in: &cancellables)
+        
+        // 로딩 상태
+        viewModel.$isLoading
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isLoading in
+                // TODO: 로딩 인디케이터 표시/숨김
+                print(isLoading ? "로딩 중..." : "로딩 완료")
             }
             .store(in: &cancellables)
     }

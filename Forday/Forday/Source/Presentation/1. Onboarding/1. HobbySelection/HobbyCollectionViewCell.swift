@@ -18,7 +18,6 @@ class HobbyCollectionViewCell: UICollectionViewCell {
     
     private let backgroundImageView = UIImageView()
     private let dimmedOverlay = UIView()
-    private let iconImageView = UIImageView()
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
     private let checkmarkImageView = UIImageView()
@@ -38,7 +37,7 @@ class HobbyCollectionViewCell: UICollectionViewCell {
     // MARK: - Configuration
     
     func configure(with hobby: HobbyCard, isSelected: Bool) {
-        iconImageView.image = hobby.imageAsset.image
+        backgroundImageView.image = hobby.imageAsset.image
         titleLabel.text = hobby.name
         subtitleLabel.text = hobby.description
         checkmarkImageView.isHidden = !isSelected
@@ -67,11 +66,6 @@ extension HobbyCollectionViewCell {
             $0.alpha = 0.5
         }
         
-        iconImageView.do {
-            $0.contentMode = .scaleAspectFit
-            $0.tintColor = .white
-        }
-        
         titleLabel.do {
             $0.font = .systemFont(ofSize: 18, weight: .bold)
             $0.textColor = .white
@@ -95,7 +89,6 @@ extension HobbyCollectionViewCell {
     private func layout() {
         contentView.addSubview(backgroundImageView)
         contentView.addSubview(dimmedOverlay)
-        contentView.addSubview(iconImageView)
         contentView.addSubview(titleLabel)
         contentView.addSubview(subtitleLabel)
         contentView.addSubview(checkmarkImageView)
@@ -106,12 +99,6 @@ extension HobbyCollectionViewCell {
         
         dimmedOverlay.snp.makeConstraints {
             $0.edges.equalToSuperview()
-        }
-        
-        iconImageView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(16)
-            $0.leading.equalToSuperview().offset(16)
-            $0.width.height.equalTo(32)
         }
         
         checkmarkImageView.snp.makeConstraints {
