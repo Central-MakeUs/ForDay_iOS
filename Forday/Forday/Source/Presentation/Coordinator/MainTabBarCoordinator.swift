@@ -83,7 +83,7 @@ class MainTabBarCoordinator: NSObject, Coordinator {
         ]
         
         tabBarController.delegate = self
-//        tabBarController.tabBar.tintColor = .systemOrange
+        tabBarController.tabBar.tintColor = .neutral900
     }
 }
 
