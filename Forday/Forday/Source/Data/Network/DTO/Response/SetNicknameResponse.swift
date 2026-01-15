@@ -9,12 +9,12 @@
 
 extension DTO {
 
-    struct SetNicknameResponse: Decodable {
+    struct SetNicknameResponse: BaseResponse {
         let status: Int
         let success: Bool
         let data: SetNicknameData
         
-        struct SetNicknameData: Decodable {
+        struct SetNicknameData: Codable {
             let message: String
             let nickname: String
         }

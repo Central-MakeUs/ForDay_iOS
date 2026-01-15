@@ -8,6 +8,7 @@
 
 import UIKit
 import Combine
+import SnapKit
 
 class HomeViewController: UIViewController {
     
@@ -124,31 +125,61 @@ extension HomeViewController {
         print("취미활동 추가하기 탭")
         showAIRecommendationModal()
     }
-    
+
     private func showAIRecommendationModal() {
-        // AI 추천 로딩 모달 표시
-        let loadingVC = AIRecommendationLoadingViewController()
-        loadingVC.modalPresentationStyle = .pageSheet
-//        loadingVC.modalTransitionStyle = .crossDissolve
+        let containerVC = AIRecommendationContainerViewController(viewModel: viewModel)
+        containerVC.modalPresentationStyle = .pageSheet
         
-        loadingVC.isModalInPresentation = true
-        
-        if let sheet = loadingVC.sheetPresentationController {
-            sheet.detents = [
-                .custom(identifier: .init("loading")) { _ in 236 }
-            ]
-            sheet.prefersGrabberVisible = false
+        if let sheet = containerVC.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
         }
         
-        present(loadingVC, animated: true) {
-            // 모달이 표시된 후 API 호출
-            Task {
-                do {
-                    try await self.viewModel.fetchAIRecommendations()
-                } catch {
-                    
-                }
+        present(containerVC, animated: true) {
+            // 시트 표시 후 토스트를 window에 추가
+            self.showToastAboveSheet()
+        }
+        
+        // 토스트 제거 클로저 전달
+        containerVC.onDismissToast = { [weak self] in
+            self?.hideToast()
+        }
+    }
+
+    private func showToastAboveSheet() {
+        // window 가져오기
+        guard let window = view.window else { return }
+        
+        // 기존 토스트 제거
+        window.subviews.filter { $0 is ToastView }.forEach { $0.removeFromSuperview() }
+        
+        // 새 토스트 생성
+        let toast = ToastView(message: "포데이 AI가 알맞은 취미활동을 추천해드려요")
+        toast.tag = 9999 // 나중에 찾기 위한 태그
+        
+        // window에 추가
+        window.addSubview(toast)
+        
+        // presentedViewController의 view를 기준으로 위치 설정
+        if let sheetView = presentedViewController?.view {
+            toast.snp.makeConstraints {
+                $0.leading.trailing.equalToSuperview().inset(26)
+                $0.bottom.equalTo(sheetView.snp.top).offset(-20)  // 시트 top으로부터 20 위
             }
+        } 
+        
+        // 페이드 인
+        toast.alpha = 0
+        UIView.animate(withDuration: 0.3) {
+            toast.alpha = 1
+        }
+    }
+
+    func hideToast() {
+        guard let window = view.window else { return }
+        
+        window.subviews.filter { $0.tag == 9999 }.forEach {
+            ($0 as? ToastView)?.hide()
         }
     }
 }

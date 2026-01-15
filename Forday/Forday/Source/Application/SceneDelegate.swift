@@ -20,7 +20,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         // Window 생성
         let window = UIWindow(windowScene: windowScene)
-        window.backgroundColor = .systemRed
+        window.backgroundColor = .bg001
         self.window = window
         
         // AppCoordinator 시작

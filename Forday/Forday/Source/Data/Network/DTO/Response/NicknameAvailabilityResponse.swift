@@ -9,7 +9,7 @@
 // Response
 
 extension DTO {
-    struct NicknameAvailabilityResponse: Codable {
+    struct NicknameAvailabilityResponse: BaseResponse {
         let status: Int
         let success: Bool
         let data: NicknameAvailabilityData

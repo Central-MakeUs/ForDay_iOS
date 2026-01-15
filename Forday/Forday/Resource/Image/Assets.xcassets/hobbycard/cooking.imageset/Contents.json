@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "hobbycard_cooking.pdf",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
