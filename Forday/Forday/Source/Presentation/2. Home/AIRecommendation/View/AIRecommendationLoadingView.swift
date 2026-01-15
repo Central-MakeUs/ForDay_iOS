@@ -15,6 +15,7 @@ class AIRecommendationLoadingView: UIView {
     
     // Properties
     
+    private let aiImageView = UIImageView()
     private let animationView = LottieAnimationView(name: "lottie/loading")
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
@@ -37,54 +38,69 @@ class AIRecommendationLoadingView: UIView {
 
 extension AIRecommendationLoadingView {
     private func style() {
-        backgroundColor = .systemBackground
+        backgroundColor = .neutralWhite
+        
+        aiImageView.do {
+            $0.image = .Ai.default
+            $0.contentMode = .scaleAspectFit
+        }
         
         animationView.do {
             $0.loopMode = .loop
             $0.contentMode = .scaleAspectFit
         }
         
+        // TODO: nickname 반영
         titleLabel.do {
-            $0.text = "유지2의 취미를 분석 중"
-            $0.font = .systemFont(ofSize: 18, weight: .bold)
-            $0.textColor = .label
+            $0.setTextWithTypography("유지2의 취미를 분석 중", style: .header20)
+            $0.textColor = .neutral900
             $0.textAlignment = .center
         }
         
         subtitleLabel.do {
-            $0.text = "독서 AI 활동을 생성 중이에요."
-            $0.font = .systemFont(ofSize: 14, weight: .regular)
-            $0.textColor = .secondaryLabel
+            $0.setTextWithTypography("독서 AI 활동을 생성 중이에요.", style: .label14)
+            $0.textColor = .neutral800
             $0.textAlignment = .center
         }
     }
     
     private func layout() {
+        addSubview(aiImageView)
         addSubview(animationView)
         addSubview(titleLabel)
         addSubview(subtitleLabel)
         
-        // Animation
-        animationView.snp.makeConstraints {
+        aiImageView.snp.makeConstraints {
             $0.top.equalTo(safeAreaLayoutGuide).offset(40)
             $0.centerX.equalToSuperview()
-            $0.width.height.equalTo(80)
+            $0.width.height.equalTo(42)
+        }
+        
+        // Animation
+        animationView.snp.makeConstraints {
+            $0.top.equalTo(aiImageView.snp.bottom)
+            $0.centerX.equalToSuperview()
+            $0.width.equalTo(120)
         }
         
         // Title
         titleLabel.snp.makeConstraints {
-            $0.top.equalTo(animationView.snp.bottom).offset(24)
-            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.top.equalTo(animationView.snp.bottom)
+            $0.centerX.equalToSuperview()
         }
         
         // Subtitle
         subtitleLabel.snp.makeConstraints {
-            $0.top.equalTo(titleLabel.snp.bottom).offset(8)
-            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.top.equalTo(titleLabel.snp.bottom).offset(10)
+            $0.centerX.equalToSuperview()
         }
     }
     
     private func startAnimation() {
         animationView.play()
     }
+}
+
+#Preview {
+    AIRecommendationLoadingView()
 }
