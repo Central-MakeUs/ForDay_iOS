@@ -17,7 +17,6 @@ class HobbyCollectionViewCell: UICollectionViewCell {
     // MARK: - Properties
     
     private let backgroundImageView = UIImageView()
-    private let dimmedOverlay = UIView()
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
     private let checkmarkImageView = UIImageView()
@@ -41,9 +40,6 @@ class HobbyCollectionViewCell: UICollectionViewCell {
         titleLabel.text = hobby.name
         subtitleLabel.text = hobby.description
         checkmarkImageView.isHidden = !isSelected
-        
-        // 선택 상태에 따른 스타일 변경
-        dimmedOverlay.alpha = isSelected ? 0.3 : 0.5
     }
 }
 
@@ -60,12 +56,7 @@ extension HobbyCollectionViewCell {
             $0.contentMode = .scaleAspectFill
             $0.backgroundColor = .systemGray5
         }
-        
-        dimmedOverlay.do {
-            $0.backgroundColor = .black
-            $0.alpha = 0.5
-        }
-        
+
         titleLabel.do {
             $0.font = .systemFont(ofSize: 18, weight: .bold)
             $0.textColor = .white
@@ -88,16 +79,11 @@ extension HobbyCollectionViewCell {
     
     private func layout() {
         contentView.addSubview(backgroundImageView)
-        contentView.addSubview(dimmedOverlay)
         contentView.addSubview(titleLabel)
         contentView.addSubview(subtitleLabel)
         contentView.addSubview(checkmarkImageView)
         
         backgroundImageView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
-        }
-        
-        dimmedOverlay.snp.makeConstraints {
             $0.edges.equalToSuperview()
         }
         
