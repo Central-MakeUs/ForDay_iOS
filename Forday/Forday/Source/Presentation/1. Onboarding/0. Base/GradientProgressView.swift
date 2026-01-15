@@ -45,7 +45,7 @@ extension GradientProgressView {
     private func style() {
         // Track (배경)
         trackView.do {
-            $0.backgroundColor = .systemGray5
+            $0.backgroundColor = .neutral200
             $0.layer.cornerRadius = 4
         }
         
@@ -56,7 +56,7 @@ extension GradientProgressView {
         }
         
         // 그라디언트 적용
-        progressGradientLayer = UIView.gradient001()
+        progressGradientLayer = UIView.gradient002()
         if let gradient = progressGradientLayer {
             progressView.layer.insertSublayer(gradient, at: 0)
         }
