@@ -64,7 +64,7 @@ class MainTabBarCoordinator: NSObject, Coordinator {
         )
         
         // 프로필 탭
-        let profileVC = UIViewController()
+        let profileVC = MyPageViewController()
         profileVC.view.backgroundColor = .systemBackground
         profileVC.title = "마이"
         profileVC.tabBarItem = UITabBarItem(
