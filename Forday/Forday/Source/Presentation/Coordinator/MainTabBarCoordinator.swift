@@ -8,7 +8,7 @@
 
 import UIKit
 
-class MainTabBarCoordinator: Coordinator {
+class MainTabBarCoordinator: NSObject, Coordinator {
     
     
     let navigationController: UINavigationController
@@ -18,6 +18,7 @@ class MainTabBarCoordinator: Coordinator {
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
+        super.init()
     }
     
     func start() {
@@ -44,6 +45,14 @@ class MainTabBarCoordinator: Coordinator {
             selectedImage: .Gnb.recommendationFill
         )
         
+        // 작성 탭 (더미)
+        let writeVC = ActivityWriteViewController()
+        writeVC.tabBarItem = UITabBarItem(
+            title: "",
+            image: .Gnb.write,
+            selectedImage: .Gnb.write
+        )
+        
         // 소식 탭
         let storyVC = UIViewController()
         storyVC.view.backgroundColor = .systemBackground
@@ -68,10 +77,42 @@ class MainTabBarCoordinator: Coordinator {
         tabBarController.viewControllers = [
             UINavigationController(rootViewController: homeVC),
             UINavigationController(rootViewController: recommendVC),
+            writeVC,
             UINavigationController(rootViewController: storyVC),
             UINavigationController(rootViewController: profileVC),
         ]
         
-        tabBarController.tabBar.tintColor = .systemOrange
+        tabBarController.delegate = self
+//        tabBarController.tabBar.tintColor = .systemOrange
+    }
+}
+
+// MARK: - UITabBarControllerDelegate
+
+extension MainTabBarCoordinator: UITabBarControllerDelegate {
+    func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
+        
+        // 가운데 탭(index 2) 선택 시
+        if let viewControllers = tabBarController.viewControllers,
+           viewControllers.firstIndex(of: viewController) == 2 {
+            
+            // ActivityWriteViewController present
+            presentActivityWrite()
+            
+            return false  // 탭 전환 막음
+        }
+        
+        return true  // 다른 탭은 정상 전환
+    }
+    
+    private func presentActivityWrite() {
+        let writeVC = ActivityWriteViewController()
+        let nav = UINavigationController(rootViewController: writeVC)
+        nav.modalPresentationStyle = .fullScreen
+        
+        // 현재 선택된 탭의 ViewController에서 present
+        if let selectedVC = tabBarController.selectedViewController {
+            selectedVC.present(nav, animated: true)
+        }
     }
 }
