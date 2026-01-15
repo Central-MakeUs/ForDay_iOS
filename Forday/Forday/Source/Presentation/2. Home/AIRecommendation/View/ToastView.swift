@@ -41,9 +41,7 @@ extension ToastView {
         containerView.do {
             $0.backgroundColor = .bg001
             $0.layer.cornerRadius = 20
-//            $0.layer.borderWidth = 1
             $0.clipsToBounds = true
-            $0.applyGradientBorder(DesignGradient.gradient002, lineWidth: 1, cornerRadius: 20)
         }
         
         iconImageView.do {
@@ -56,6 +54,11 @@ extension ToastView {
             $0.textColor = .neutral800
             $0.numberOfLines = 1
         }
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        containerView.applyGradientBorder(DesignGradient.gradient002, lineWidth: 1, cornerRadius: 20)
     }
     
     private func layout() {
