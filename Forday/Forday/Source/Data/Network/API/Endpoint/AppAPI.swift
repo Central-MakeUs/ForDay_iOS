@@ -11,4 +11,17 @@ enum AppAPI {
     case fetchAppMetadata         /// 앱 리소스 다운로드
     case fetchPresignedUrl        /// presigned url 발급
     case fetchAlarm               /// 알림 모아보기
+    
+    var endpoint: String {
+        switch self {
+        case .fetchAppMetadata:
+            return "/app/metadata"
+            
+        case .fetchPresignedUrl:
+            return ""
+            
+        case .fetchAlarm:
+            return ""
+        }
+    }
 }
