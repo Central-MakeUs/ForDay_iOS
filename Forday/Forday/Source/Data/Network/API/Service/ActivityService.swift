@@ -19,7 +19,13 @@ final class ActivityService {
     init(provider: MoyaProvider<HobbiesTarget> = NetworkProvider.createProvider()) {
         self.provider = provider
     }
-    
+
+    // MARK: - 취미 생성
+
+    func createHobby(request: DTO.CreateHobbyRequest) async throws -> DTO.CreateHobbyResponse {
+        return try await provider.request(.createHobby(request: request))
+    }
+
     // MARK: - AI 추천
 
     func fetchAIRecommendations(hobbyId: Int) async throws -> DTO.AIRecommendationResponse {

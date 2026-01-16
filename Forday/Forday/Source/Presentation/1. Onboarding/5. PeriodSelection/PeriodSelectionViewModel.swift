@@ -10,19 +10,26 @@ import Foundation
 import Combine
 
 class PeriodSelectionViewModel {
-    
+
     // Published Properties
-    
+
     @Published var periods: [PeriodModel] = []
     @Published var selectedPeriod: PeriodModel?
     @Published var isNextButtonEnabled: Bool = false
-    
+    @Published var isLoading: Bool = false
+    @Published var errorMessage: String?
+
     // Coordinator에게 데이터 전달
     var onPeriodSelected: ((Bool) -> Void)?
-    
+    var onHobbyCreated: ((Int) -> Void)?
+
+    // UseCase
+    private let createHobbyUseCase: CreateHobbyUseCase
+
     // Initialization
-    
-    init() {
+
+    init(createHobbyUseCase: CreateHobbyUseCase = CreateHobbyUseCase()) {
+        self.createHobbyUseCase = createHobbyUseCase
         loadMockData()
     }
     
@@ -68,5 +75,21 @@ class PeriodSelectionViewModel {
     func isSelected(at index: Int) -> Bool {
         guard index < periods.count else { return false }
         return periods[index].id == selectedPeriod?.id
+    }
+
+    /// 취미 생성 API 호출
+    func createHobby(with onboardingData: OnboardingData) async {
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            let hobbyId = try await createHobbyUseCase.execute(onboardingData: onboardingData)
+            isLoading = false
+            onHobbyCreated?(hobbyId)
+        } catch {
+            isLoading = false
+            errorMessage = error.localizedDescription
+            print("❌ 취미 생성 실패: \(error)")
+        }
     }
 }

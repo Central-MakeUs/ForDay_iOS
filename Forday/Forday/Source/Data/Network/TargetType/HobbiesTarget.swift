@@ -10,6 +10,7 @@ import Moya
 import Alamofire
 
 enum HobbiesTarget {
+    case createHobby(request: DTO.CreateHobbyRequest)
     case fetchAIRecommendations(hobbyId: Int)
     case fetchActivityList(hobbyId: Int)
     case createActivities(hobbyId: Int, request: DTO.CreateActivitiesRequest)
@@ -21,6 +22,9 @@ extension HobbiesTarget: BaseTargetType {
     
     var path: String {
         switch self {
+        case .createHobby(_):
+            return HobbiesAPI.createHobby.endpoint
+            
         case .fetchAIRecommendations:
             return HobbiesAPI.fetchAIRecommendations.endpoint
             
@@ -40,6 +44,8 @@ extension HobbiesTarget: BaseTargetType {
     
     var method: Moya.Method {
         switch self {
+        case .createHobby:
+            return .post
         case .fetchAIRecommendations:
             return .get
         case .fetchActivityList:
@@ -55,6 +61,10 @@ extension HobbiesTarget: BaseTargetType {
     
     var task: Moya.Task {
         switch self {
+            
+        case .createHobby(let request):
+            return .requestJSONEncodable(request)
+            
         case .fetchAIRecommendations, .fetchActivityList, .deleteActivity:
             return .requestPlain
             
