@@ -13,7 +13,8 @@ enum AuthTarget {
     case kakaoLogin(request: DTO.KakaoLoginRequest)
 //    case appleLogin(request: DTO.AppleLoginRequest)
     case guestLogin(request: DTO.GuestLoginRequest)
-//    case refreshToken(request: DTO.TokenRefreshRequest)
+    case refreshToken(request: DTO.TokenRefreshRequest)
+    case validateToken
 //    case logout
 }
 
@@ -31,8 +32,10 @@ extension AuthTarget: BaseTargetType {
 //            return AuthAPI.appleLogin.endpoint
         case .guestLogin:
             return AuthAPI.guestLogin.endpoint
-//        case .refreshToken:
-//            return AuthAPI.refreshToken.endpoint
+        case .refreshToken:
+            return AuthAPI.refreshToken.endpoint
+        case .validateToken:
+            return "/auth/validate"
 //        case .logout:
 //            return AuthAPI.logout.endpoint
         }
@@ -40,8 +43,10 @@ extension AuthTarget: BaseTargetType {
     
     var method: Moya.Method {
         switch self {
-        case .kakaoLogin, .guestLogin /*, .appleLogin,  .refreshToken, .logout*/:
+        case .kakaoLogin, .guestLogin, .refreshToken /*, .appleLogin, .logout*/:
             return .post
+        case .validateToken:
+            return .get
         }
     }
     
@@ -53,8 +58,10 @@ extension AuthTarget: BaseTargetType {
 //            return .requestJSONEncodable(request)
         case .guestLogin(let request):
             return .requestJSONEncodable(request)
-//        case .refreshToken(let request):
-//            return .requestJSONEncodable(request)
+        case .refreshToken(let request):
+            return .requestJSONEncodable(request)
+        case .validateToken:
+            return .requestPlain
 //        case .logout:
 //            return .requestPlain
         }

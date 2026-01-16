@@ -23,13 +23,20 @@ class AppCoordinator: Coordinator {
     
     func start() {
         print("AppCoordinator start")
-        // 토큰 확인
-        if isLoggedIn() {
-            showMainTabBar()
-        } else {
-            showAuth()
+
+        // 토큰 유효성 검사 (비동기)
+        Task {
+            let isTokenValid = await TokenManager.shared.validateTokenOnAppLaunch()
+
+            await MainActor.run {
+                if isTokenValid {
+                    showMainTabBar()
+                } else {
+                    showAuth()
+                }
+            }
         }
-        
+
         window.rootViewController = navigationController
 //        window.makeKeyAndVisible()
     }
