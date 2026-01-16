@@ -62,6 +62,6 @@ class StickerCell: UICollectionViewCell {
     func configure(with sticker: Sticker, isSelected: Bool) {
         stickerImageView.image = sticker.image
         
-        containerView.layer.borderColor = isSelected ? UIColor.systemOrange.cgColor : UIColor.clear.cgColor
+        containerView.layer.borderColor = isSelected ? UIColor.systemOrange.cgColor : UIColor.stroke001.cgColor
     }
 }
