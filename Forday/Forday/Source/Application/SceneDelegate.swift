@@ -55,5 +55,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func sceneDidEnterBackground(_ scene: UIScene) {
     }
+
+    // MARK: - Token Expiration
+
+    func showLoginScreen() {
+        appCoordinator?.showAuth()
+    }
 }
 

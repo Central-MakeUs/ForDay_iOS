@@ -118,7 +118,18 @@ extension HomeViewController {
     
     @objc private func myActivityChevronTapped() {
         print("나의 취미활동 쉐브론 탭")
-        // TODO: 활동 리스트 화면
+        showActivityList()
+    }
+
+    private func showActivityList() {
+        // 현재 취미 ID 가져오기
+        guard let hobbyId = viewModel.onboardingData?.selectedHobbyCard?.id else {
+            print("❌ 취미 ID 없음")
+            return
+        }
+        
+        let activityListVC = ActivityListViewController(hobbyId: hobbyId)
+        navigationController?.pushViewController(activityListVC, animated: true)
     }
     
     @objc private func addActivityButtonTapped() {

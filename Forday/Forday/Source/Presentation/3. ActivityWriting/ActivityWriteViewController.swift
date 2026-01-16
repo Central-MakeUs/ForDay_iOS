@@ -76,7 +76,7 @@ extension ActivityWriteViewController {
         viewModel.$selectedActivity
             .receive(on: DispatchQueue.main)
             .sink { [weak self] activity in
-                self?.writeView.updateActivityTitle(activity?.name)
+                self?.writeView.updateActivityTitle(activity?.content)
             }
             .store(in: &cancellables)
         

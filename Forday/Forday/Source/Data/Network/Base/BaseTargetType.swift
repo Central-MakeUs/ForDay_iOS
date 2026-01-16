@@ -14,15 +14,10 @@ extension BaseTargetType {
     public var baseURL: URL {
         return URL(string: APIConstants.baseURL)!
     }
-    
+
     var headers: [String: String]? {
-        var headers = ["Content-Type": "application/json"]
-        
-        if let token = try? TokenStorage.shared.loadAccessToken() {
-            headers["Authorization"] = "Bearer \(token)"
-        }
-        
-        return headers
+        // Authorization 헤더는 TokenRefreshInterceptor에서 자동 추가
+        return ["Content-Type": "application/json"]
     }
 }
 

@@ -64,8 +64,8 @@ class HomeViewModel {
 
 // MARK: - Models
 
-struct Activity {
-    let id: Int
-    let name: String
-    let isCompleted: Bool
-}
+//struct Activity {
+//    let id: Int
+//    let name: String
+//    let isCompleted: Bool
+//}
