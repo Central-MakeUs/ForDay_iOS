@@ -36,9 +36,6 @@ class AppCoordinator: Coordinator {
                 }
             }
         }
-
-        window.rootViewController = navigationController
-//        window.makeKeyAndVisible()
     }
     
     // 로그인 여부 확인
@@ -54,6 +51,7 @@ class AppCoordinator: Coordinator {
     // 인증 화면 (로그인)
     func showAuth() {
         print("show auth")
+        window.rootViewController = navigationController
         let authCoordinator = AuthCoordinator(navigationController: navigationController)
         authCoordinator.parentCoordinator = self
         authCoordinator.start()
@@ -63,15 +61,15 @@ class AppCoordinator: Coordinator {
     // 메인 화면 (홈)
     func showMainTabBar() {
         print("🟡 showMainTabBar 호출됨")
-        
-        let mainTabBarCoordinator = MainTabBarCoordinator(navigationController: navigationController)  // ✅ 주입!
+
+        let mainTabBarCoordinator = MainTabBarCoordinator(navigationController: navigationController)
         mainTabBarCoordinator.parentCoordinator = self
         mainTabBarCoordinator.start()
-        
-        print("🟡 navigationController.setViewControllers 실행")
-        navigationController.setViewControllers([mainTabBarCoordinator.tabBarController], animated: true)
+
+        print("🟡 window.rootViewController = tabBarController 실행")
+        window.rootViewController = mainTabBarCoordinator.tabBarController
         self.mainTabBarCoordinator = mainTabBarCoordinator
-        
+
         print("🟡 showMainTabBar 완료")
     }
     
