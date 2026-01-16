@@ -152,7 +152,7 @@ extension AIRecommendationContainerViewController {
                 sheet.detents = [
                     .custom(identifier: .init("intro")) { _ in 236 }
                 ]
-                sheet.preferredCornerRadius = 2
+                sheet.preferredCornerRadius = 20
                 sheet.prefersGrabberVisible = true
             }
             

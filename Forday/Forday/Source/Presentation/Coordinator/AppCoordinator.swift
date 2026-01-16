@@ -71,8 +71,14 @@ class AppCoordinator: Coordinator {
     // 로그아웃
     func logout() {
         do {
-            try TokenStorage.shared.deleteTokens()
+            try TokenStorage.shared.deleteAllTokens()
+            print("🔧 [DEBUG] 토큰 삭제됨 - 로그인 화면으로 이동")
+            
+            // 기존 coordinator 정리 후 인증 화면으로 전환
+            mainTabBarCoordinator = nil
+            authCoordinator = nil
             showAuth()
+            
         } catch {
             print("로그아웃 실패: \(error)")
         }

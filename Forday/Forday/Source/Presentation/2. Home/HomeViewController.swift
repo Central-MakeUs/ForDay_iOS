@@ -185,8 +185,5 @@ extension HomeViewController {
 }
 
 #Preview {
-    let nav = UINavigationController()
-    let vc = HomeViewController()
-    nav.setViewControllers([vc], animated: false)
-    return nav
+    HomeViewController()
 }

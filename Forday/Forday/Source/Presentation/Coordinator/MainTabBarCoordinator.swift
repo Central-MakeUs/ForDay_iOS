@@ -8,7 +8,7 @@
 
 import UIKit
 
-class MainTabBarCoordinator: Coordinator {
+class MainTabBarCoordinator: NSObject, Coordinator {
     
     
     let navigationController: UINavigationController
@@ -18,6 +18,7 @@ class MainTabBarCoordinator: Coordinator {
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
+        super.init()
     }
     
     func start() {
@@ -30,37 +31,88 @@ class MainTabBarCoordinator: Coordinator {
         homeVC.coordinator = self
         homeVC.tabBarItem = UITabBarItem(
             title: "홈",
-            image: UIImage(systemName: "house"),
-            selectedImage: UIImage(systemName: "house.fill")
+            image: .Gnb.home,
+            selectedImage: .Gnb.homeFill
         )
         
-        // 기록 탭
-        let recordVC = UIViewController()
-        recordVC.view.backgroundColor = .systemBackground
-        recordVC.title = "기록"
-        recordVC.tabBarItem = UITabBarItem(
-            title: "기록",
-            image: UIImage(systemName: "book"),
-            selectedImage: UIImage(systemName: "book.fill")
+        // 발견 탭
+        let recommendVC = UIViewController()
+        recommendVC.view.backgroundColor = .systemBackground
+        recommendVC.title = "발견"
+        recommendVC.tabBarItem = UITabBarItem(
+            title: "발견",
+            image: .Gnb.recommendation,
+            selectedImage: .Gnb.recommendationFill
+        )
+        
+        // 작성 탭 (더미)
+        let writeVC = ActivityWriteViewController()
+        writeVC.tabBarItem = UITabBarItem(
+            title: "",
+            image: .Gnb.write,
+            selectedImage: .Gnb.write
+        )
+        
+        // 소식 탭
+        let storyVC = UIViewController()
+        storyVC.view.backgroundColor = .systemBackground
+        storyVC.title = "소식"
+        storyVC.tabBarItem = UITabBarItem(
+            title: "소식",
+            image: .Gnb.story,
+            selectedImage: .Gnb.storyFill
         )
         
         // 프로필 탭
-        let profileVC = UIViewController()
+        let profileVC = MyPageViewController()
         profileVC.view.backgroundColor = .systemBackground
-        profileVC.title = "프로필"
+        profileVC.title = "마이"
         profileVC.tabBarItem = UITabBarItem(
-            title: "프로필",
-            image: UIImage(systemName: "person"),
-            selectedImage: UIImage(systemName: "person.fill")
+            title: "마이",
+            image: .Gnb.myPage,
+            selectedImage: .Gnb.myPageFill
         )
         
         // TabBar 설정
         tabBarController.viewControllers = [
             UINavigationController(rootViewController: homeVC),
-            UINavigationController(rootViewController: recordVC),
-            UINavigationController(rootViewController: profileVC)
+            UINavigationController(rootViewController: recommendVC),
+            writeVC,
+            UINavigationController(rootViewController: storyVC),
+            UINavigationController(rootViewController: profileVC),
         ]
         
-        tabBarController.tabBar.tintColor = .systemOrange
+        tabBarController.delegate = self
+        tabBarController.tabBar.tintColor = .neutral900
+    }
+}
+
+// MARK: - UITabBarControllerDelegate
+
+extension MainTabBarCoordinator: UITabBarControllerDelegate {
+    func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
+        
+        // 가운데 탭(index 2) 선택 시
+        if let viewControllers = tabBarController.viewControllers,
+           viewControllers.firstIndex(of: viewController) == 2 {
+            
+            // ActivityWriteViewController present
+            presentActivityWrite()
+            
+            return false  // 탭 전환 막음
+        }
+        
+        return true  // 다른 탭은 정상 전환
+    }
+    
+    private func presentActivityWrite() {
+        let writeVC = ActivityWriteViewController()
+        let nav = UINavigationController(rootViewController: writeVC)
+        nav.modalPresentationStyle = .fullScreen
+        
+        // 현재 선택된 탭의 ViewController에서 present
+        if let selectedVC = tabBarController.selectedViewController {
+            selectedVC.present(nav, animated: true)
+        }
     }
 }
