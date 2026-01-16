@@ -24,15 +24,53 @@ final class ActivityRepository: ActivityRepositoryInterface {
             #if DEBUG
             print("⚠️ API 실패 - 목 데이터 사용")
             print("⚠️ 에러 내용: \(error)")
-            return makeMockData()
+            return makeMockAIData()
             #else
             throw error
             #endif
         }
     }
     
-    #if DEBUG
-    private func makeMockData() -> AIRecommendationResult {
+    func fetchActivityList(hobbyId: Int) async throws -> [Activity] {
+        do {
+            let response = try await activityService.fetchActivityList(hobbyId: hobbyId)
+            return response.toDomain()
+        } catch {
+            #if DEBUG
+            print("⚠️ 활동 목록 API 실패 - 목 데이터 사용")
+            return makeMockActivityList()
+            #else
+            throw error
+            #endif
+        }
+    }
+    
+    func createActivities(hobbyId: Int, activities: [ActivityInput]) async throws -> String {
+        let dtoActivities = activities.map {
+            DTO.ActivityInput(aiRecommended: $0.aiRecommended, content: $0.content)
+        }
+        let request = DTO.CreateActivitiesRequest(activities: dtoActivities)
+        let response = try await activityService.createActivities(hobbyId: hobbyId, request: request)
+        return response.toDomain()
+    }
+    
+    func updateActivity(activityId: Int, content: String) async throws -> String {
+        let request = DTO.UpdateActivityRequest(content: content)
+        let response = try await activityService.updateActivity(activityId: activityId, request: request)
+        return response.toDomain()
+    }
+    
+    func deleteActivity(activityId: Int) async throws -> String {
+        let response = try await activityService.deleteActivity(activityId: activityId)
+        return response.toDomain()
+    }
+}
+
+
+#if DEBUG
+extension ActivityRepository {
+    
+    func makeMockAIData() -> AIRecommendationResult {
         return AIRecommendationResult(
             message: "AI가 취미 활동을 추천했습니다.",
             aiCallCount: 1,
@@ -59,5 +97,34 @@ final class ActivityRepository: ActivityRepositoryInterface {
             ]
         )
     }
-    #endif
+    
+    func makeMockActivityList() -> [Activity] {
+        return [
+            Activity(
+                activityId: 1,
+                content: "미라클 모닝 아침 독서",
+                aiRecommended: false,
+                deletable: false,
+                stickers: [
+                    ActivitySticker(activityRecordId: 1, sticker: "smile.jpg"),
+                    ActivitySticker(activityRecordId: 2, sticker: "smile.jpg")
+                ]
+            ),
+            Activity(
+                activityId: 2,
+                content: "한 챕터마다 독후감 쓰기",
+                aiRecommended: false,
+                deletable: true,
+                stickers: []
+            ),
+            Activity(
+                activityId: 3,
+                content: "SNS 독서 인증",
+                aiRecommended: true,
+                deletable: true,
+                stickers: []
+            )
+        ]
+    }
 }
+#endif
