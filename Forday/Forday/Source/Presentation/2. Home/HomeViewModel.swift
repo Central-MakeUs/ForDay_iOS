@@ -10,50 +10,67 @@ import Foundation
 import Combine
 
 class HomeViewModel {
-    
+
     // Published Properties
-    
-    @Published var onboardingData: OnboardingData?
+
+    @Published var homeInfo: HomeInfo?
     @Published var activities: [Activity] = []
     @Published var aiRecommendationResult: AIRecommendationResult?
-    
+    @Published var currentHobbyId: Int?
+    @Published var isLoading: Bool = false
+    @Published var errorMessage: String?
+
     private var cancellables = Set<AnyCancellable>()
-    
-    // Storage
-    private let onboardingStorage = OnboardingDataStorage.shared
-    
+
     // UseCase
+    private let fetchHomeInfoUseCase: FetchHomeInfoUseCase
     private let fetchAIRecommendationsUseCase: FetchAIRecommendationsUseCase
-    
+
     // Initialization
-    
-    init(fetchAIRecommendationsUseCase: FetchAIRecommendationsUseCase = FetchAIRecommendationsUseCase()) {
+
+    init(
+        fetchHomeInfoUseCase: FetchHomeInfoUseCase = FetchHomeInfoUseCase(),
+        fetchAIRecommendationsUseCase: FetchAIRecommendationsUseCase = FetchAIRecommendationsUseCase()
+    ) {
+        self.fetchHomeInfoUseCase = fetchHomeInfoUseCase
         self.fetchAIRecommendationsUseCase = fetchAIRecommendationsUseCase
     }
     
     // Methods
-    
-    func loadOnboardingData() {
+
+    func fetchHomeInfo() async {
+        isLoading = true
+        errorMessage = nil
+
         do {
-            let data = try onboardingStorage.load()
-            onboardingData = data
-            print("✅ 온보딩 데이터 로드 성공: \(data)")
+            let info = try await fetchHomeInfoUseCase.execute(hobbyId: nil)
+            await MainActor.run {
+                self.homeInfo = info
+                // inProgressHobbies의 첫 번째 hobbyId 저장
+                if let firstHobby = info.inProgressHobbies.first {
+                    self.currentHobbyId = firstHobby.hobbyId
+                    print("✅ 홈 정보 로드 성공 - hobbyId: \(firstHobby.hobbyId)")
+                }
+                self.isLoading = false
+            }
         } catch {
-            print("❌ 온보딩 데이터 로드 실패: \(error)")
+            await MainActor.run {
+                self.errorMessage = error.localizedDescription
+                self.isLoading = false
+                print("❌ 홈 정보 로드 실패: \(error)")
+            }
         }
     }
-    
+
     func fetchAIRecommendations() async throws {
-        guard let data = onboardingData,
-              let hobbyCard = data.selectedHobbyCard,
-              let hobbyId = hobbyCard.id else {
-            throw NSError(domain: "HomeViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "온보딩 데이터 없음"])
+        guard let hobbyId = currentHobbyId else {
+            throw NSError(domain: "HomeViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "취미 정보 없음"])
         }
-        
+
         print("🔍 AI 추천 요청 시작 - hobbyId: \(hobbyId)")
-        
+
         let result = try await fetchAIRecommendationsUseCase.execute(hobbyId: hobbyId)
-        
+
         await MainActor.run {
             self.aiRecommendationResult = result
             print("✅ AI 추천 완료: \(result.activities.count)개")
