@@ -34,7 +34,8 @@ class MainTabBarCoordinator: NSObject, Coordinator {
             image: .Gnb.home,
             selectedImage: .Gnb.homeFill
         )
-        
+        let homeNav = createNavigationController(rootViewController: homeVC)
+
         // 발견 탭
         let recommendVC = UIViewController()
         recommendVC.view.backgroundColor = .systemBackground
@@ -44,7 +45,8 @@ class MainTabBarCoordinator: NSObject, Coordinator {
             image: .Gnb.recommendation,
             selectedImage: .Gnb.recommendationFill
         )
-        
+        let recommendNav = createNavigationController(rootViewController: recommendVC)
+
         // 작성 탭 (더미)
         let writeVC = ActivityWriteViewController()
         writeVC.tabBarItem = UITabBarItem(
@@ -52,7 +54,7 @@ class MainTabBarCoordinator: NSObject, Coordinator {
             image: .Gnb.write,
             selectedImage: .Gnb.write
         )
-        
+
         // 소식 탭
         let storyVC = UIViewController()
         storyVC.view.backgroundColor = .systemBackground
@@ -62,7 +64,8 @@ class MainTabBarCoordinator: NSObject, Coordinator {
             image: .Gnb.story,
             selectedImage: .Gnb.storyFill
         )
-        
+        let storyNav = createNavigationController(rootViewController: storyVC)
+
         // 프로필 탭
         let profileVC = MyPageViewController()
         profileVC.view.backgroundColor = .systemBackground
@@ -72,18 +75,36 @@ class MainTabBarCoordinator: NSObject, Coordinator {
             image: .Gnb.myPage,
             selectedImage: .Gnb.myPageFill
         )
-        
+        let profileNav = createNavigationController(rootViewController: profileVC)
+
         // TabBar 설정
         tabBarController.viewControllers = [
-            UINavigationController(rootViewController: homeVC),
-            UINavigationController(rootViewController: recommendVC),
+            homeNav,
+            recommendNav,
             writeVC,
-            UINavigationController(rootViewController: storyVC),
-            UINavigationController(rootViewController: profileVC),
+            storyNav,
+            profileNav,
         ]
         
         tabBarController.delegate = self
         tabBarController.tabBar.tintColor = .neutral900
+    }
+
+    private func createNavigationController(rootViewController: UIViewController) -> UINavigationController {
+        let nav = UINavigationController(rootViewController: rootViewController)
+
+        // 네비게이션 바 기본 설정
+        nav.navigationBar.prefersLargeTitles = false
+        nav.navigationBar.isTranslucent = true
+
+        // 네비게이션 바를 상태바 바로 아래에 배치
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithDefaultBackground()
+        nav.navigationBar.standardAppearance = appearance
+        nav.navigationBar.scrollEdgeAppearance = appearance
+        nav.navigationBar.compactAppearance = appearance
+
+        return nav
     }
 }
 

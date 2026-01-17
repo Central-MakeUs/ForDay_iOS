@@ -9,9 +9,10 @@ import Foundation
 
 enum HobbiesAPI {
     case createHobby                /// 취미 생성
-    case fetchOthersActivities      /// [Version1] 다른 포비들의  활동 조회 (AI 기반)
+    case fetchHomeInfo              /// 홈 진입 취미 정보 조회
+    case fetchOthersActivities      /// [Version1] 다른 포비들의 활동 조회 (AI 기반)
     case fetchAIRecommendations     /// AI 취미 활동 추천
-    
+
     case fetchActivityList(Int)     /// 활동 리스트 조회
     case createActivities(Int)      /// 취미 활동 추가하기
     case updateActivity(Int)        /// 활동 수정하기
@@ -21,10 +22,13 @@ enum HobbiesAPI {
         switch self {
         case .createHobby:
             return "/hobbies/create"
-            
+
+        case .fetchHomeInfo:
+            return "/hobbies/home"
+
         case .fetchOthersActivities:
             return "/hobbies/activities/others/v1"
-            
+
         case .fetchAIRecommendations:
             return "/hobbies/activities/ai/recommend"
             

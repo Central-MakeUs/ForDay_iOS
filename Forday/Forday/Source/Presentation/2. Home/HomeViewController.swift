@@ -32,9 +32,11 @@ class HomeViewController: UIViewController {
         setupNavigationBar()
         setupActions()
         bind()
-        
-        // 데이터 로드
-        viewModel.loadOnboardingData()
+
+        // 홈 정보 로드
+        Task {
+            await viewModel.fetchHomeInfo()
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -81,24 +83,44 @@ extension HomeViewController {
     }
     
     private func bind() {
-        // 온보딩 데이터 업데이트
-        viewModel.$onboardingData
+        // 홈 정보 업데이트
+        viewModel.$homeInfo
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] data in
-                self?.updateUI(with: data)
+            .sink { [weak self] homeInfo in
+                self?.updateUI(with: homeInfo)
+            }
+            .store(in: &cancellables)
+
+        // 로딩 상태
+        viewModel.$isLoading
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isLoading in
+                // TODO: 로딩 인디케이터 표시
+                print("로딩 상태: \(isLoading)")
+            }
+            .store(in: &cancellables)
+
+        // 에러 메시지
+        viewModel.$errorMessage
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] errorMessage in
+                if let error = errorMessage {
+                    print("❌ 에러: \(error)")
+                    // TODO: 에러 얼럿 표시
+                }
             }
             .store(in: &cancellables)
     }
-    
-    private func updateUI(with data: OnboardingData?) {
-        guard let data = data,
-              let hobbyCard = data.selectedHobbyCard else {
+
+    private func updateUI(with homeInfo: HomeInfo?) {
+        guard let homeInfo = homeInfo,
+              let firstHobby = homeInfo.inProgressHobbies.first else {
             return
         }
-        
+
         // 취미 이름 업데이트
         var config = homeView.hobbyDropdownButton.configuration
-        config?.title = hobbyCard.name
+        config?.title = firstHobby.hobbyName
         homeView.hobbyDropdownButton.configuration = config
     }
 }
@@ -123,11 +145,11 @@ extension HomeViewController {
 
     private func showActivityList() {
         // 현재 취미 ID 가져오기
-        guard let hobbyId = viewModel.onboardingData?.selectedHobbyCard?.id else {
+        guard let hobbyId = viewModel.currentHobbyId else {
             print("❌ 취미 ID 없음")
             return
         }
-        
+
         let activityListVC = ActivityListViewController(hobbyId: hobbyId)
         navigationController?.pushViewController(activityListVC, animated: true)
     }

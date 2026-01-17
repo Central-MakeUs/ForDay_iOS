@@ -195,12 +195,18 @@ extension ActivityInputField {
     func getText() -> String {
         return textField.text ?? ""
     }
-    
+
+    func setText(_ text: String) {
+        textField.text = text
+        updateCharacterCount()
+        onTextChanged?(text)
+    }
+
     func clear() {
         textField.text = ""
         updateCharacterCount()
     }
-    
+
 }
 
 // UITextFieldDelegate

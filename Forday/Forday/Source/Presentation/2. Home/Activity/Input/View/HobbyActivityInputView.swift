@@ -21,14 +21,18 @@ class HobbyActivityInputView: UIView {
     private let titleView = UILabel()
     private let stackView = UIStackView()
     private let addButton = UIButton()
+    private let recommendationLabel = UILabel()
+    private let flowLayoutView = FlowLayoutView()
     private let saveButton = UIButton()
-    
+
     private var activityFields: [ActivityInputField] = []
-    
+    private let maxFields = 3
+
     // Callbacks
     var onSaveButtonTapped: (() -> Void)?
     var onAddButtonTapped: (() -> Void)?
     var onDeleteButtonTapped: ((Int) -> Void)?
+    var onRecommendationButtonTapped: ((String) -> Void)?
     
     // Initialization
     
@@ -78,7 +82,18 @@ extension HobbyActivityInputView {
             config.image = .Icon.activityAddButton
             $0.configuration = config
         }
-        
+
+        recommendationLabel.do {
+            $0.setTextWithTypography("다른 포비들은 이런 활동을 하고 있어요", style: .body14)
+            $0.textColor = .neutral800
+        }
+
+        flowLayoutView.do {
+            $0.onButtonTapped = { [weak self] title in
+                self?.onRecommendationButtonTapped?(title)
+            }
+        }
+
         saveButton.do {
             var config = UIButton.Configuration.filled()
             config.title = "저장"
@@ -101,6 +116,8 @@ extension HobbyActivityInputView {
         contentView.addSubview(titleView)
         contentView.addSubview(stackView)
         contentView.addSubview(addButton)
+        contentView.addSubview(recommendationLabel)
+        contentView.addSubview(flowLayoutView)
         
         // ScrollView
         scrollView.snp.makeConstraints {
@@ -134,6 +151,19 @@ extension HobbyActivityInputView {
         addButton.snp.makeConstraints {
             $0.top.equalTo(stackView.snp.bottom).offset(24)
             $0.centerX.equalToSuperview()
+        }
+
+        // Recommendation Label
+        recommendationLabel.snp.makeConstraints {
+            $0.top.equalTo(addButton.snp.bottom).offset(32)
+            $0.leading.trailing.equalToSuperview().inset(20)
+        }
+
+        // FlowLayout View
+        flowLayoutView.snp.makeConstraints {
+            $0.top.equalTo(recommendationLabel.snp.bottom).offset(12)
+            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.height.equalTo(100) // 초기 높이, 버튼 추가 시 업데이트됨
             $0.bottom.equalToSuperview().offset(-20)
         }
         
@@ -163,26 +193,36 @@ extension HobbyActivityInputView {
 
 extension HobbyActivityInputView {
     func addActivityField() {
+        guard activityFields.count < maxFields else { return }
+
         let field = ActivityInputField(type: .userInput)
         field.onDeleteTapped = { [weak self] in
             guard let self = self,
                   let index = self.activityFields.firstIndex(of: field) else { return }
             self.onDeleteButtonTapped?(index)
         }
-        
+
+        field.onTextChanged = { [weak self] _ in
+            self?.updateAddButtonVisibility()
+        }
+
         activityFields.append(field)
         stackView.addArrangedSubview(field)
+
+        updateAddButtonVisibility()
     }
     
     func deleteActivityField(at index: Int) {
         guard index < activityFields.count else { return }
-        
+
         let field = activityFields[index]
         stackView.removeArrangedSubview(field)
         field.removeFromSuperview()
         activityFields.remove(at: index)
+
+        updateAddButtonVisibility()
     }
-    
+
     func getActivities() -> [(content: String, aiRecommended: Bool)] {
         return activityFields.compactMap {
             let content = $0.getText()
@@ -190,13 +230,39 @@ extension HobbyActivityInputView {
             return (content, false)
         }
     }
-    
+
     func setSaveButtonEnabled(_ isEnabled: Bool) {
         saveButton.isEnabled = isEnabled
-        
+
         var config = saveButton.configuration
         config?.baseBackgroundColor = isEnabled ? .systemOrange : .systemGray4
         saveButton.configuration = config
+    }
+
+    func setRecommendations(_ activities: [OthersActivity]) {
+        let titles = activities.map { $0.content }
+        flowLayoutView.configure(with: titles)
+    }
+
+    func fillLastFieldWithText(_ text: String) {
+        guard let lastField = activityFields.last else { return }
+        lastField.setText(text)
+        updateAddButtonVisibility()
+    }
+
+    private func updateAddButtonVisibility() {
+        // 3개 도달 → addButton 숨김
+        if activityFields.count >= maxFields {
+            addButton.isHidden = true
+            return
+        }
+
+        // 마지막 필드에 텍스트가 있으면 addButton 표시
+        if let lastField = activityFields.last {
+            addButton.isHidden = lastField.getText().isEmpty
+        } else {
+            addButton.isHidden = false
+        }
     }
 }
 

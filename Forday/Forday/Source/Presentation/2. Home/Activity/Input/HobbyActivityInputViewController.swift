@@ -44,6 +44,11 @@ class HobbyActivityInputViewController: UIViewController {
         setupNavigationBar()
         setupActions()
         bind()
+
+        // 추천 활동 조회
+        Task {
+            await viewModel.fetchOthersActivities(hobbyId: hobbyId)
+        }
     }
 }
 
@@ -68,13 +73,17 @@ extension HobbyActivityInputViewController {
         activityInputView.onSaveButtonTapped = { [weak self] in
             self?.saveActivities()
         }
-        
+
         activityInputView.onAddButtonTapped = { [weak self] in
             self?.addActivityField()
         }
-        
+
         activityInputView.onDeleteButtonTapped = { [weak self] index in
             self?.deleteActivityField(at: index)
+        }
+
+        activityInputView.onRecommendationButtonTapped = { [weak self] text in
+            self?.fillLastFieldWithRecommendation(text)
         }
     }
     
@@ -86,13 +95,21 @@ extension HobbyActivityInputViewController {
                 self?.activityInputView.setSaveButtonEnabled(isEnabled)
             }
             .store(in: &cancellables)
-        
+
         // 로딩 상태
         viewModel.$isLoading
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isLoading in
                 // TODO: 로딩 인디케이터
                 print(isLoading ? "저장 중..." : "저장 완료")
+            }
+            .store(in: &cancellables)
+
+        // 추천 활동 업데이트
+        viewModel.$othersActivities
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] activities in
+                self?.activityInputView.setRecommendations(activities)
             }
             .store(in: &cancellables)
     }
@@ -119,7 +136,12 @@ extension HobbyActivityInputViewController {
         let activities = activityInputView.getActivities()
         viewModel.updateActivities(activities)
     }
-    
+
+    private func fillLastFieldWithRecommendation(_ text: String) {
+        activityInputView.fillLastFieldWithText(text)
+        validateActivities()
+    }
+
     private func saveActivities() {
         let activities = activityInputView.getActivities()
         

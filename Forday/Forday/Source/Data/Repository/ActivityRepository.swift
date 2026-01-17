@@ -15,7 +15,22 @@ final class ActivityRepository: ActivityRepositoryInterface {
     init(activityService: ActivityService = ActivityService()) {
         self.activityService = activityService
     }
-    
+
+    func fetchOthersActivities(hobbyId: Int) async throws -> OthersActivityResult {
+        do {
+            let response = try await activityService.fetchOthersActivities(hobbyId: hobbyId)
+            return response.toDomain()
+        } catch {
+            #if DEBUG
+            print("⚠️ 다른 포비들 활동 API 실패 - 목 데이터 사용")
+            print("⚠️ 에러 내용: \(error)")
+            return makeMockOthersActivities()
+            #else
+            throw error
+            #endif
+        }
+    }
+
     func fetchAIRecommendations(hobbyId: Int) async throws -> AIRecommendationResult {
         do {
             let response = try await activityService.fetchAIRecommendations(hobbyId: hobbyId)
@@ -125,6 +140,17 @@ extension ActivityRepository {
                 stickers: []
             )
         ]
+    }
+
+    func makeMockOthersActivities() -> OthersActivityResult {
+        return OthersActivityResult(
+            message: "다른 포비들의 인기 활동을 조회했습니다.",
+            activities: [
+                OthersActivity(id: 1, content: "SNS에 인증하기"),
+                OthersActivity(id: 2, content: "인증사진 남기기"),
+                OthersActivity(id: 3, content: "기록 남기기")
+            ]
+        )
     }
 }
 #endif

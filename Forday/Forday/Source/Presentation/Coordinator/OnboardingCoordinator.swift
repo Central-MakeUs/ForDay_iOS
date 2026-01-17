@@ -17,7 +17,8 @@ class OnboardingCoordinator: Coordinator {
     
     // 온보딩 데이터 수집
     private var onboardingData = OnboardingData()
-    private let storage = OnboardingDataStorage.shared
+    // 로컬 저장은 더 이상 사용하지 않음 - 서버로 직접 전송
+    // private let storage = OnboardingDataStorage.shared
     
     // Initialization
     
@@ -70,6 +71,10 @@ class OnboardingCoordinator: Coordinator {
             viewModel.onPeriodSelected = { [weak self] isDurationSet in
                 self?.updatePeriod(isDurationSet)
             }
+            viewModel.onHobbyCreated = { [weak self] hobbyId in
+                print("✅ 취미 생성 완료 - hobbyId: \(hobbyId)")
+                self?.next(from: .period)
+            }
             vc = PeriodSelectionViewController(viewModel: viewModel)
             
         case .complete:
@@ -92,6 +97,7 @@ class OnboardingCoordinator: Coordinator {
         case .purpose: show(.frequency)
         case .frequency: show(.period)
         case .period:
+            // API 호출은 ViewModel에서 처리하고, 성공 시 onHobbyCreated 클로저를 통해 여기로 돌아옴
             show(.complete)
             // Complete 화면이 push 완료된 후 스택 정리
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -119,12 +125,8 @@ class OnboardingCoordinator: Coordinator {
     // 닉네임 설정 완료 후 홈으로
     func completeNicknameSetup() {
         print("🔵 completeNicknameSetup 호출됨")
-        
-        // 온보딩 데이터 저장
-        saveOnboardingData()
-        
         print("🔵 navigationController dismiss 시작")
-        
+
         // ✅ dismiss만 하고 바로 AuthCoordinator에 알림
         navigationController.dismiss(animated: true) {
             print("🔵 dismiss 완료, completeOnboarding 호출")
@@ -172,14 +174,20 @@ extension OnboardingCoordinator {
         onboardingData.isDurationSet = isDurationSet
         print("✅ 기간 저장: \(isDurationSet)")
     }
-    
-    private func saveOnboardingData() {
-        do {
-            try storage.save(onboardingData)
-            print("✅ 온보딩 데이터 저장 완료")
-            print("저장된 데이터: \(onboardingData)")
-        } catch {
-            print("❌ 온보딩 데이터 저장 실패: \(error)")
-        }
+
+    // 온보딩 데이터 getter - ViewModel에서 사용
+    func getOnboardingData() -> OnboardingData {
+        return onboardingData
     }
+
+    // 로컬 저장은 더 이상 사용하지 않음 - 서버로 직접 전송
+    // private func saveOnboardingData() {
+    //     do {
+    //         try storage.save(onboardingData)
+    //         print("✅ 온보딩 데이터 저장 완료")
+    //         print("저장된 데이터: \(onboardingData)")
+    //     } catch {
+    //         print("❌ 온보딩 데이터 저장 실패: \(error)")
+    //     }
+    // }
 }

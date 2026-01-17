@@ -46,10 +46,19 @@ class PeriodSelectionViewController: BaseOnboardingViewController {
     }
     
     // Actions
-    
+
     override func nextButtonTapped() {
         print("Selected period: \(viewModel.selectedPeriod?.title ?? "None")")
-        coordinator?.next(from: .period)
+
+        guard let onboardingCoordinator = coordinator as? OnboardingCoordinator else {
+            return
+        }
+
+        let onboardingData = onboardingCoordinator.getOnboardingData()
+
+        Task {
+            await viewModel.createHobby(with: onboardingData)
+        }
     }
 }
 
@@ -69,12 +78,32 @@ extension PeriodSelectionViewController {
                 self?.periodView.collectionView.reloadData()
             }
             .store(in: &cancellables)
-        
+
         // 다음 버튼 활성화 상태 변경
         viewModel.$isNextButtonEnabled
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isEnabled in
                 self?.setNextButtonEnabled(isEnabled)
+            }
+            .store(in: &cancellables)
+
+        // 로딩 상태 변경
+        viewModel.$isLoading
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isLoading in
+                self?.setNextButtonEnabled(!isLoading)
+                // TODO: 로딩 인디케이터 표시
+            }
+            .store(in: &cancellables)
+
+        // 에러 메시지 표시
+        viewModel.$errorMessage
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] errorMessage in
+                if let error = errorMessage {
+                    print("❌ 에러: \(error)")
+                    // TODO: 에러 얼럿 표시
+                }
             }
             .store(in: &cancellables)
     }
