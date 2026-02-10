@@ -1,0 +1,446 @@
+{
+    "termsOfService": {
+        "title": "포데이(FORDAY) 이용약관",
+        "version": "v1.0",
+        "sections": [
+            {
+                "sectionNo": 1,
+                "sectionTitle": "목적",
+                "articles": [
+                    {
+                        "articleId": 1,
+                        "clauseNo": null,
+                        "content": "본 약관은 데이앤(이하 \"회사\")이 제공하는 포데이(FORDAY) 서비스(이하 \"서비스\")의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.",
+                        "items": []
+                    }
+                ]
+            },
+            {
+                "sectionNo": 2,
+                "sectionTitle": "정의",
+                "articles": [
+                    {
+                        "articleId": 2,
+                        "clauseNo": null,
+                        "content": "본 약관에서 사용하는 용어의 정의는 다음과 같습니다.",
+                        "items": []
+                    },
+                    {
+                        "articleId": 3,
+                        "clauseNo": 1,
+                        "content": "\"서비스\"란 회사가 제공하는 취미 활동 기록, 소셜 피드, 친구 기능, AI 활동 추천, 클래스 및 모임 추천 등의 모든 서비스를 말합니다.",
+                        "items": []
+                    },
+                    {
+                        "articleId": 4,
+                        "clauseNo": 2,
+                        "content": "\"이용자\"란 본 약관에 동의하고 서비스를 이용하는 자를 말합니다.",
+                        "items": []
+                    },
+                    {
+                        "articleId": 5,
+                        "clauseNo": 3,
+                        "content": "\"회원\"란 소셜 로그인 또는 게스트 로그인을 통해 서비스에 가입하여 지속적으로 서비스를 이용할 수 있는 자를 말합니다.",
+                        "items": []
+                    },
+                    {
+                        "articleId": 6,
+                        "clauseNo": 4,
+                        "content": "\"게스트\"란 회원가입 없이 닉네임과 취미 정보만으로 제한적으로 서비스를 이용하는 자를 말합니다.",
+                        "items": []
+                    },
+                    {
+                        "articleId": 7,
+                        "clauseNo": 5,
+                        "content": "\"콘텐츠\"란 이용자가 서비스에 게시한 취미 활동 기록, 사진, 메모 등의 정보를 말합니다.",
+                        "items": []
+                    }
+                ]
+            },
+            {
+                "sectionNo": 3,
+                "sectionTitle": "약관의 효력 및 변경",
+                "articles": [
+                    {
+                        "articleId": 8,
+                        "clauseNo": 1,
+                        "content": "본 약관은 서비스 화면에 게시하거나 기타의 방법으로 이용자에게 공지함으로써 효력이 발생합니다.",
+                        "items": []
+                    },
+                    {
+                        "articleId": 9,
+                        "clauseNo": 2,
+                        "content": "회사는 필요한 경우 관련 법령을 위배하지 않는 범위 내에서 본 약관을 변경할 수 있습니다.",
+                        "items": []
+                    },
+                    {
+                        "articleId": 10,
+                        "clauseNo": 3,
+                        "content": "약관이 변경되는 경우 회사는 변경사항을 시행일자 7일 전부터 공지하며, 중대한 변경사항의 경우 30일 전에 공지합니다.",
+                        "items": []
+                    },
+                    {
+                        "articleId": 11,
+                        "clauseNo": 4,
+                        "content": "이용자가 변경된 약관에 동의하지 않는 경우 서비스 이용을 중단하고 탈퇴할 수 있습니다.",
+                        "items": []
+                    }
+                ]
+            },
+            {
+                "sectionNo": 4,
+                "sectionTitle": "이용 계약의 성립",
+                "articles": [
+                    {
+                        "articleId": 12,
+                        "clauseNo": 1,
+                        "content": "이용 계약은 이용자가 본 약관에 동의하고 회원가입을 완료함으로써 성립됩니다.",
+                        "items": []
+                    },
+                    {
+                        "articleId": 13,
+                        "clauseNo": 2,
+                        "content": "회원가입은 다음의 방법으로 가능합니다.",
+                        "items": [
+                            { "itemId": 1, "itemNo": 1, "content": "소셜 로그인 (카카오, 애플)" },
+                            { "itemId": 2, "itemNo": 2, "content": "게스트 로그인 (닉네임, 취미 정보 입력)" }
+                        ]
+                    },
+                    {
+                        "articleId": 14,
+                        "clauseNo": 3,
+                        "content": "회사는 다음 각 호에 해당하는 경우 가입을 거부하거나 사후에 이용 계약을 해지할 수 있습니다.",
+                        "items": [
+                            { "itemId": 3, "itemNo": 1, "content": "만 12세 미만인 경우" },
+                            { "itemId": 4, "itemNo": 2, "content": "타인의 정보를 도용한 경우" },
+                            { "itemId": 5, "itemNo": 3, "content": "허위 정보를 기재한 경우" },
+                            { "itemId": 6, "itemNo": 4, "content": "이전에 회원 자격을 상실한 적이 있는 경우 (단, 회사의 재가입 승낙을 받은 경우 제외)" }
+                        ]
+                    }
+                ]
+            },
+            {
+                "sectionNo": 5,
+                "sectionTitle": "개인정보의 보호",
+                "articles": [
+                    {
+                        "articleId": 15,
+                        "clauseNo": 1,
+                        "content": "회사는 관련 법령이 정하는 바에 따라 이용자의 개인정보를 보호하기 위해 노력합니다.",
+                        "items": []
+                    },
+                    {
+                        "articleId": 16,
+                        "clauseNo": 2,
+                        "content": "개인정보의 보호 및 이용에 대해서는 관련 법령 및 회사의 개인정보처리방침이 적용됩니다.",
+                        "items": []
+                    },
+                    {
+                        "articleId": 17,
+                        "clauseNo": 3,
+                        "content": "회사가 수집하는 개인정보는 다음과 같습니다.",
+                        "items": [
+                            { "itemId": 7, "itemNo": 1, "content": "필수 정보: 닉네임, 취미 종류, 취미 시간, 취미 횟수, 취미 빈도, 취미 활동명" },
+                            { "itemId": 8, "itemNo": 2, "content": "선택 정보: 활동 사진, 활동 메모, 프로필 사진, 취미 대표 사진" },
+                            { "itemId": 9, "itemNo": 3, "content": "소셜 로그인 시: 해당 플랫폼에서 제공하는 정보 (이메일, 프로필 정보 등)" }
+                        ]
+                    }
+                ]
+            },
+            {
+                "sectionNo": 6,
+                "sectionTitle": "서비스의 제공 및 변경",
+                "articles": [
+                    {
+                        "articleId": 18,
+                        "clauseNo": 1,
+                        "content": "회사는 다음과 같은 서비스를 제공합니다:",
+                        "items": [
+                            { "itemId": 10, "itemNo": 1, "content": "취미 활동 기록 및 관리" },
+                            { "itemId": 11, "itemNo": 2, "content": "소셜 피드 (다른 이용자의 활동 보기)" },
+                            { "itemId": 12, "itemNo": 3, "content": "친구 추가 및 관리" },
+                            { "itemId": 13, "itemNo": 4, "content": "AI 기반 활동 추천" },
+                            { "itemId": 14, "itemNo": 5, "content": "클래스 및 모임 추천" }
+                        ]
+                    },
+                    {
+                        "articleId": 19,
+                        "clauseNo": 2,
+                        "content": "회사는 서비스의 내용을 변경할 수 있으며, 변경 시 사전에 공지합니다.",
+                        "items": []
+                    },
+                    {
+                        "articleId": 20,
+                        "clauseNo": 3,
+                        "content": "서비스는 연중무휴, 1일 24시간 제공함을 원칙으로 합니다. 다만, 시스템 점검, 서버 증설 등 운영상 필요한 경우 서비스를 일시 중단할 수 있습니다.",
+                        "items": []
+                    }
+                ]
+            },
+            {
+                "sectionNo": 7,
+                "sectionTitle": "유료 서비스",
+                "articles": [
+                    { "articleId": 21, "clauseNo": 1, "content": "현재 서비스는 무료로 제공됩니다.", "items": [] },
+                    { "articleId": 22, "clauseNo": 2, "content": "회사는 향후 일부 서비스를 유료로 전환하거나 유료 서비스를 추가할 수 있습니다.", "items": [] },
+                    { "articleId": 23, "clauseNo": 3, "content": "유료 서비스 도입 시 회사는 최소 30일 전에 이용자에게 공지하며, 이용자는 유료 서비스 이용 여부를 선택할 수 있습니다.", "items": [] },
+                    { "articleId": 24, "clauseNo": 4, "content": "유료 서비스 이용 시 별도의 결제 약관이 적용됩니다.", "items": [] }
+                ]
+            },
+            {
+                "sectionNo": 8,
+                "sectionTitle": "이용자의 의무",
+                "articles": [
+                    {
+                        "articleId": 25,
+                        "clauseNo": 1,
+                        "content": "이용자는 다음 행위를 해서는 안 됩니다:",
+                        "items": [
+                            { "itemId": 15, "itemNo": 1, "content": "타인의 정보 도용" },
+                            { "itemId": 16, "itemNo": 2, "content": "허위 정보 기재" },
+                            { "itemId": 17, "itemNo": 3, "content": "회사 또는 타인의 지적재산권 침해" },
+                            { "itemId": 18, "itemNo": 4, "content": "욕설, 비방, 음란물 등 부적절한 콘텐츠 게시" },
+                            { "itemId": 19, "itemNo": 5, "content": "스팸, 광고성 정보 무단 게시" },
+                            { "itemId": 20, "itemNo": 6, "content": "서비스 운영 방해 행위" },
+                            { "itemId": 21, "itemNo": 7, "content": "기타 관련 법령 위반 행위" }
+                        ]
+                    },
+                    { "articleId": 26, "clauseNo": 2, "content": "이용자는 본 약관, 관련 법령, 회사의 정책을 준수해야 합니다.", "items": [] },
+                    { "articleId": 27, "clauseNo": 3, "content": "이용자가 위 의무를 위반한 경우 회사는 서비스 이용을 제한하거나 이용 계약을 해지할 수 있습니다.", "items": [] }
+                ]
+            },
+            {
+                "sectionNo": 9,
+                "sectionTitle": "콘텐츠의 저작권",
+                "articles": [
+                    { "articleId": 28, "clauseNo": 1, "content": "이용자가 작성한 콘텐츠의 저작권은 이용자에게 귀속됩니다.", "items": [] },
+                    {
+                        "articleId": 29,
+                        "clauseNo": 2,
+                        "content": "이용자는 자신이 작성한 콘텐츠에 대해 회사가 다음의 목적으로 사용하는 것에 동의합니다:",
+                        "items": [
+                            { "itemId": 22, "itemNo": 1, "content": "서비스 내 게시 및 전송" },
+                            { "itemId": 23, "itemNo": 2, "content": "서비스 홍보 및 마케팅 (사전 동의 시)" },
+                            { "itemId": 24, "itemNo": 3, "content": "서비스 개선 및 AI 학습" }
+                        ]
+                    },
+                    { "articleId": 30, "clauseNo": 3, "content": "회사가 작성한 콘텐츠(AI 추천 내용 등)의 저작권은 회사에 귀속됩니다.", "items": [] },
+                    { "articleId": 31, "clauseNo": 4, "content": "이용자는 타인의 저작권을 침해하는 콘텐츠를 게시해서는 안 됩니다.", "items": [] }
+                ]
+            },
+            {
+                "sectionNo": 10,
+                "sectionTitle": "게시물의 관리",
+                "articles": [
+                    {
+                        "articleId": 32,
+                        "clauseNo": 1,
+                        "content": "이용자의 게시물이 다음에 해당하는 경우 회사는 사전 통지 없이 삭제하거나 이동할 수 있습니다:",
+                        "items": [
+                            { "itemId": 25, "itemNo": 1, "content": "타인을 비방하거나 명예를 훼손하는 내용" },
+                            { "itemId": 26, "itemNo": 2, "content": "음란물, 폭력적 내용" },
+                            { "itemId": 27, "itemNo": 3, "content": "범죄 행위와 관련된 내용" },
+                            { "itemId": 28, "itemNo": 4, "content": "타인의 저작권 등 권리를 침해하는 내용" },
+                            { "itemId": 29, "itemNo": 5, "content": "회사 또는 제3자의 권리를 침해하는 내용" },
+                            { "itemId": 30, "itemNo": 6, "content": "기타 관련 법령에 위반되는 내용" }
+                        ]
+                    },
+                    { "articleId": 33, "clauseNo": 2, "content": "회사는 게시물로 인한 법적 분쟁 발생 시 해당 게시물을 임시 차단할 수 있습니다.", "items": [] }
+                ]
+            },
+            {
+                "sectionNo": 11,
+                "sectionTitle": "서비스 이용 제한",
+                "articles": [
+                    { "articleId": 34, "clauseNo": 1, "content": "회사는 이용자가 본 약관을 위반하거나 서비스의 정상적인 운영을 방해한 경우 서비스 이용을 제한하거나 정지할 수 있습니다.", "items": [] },
+                    {
+                        "articleId": 35,
+                        "clauseNo": 2,
+                        "content": "이용 제한의 종류는 다음과 같습니다:",
+                        "items": [
+                            { "itemId": 31, "itemNo": 1, "content": "경고" },
+                            { "itemId": 32, "itemNo": 2, "content": "일시 정지 (최대 30일)" },
+                            { "itemId": 33, "itemNo": 3, "content": "영구 정지" }
+                        ]
+                    },
+                    { "articleId": 36, "clauseNo": 3, "content": "회사는 이용 제한 시 이용자에게 그 사유와 기간을 통지합니다.", "items": [] },
+                    { "articleId": 37, "clauseNo": 4, "content": "이용자는 이용 제한에 대해 이의가 있는 경우 회사에 소명할 수 있습니다.", "items": [] }
+                ]
+            },
+            {
+                "sectionNo": 12,
+                "sectionTitle": "서비스 이용의 종료",
+                "articles": [
+                    { "articleId": 38, "clauseNo": 1, "content": "이용자는 언제든지 서비스 내 설정을 통해 탈퇴할 수 있습니다.", "items": [] },
+                    { "articleId": 39, "clauseNo": 2, "content": "탈퇴 시 이용자의 모든 데이터는 삭제되며, 삭제된 데이터는 복구할 수 없습니다. 단, 관련 법령에 따라 보관이 필요한 정보는 일정 기간 보관됩니다.", "items": [] },
+                    {
+                        "articleId": 40,
+                        "clauseNo": 3,
+                        "content": "회사는 다음의 경우 이용 계약을 해지할 수 있습니다:",
+                        "items": [
+                            { "itemId": 34, "itemNo": 1, "content": "이용자가 본 약관을 위반한 경우" },
+                            { "itemId": 35, "itemNo": 2, "content": "6개월 이상 서비스를 이용하지 않은 경우 (휴면 계정 전환)" }
+                        ]
+                    }
+                ]
+            },
+            {
+                "sectionNo": 13,
+                "sectionTitle": "손해배상 및 면책",
+                "articles": [
+                    { "articleId": 41, "clauseNo": 1, "content": "회사는 무료로 제공되는 서비스 이용과 관련하여 관련 법령에 특별한 규정이 없는 한 책임을 지지 않습니다.", "items": [] },
+                    { "articleId": 42, "clauseNo": 2, "content": "회사는 천재지변, 전쟁, 해킹, DDOS 공격 등 불가항력으로 인해 서비스를 제공할 수 없는 경우 책임을 지지 않습니다.", "items": [] },
+                    { "articleId": 43, "clauseNo": 3, "content": "회사는 이용자의 귀책사유로 인한 서비스 이용 장애에 대해 책임을 지지 않습니다.", "items": [] },
+                    { "articleId": 44, "clauseNo": 4, "content": "회사는 이용자 간 또는 이용자와 제3자 간에 발생한 분쟁에 대해 책임을 지지 않습니다.", "items": [] },
+                    { "articleId": 45, "clauseNo": 5, "content": "이용자가 본 약관을 위반하여 회사에 손해를 입힌 경우 그에 대한 모든 책임을 부담합니다.", "items": [] }
+                ]
+            },
+            {
+                "sectionNo": 14,
+                "sectionTitle": "분쟁 해결",
+                "articles": [
+                    { "articleId": 46, "clauseNo": 1, "content": "서비스 이용과 관련한 분쟁은 회사와 이용자 간 협의를 통해 해결합니다.", "items": [] },
+                    { "articleId": 47, "clauseNo": 2, "content": "협의가 이루어지지 않을 경우 「소비자기본법」에 따른 소비자분쟁조정기구의 조정을 거칠 수 있습니다.", "items": [] },
+                    { "articleId": 48, "clauseNo": 3, "content": "소송이 필요한 경우 대한민국 법을 준거법으로 하며, 회사의 본사 소재지 법원을 관할 법원으로 합니다.", "items": [] }
+                ]
+            },
+            {
+                "sectionNo": 15,
+                "sectionTitle": "통지",
+                "articles": [
+                    { "articleId": 49, "clauseNo": 1, "content": "회사가 이용자에게 통지하는 경우 본 약관에 별도 규정이 없는 한 서비스 내 공지사항, 이메일, 푸시 알림 등으로 할 수 있습니다.", "items": [] },
+                    { "articleId": 50, "clauseNo": 2, "content": "회사는 불특정 다수 이용자에 대한 통지의 경우 서비스 내 공지로 개별 통지를 갈음할 수 있습니다.", "items": [] }
+                ]
+            }
+        ],
+        "serviceInfo": {
+            "title": "부칙",
+            "description": "본 약관은 2026-02-07부터 시행됩니다.",
+            "serviceName": "포데이 (FORDAY)",
+            "companyName": "데이앤 (DayN)",
+            "email": "team.forday@gmail.com",
+            "representative": "유지원",
+            "contactNumber": "010-2127-7492"
+        }
+    },
+    "privacyPolicy": {
+        "title": "개인정보처리방침",
+        "description": "데이앤(이하 \"회사\")은 「개인정보 보호법」 제30조에 따라 정보주체의 개인정보를 보호하고 이와 관련한 고충을 신속하고 원활하게 처리할 수 있도록 다음과 같이 개인정보처리방침을 수립·공개합니다.",
+        "version": "v1.0",
+        "sections": [
+            {
+                "sectionNo": 1,
+                "sectionTitle": "개인정보의 처리 목적",
+                "articles": [
+                    { "articleId": 51, "clauseNo": null, "content": "회사는 다음의 목적을 위하여 개인정보를 처리합니다. 처리하고 있는 개인정보는 다음의 목적 이외의 용도로는 이용되지 않으며, 이용 목적이 변경되는 경우에는 「개인정보 보호법」 제18조에 따라 별도의 동의를 받는 등 필요한 조치를 이행할 예정입니다.", "items": [] },
+                    { "articleId": 52, "clauseNo": 1, "content": "회원 가입 및 관리", "items": [{ "itemId": 36, "itemNo": 1, "content": "회원 식별, 서비스 이용 의사 확인, 연령 확인, 부정 이용 방지" }] },
+                    { "articleId": 53, "clauseNo": 2, "content": "서비스 제공", "items": [{ "itemId": 37, "itemNo": 1, "content": "취미 활동 기록 및 관리, 소셜 피드 제공, 친구 기능, AI 활동 추천, 클래스 및 모임 추천" }] },
+                    { "articleId": 54, "clauseNo": 3, "content": "서비스 개선 및 개발", "items": [{ "itemId": 38, "itemNo": 1, "content": "서비스 이용 분석, 신규 서비스 개발, 맞춤형 콘텐츠 제공" }] },
+                    { "articleId": 55, "clauseNo": 4, "content": "마케팅 및 광고 활용 (선택 동의 시)", "items": [{ "itemId": 39, "itemNo": 1, "content": "이벤트 안내, 맞춤형 광고 제공" }] }
+                ]
+            },
+            {
+                "sectionNo": 2,
+                "sectionTitle": "처리하는 개인정보의 항목",
+                "articles": [
+                    { "articleId": 56, "clauseNo": null, "content": "회사는 다음의 개인정보 항목을 처리하고 있습니다.", "items": [] },
+                    { "articleId": 57, "clauseNo": 1, "content": "소셜 로그인 (카카오, 애플)", "items": [{ "itemId": 40, "itemNo": 1, "content": "필수 항목: 소셜 계정 식별자, 닉네임" }, { "itemId": 41, "itemNo": 2, "content": "선택 항목: 프로필 사진, 이메일 (소셜 플랫폼에서 제공하는 경우)" }] },
+                    { "articleId": 58, "clauseNo": 2, "content": "게스트 로그인", "items": [{ "itemId": 42, "itemNo": 1, "content": "필수 항목: 닉네임, 취미 종류" }] },
+                    { "articleId": 59, "clauseNo": 3, "content": "서비스 이용 과정에서 수집되는 정보", "items": [{ "itemId": 43, "itemNo": 1, "content": "필수 항목: 취미 종류, 취미 시간, 취미 횟수, 취미 빈도, 취미 활동명" }, { "itemId": 44, "itemNo": 2, "content": "선택 항목: 활동 사진, 활동 메모, 프로필 사진, 취미 대표 사진" }] },
+                    { "articleId": 60, "clauseNo": 4, "content": "자동 수집 정보", "items": [{ "itemId": 45, "itemNo": 1, "content": "서비스 이용 기록, 접속 로그, IP 주소, 쿠키, 기기 정보 (OS 버전, 기기 모델 등)" }] }
+                ]
+            },
+            {
+                "sectionNo": 3,
+                "sectionTitle": "개인정보의 처리 및 보유 기간",
+                "articles": [
+                    { "articleId": 61, "clauseNo": 1, "content": "회사는 법령에 따른 개인정보 보유·이용 기간 또는 정보주체로부터 개인정보를 수집 시에 동의받은 개인정보 보유·이용 기간 내에서 개인정보를 처리·보유합니다.", "items": [] },
+                    { "articleId": 62, "clauseNo": 2, "content": "각각의 개인정보 처리 및 보유 기간은 다음과 같습니다:", "items": [{ "itemId": 46, "itemNo": 1, "content": "회원 가입 및 관리: 회원 탈퇴 시까지 (단, 관련 법령에 따라 보존 필요 시 해당 기간까지)" }, { "itemId": 47, "itemNo": 2, "content": "서비스 제공: 서비스 이용 종료 시까지" }] },
+                    { "articleId": 63, "clauseNo": 3, "content": "관련 법령에 따라 보존이 필요한 경우:", "items": [{ "itemId": 48, "itemNo": 1, "content": "계약 또는 청약철회 등에 관한 기록: 5년 (전자상거래법)" }, { "itemId": 49, "itemNo": 2, "content": "대금결제 및 재화 등의 공급에 관한 기록: 5년 (전자상거래법)" }, { "itemId": 50, "itemNo": 3, "content": "소비자 불만 또는 분쟁처리 기록: 3년 (전자상거래법)" }, { "itemId": 51, "itemNo": 4, "content": "서비스 방문 기록: 3개월 (통신비밀보호법)" }] }
+                ]
+            },
+            {
+                "sectionNo": 4,
+                "sectionTitle": "개인정보의 제3자 제공",
+                "articles": [
+                    { "articleId": 64, "clauseNo": null, "content": "회사는 정보주체의 개인정보를 제1조(개인정보의 처리 목적)에서 명시한 범위 내에서만 처리하며, 정보주체의 동의, 법률의 특별한 규정 등 「개인정보 보호법」 제17조 및 제18조에 해당하는 경우에만 개인정보를 제3자에게 제공합니다. 현재 회사는 이용자의 개인정보를 제3자에게 제공하지 않습니다. 향후 제공이 필요한 경우 사전에 동의를 받겠습니다.", "items": [] }
+                ]
+            },
+            {
+                "sectionNo": 5,
+                "sectionTitle": "개인정보 처리의 위탁",
+                "articles": [
+                    { "articleId": 65, "clauseNo": null, "content": "회사는 개인정보 처리 업무를 위탁함에 있어 개인정보보호법 제29조에 따라 개인정보가 안전하게 관리될 수 있도록 기술적·관리적 보호조치를 시행하고 있습니다.", "items": [{ "itemId": 52, "itemNo": 1, "content": "위탁받는 자: Amazon Web Services (AWS)" }, { "itemId": 53, "itemNo": 2, "content": "위탁 업무 내용: 데이터 보관 및 서버 운영" }, { "itemId": 54, "itemNo": 3, "content": "보유 및 이용기간: 회원 탈퇴 시 또는 위탁 계약 종료 시까지" }, { "itemId": 55, "itemNo": 4, "content": "위탁 업체는 서비스 운영 상황에 따라 변경될 수 있으며, 변경 시 공지합니다." }, { "itemId": 56, "itemNo": 5, "content": "AWS는 서비스 제공을 위해 필요한 범위 내에서 일부 업무를 재위탁(Sub-processor)할 수 있습니다." }, { "itemId": 57, "itemNo": 6, "content": "AWS의 재위탁 현황은 AWS에서 공개하는 하위 처리자 목록을 통해 확인할 수 있으며, 회사는 관련 법령에 따라 개인정보 보호 수준이 유지되도록 관리·감독합니다." }, { "itemId": 58, "itemNo": 7, "content": "위탁받은 자에 대하여는 개인정보에 대한 접근 통제, 접근 권한의 최소화, 개인정보의 암호화, 보안 프로그램 설치 및 운영 등 안전성 확보에 필요한 조치를 취하도록 관리·감독합니다." }] }
+                ]
+            },
+            {
+                "sectionNo": 6,
+                "sectionTitle": "정보주체의 권리·의무 및 행사 방법",
+                "articles": [
+                    { "articleId": 66, "clauseNo": 1, "content": "정보주체는 회사에 대해 언제든지 다음 각 호의 개인정보 보호 관련 권리를 행사할 수 있습니다.", "items": [{ "itemId": 59, "itemNo": 1, "content": "개인정보 열람 요구" }, { "itemId": 60, "itemNo": 2, "content": "오류 등이 있을 경우 정정 요구" }, { "itemId": 61, "itemNo": 3, "content": "삭제 요구" }, { "itemId": 62, "itemNo": 4, "content": "처리 정지 요구" }] },
+                    { "articleId": 67, "clauseNo": 2, "content": "권리 행사는 서비스 내 설정 메뉴 또는 이메일(team.forday@gmail.com)을 통해 할 수 있습니다.", "items": [] },
+                    { "articleId": 68, "clauseNo": 3, "content": "만 14세 미만 아동의 경우 법정대리인이 권리를 행사할 수 있습니다.", "items": [] }
+                ]
+            },
+            {
+                "sectionNo": 7,
+                "sectionTitle": "개인정보의 파기",
+                "articles": [
+                    { "articleId": 69, "clauseNo": 1, "content": "회사는 개인정보 보유 기간의 경과, 처리 목적 달성 등 개인정보가 불필요하게 되었을 때에는 지체 없이 해당 개인정보를 파기합니다.", "items": [] },
+                    { "articleId": 70, "clauseNo": 2, "content": "파기 절차 및 방법은 다음과 같습니다:", "items": [{ "itemId": 63, "itemNo": 1, "content": "전자적 파일: 복구 및 재생이 불가능한 방법으로 영구 삭제" }, { "itemId": 64, "itemNo": 2, "content": "종이 문서: 분쇄 또는 소각" }] }
+                ]
+            },
+            {
+                "sectionNo": 8,
+                "sectionTitle": "개인정보의 안전성 확보 조치",
+                "articles": [
+                    { "articleId": 71, "clauseNo": null, "content": "회사는 개인정보의 안전성 확보를 위해 다음과 같은 조치를 취하고 있습니다:", "items": [] },
+                    { "articleId": 72, "clauseNo": 1, "content": "개인정보 암호화", "items": [] },
+                    { "articleId": 73, "clauseNo": 2, "content": "해킹 등에 대비한 기술적 대책", "items": [] },
+                    { "articleId": 74, "clauseNo": 3, "content": "개인정보 취급 직원의 최소화 및 교육", "items": [] },
+                    { "articleId": 75, "clauseNo": 4, "content": "개인정보 접근 권한 관리", "items": [] }
+                ]
+            },
+            {
+                "sectionNo": 9,
+                "sectionTitle": "개인정보 자동 수집 장치의 설치·운영 및 거부",
+                "articles": [
+                    { "articleId": 76, "clauseNo": 1, "content": "회사는 서비스 제공을 위해 쿠키를 사용할 수 있습니다.", "items": [] },
+                    { "articleId": 77, "clauseNo": 2, "content": "쿠키는 서비스 이용 편의성 향상, 맞춤형 서비스 제공을 위해 사용됩니다.", "items": [] },
+                    { "articleId": 78, "clauseNo": 3, "content": "이용자는 웹브라우저 설정을 통해 쿠키 저장을 거부할 수 있으나, 이 경우 서비스 이용에 제한이 있을 수 있습니다.", "items": [] }
+                ]
+            },
+            {
+                "sectionNo": 10,
+                "sectionTitle": "개인정보 보호책임자",
+                "articles": [
+                    { "articleId": 79, "clauseNo": null, "content": "회사는 개인정보 처리에 관한 업무를 총괄해서 책임지고, 개인정보 처리와 관련한 정보주체의 불만 처리 및 피해구제 등을 위하여 아래와 같이 개인정보 보호책임자를 지정하고 있습니다.", "items": [] },
+                    { "articleId": 80, "clauseNo": 1, "content": "개인정보 보호책임자", "items": [{ "itemId": 65, "itemNo": 1, "content": "이메일: team.forday@gmail.com" }, { "itemId": 66, "itemNo": 2, "content": "대표번호: 010-2127-7492" }] },
+                    { "articleId": 81, "clauseNo": 2, "content": "정보주체는 서비스를 이용하며 발생한 모든 개인정보 보호 관련 문의, 불만 처리, 피해구제 등에 관한 사항을 개인정보 보호책임자에게 문의하실 수 있습니다.", "items": [] }
+                ]
+            },
+            {
+                "sectionNo": 11,
+                "sectionTitle": "권익침해 구제 방법",
+                "articles": [
+                    { "articleId": 82, "clauseNo": null, "content": "정보주체는 개인정보 침해로 인한 구제를 받기 위하여 개인정보분쟁조정위원회, 한국인터넷진흥원 개인정보침해신고센터 등에 분쟁해결이나 상담 등을 신청할 수 있습니다.", "items": [{ "itemId": 67, "itemNo": 1, "content": "개인정보분쟁조정위원회: 1833-6972 (www.kopico.go.kr)" }, { "itemId": 68, "itemNo": 2, "content": "개인정보침해신고센터: 118 (privacy.kisa.or.kr)" }, { "itemId": 69, "itemNo": 3, "content": "대검찰청 사이버수사과: 1301 (www.spo.go.kr)" }, { "itemId": 70, "itemNo": 4, "content": "경찰청 사이버안전국: 182 (cyberbureau.police.go.kr)" }] }
+                ]
+            },
+            {
+                "sectionNo": 12,
+                "sectionTitle": "개인정보처리방침의 변경",
+                "articles": [
+                    { "articleId": 83, "clauseNo": 1, "content": "이 개인정보처리방침은 2026-02-07부터 적용됩니다.", "items": [] },
+                    { "articleId": 84, "clauseNo": 2, "content": "본 방침은 법령, 정책 또는 보안기술의 변경에 따라 내용의 추가, 삭제 및 수정이 있을 시에는 변경사항 시행 7일 전부터 공지사항을 통해 고지할 것입니다.", "items": [] }
+                ]
+            }
+        ],
+        "serviceInfo": {
+            "serviceName": "포데이 (FORDAY)",
+            "companyName": "데이앤 (DayN)",
+            "email": "team.forday@gmail.com",
+            "representative": "유지원",
+            "contactNumber": "010-2127-7492"
+        }
+    }
+}
