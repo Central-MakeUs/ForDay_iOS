@@ -9,6 +9,17 @@ import UIKit
 import SnapKit
 import Then
 
+enum ToastPosition {
+    case top
+    case bottom
+}
+
+enum ToastIcon {
+    case success    // checkCircle
+    case error      // xmarkCircle
+    case none       // 아이콘 없음
+}
+
 final class ToastView: UIView {
 
     // MARK: - UI Components
@@ -21,12 +32,20 @@ final class ToastView: UIView {
 
     private var onAction: (() -> Void)?
     private var actionTitle: String?
+    private var icon: ToastIcon = .success
+    private var position: ToastPosition = .top
 
     // MARK: - Initialization
 
-    init(message: String, actionTitle: String? = nil, onAction: (() -> Void)? = nil) {
+    init(
+        message: String,
+        icon: ToastIcon = .success,
+        actionTitle: String? = nil,
+        onAction: (() -> Void)? = nil
+    ) {
         self.onAction = onAction
         self.actionTitle = actionTitle
+        self.icon = icon
         super.init(frame: .zero)
         messageLabel.text = message
 
@@ -61,26 +80,35 @@ final class ToastView: UIView {
 
     /// 화면 상단에 토스트 메시지 표시 (액션 버튼 없음)
     static func show(message: String, duration: TimeInterval = 2.0) {
-        show(message: message, actionTitle: nil, duration: duration, onAction: nil)
+        show(message: message, icon: .success, position: .top, actionTitle: nil, duration: duration, onAction: nil)
     }
 
-    /// 화면 상단에 토스트 메시지 표시 (액션 버튼 포함)
+    /// 화면에 토스트 메시지 표시 (전체 옵션)
     static func show(
         message: String,
-        actionTitle: String?,
+        icon: ToastIcon = .success,
+        position: ToastPosition = .top,
+        actionTitle: String? = nil,
         duration: TimeInterval = 3.0,
-        onAction: (() -> Void)?
+        onAction: (() -> Void)? = nil
     ) {
         guard let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow }) else {
             return
         }
 
-        let toast = ToastView(message: message, actionTitle: actionTitle, onAction: onAction)
+        let toast = ToastView(message: message, icon: icon, actionTitle: actionTitle, onAction: onAction)
+        toast.position = position
         window.addSubview(toast)
 
         toast.snp.makeConstraints {
-            // safe area top + navigation bar height(44) + 10pt spacing
-            $0.top.equalTo(window.safeAreaLayoutGuide.snp.top).offset(54)
+            switch position {
+            case .top:
+                // safe area top + navigation bar height(44) + 10pt spacing
+                $0.top.equalTo(window.safeAreaLayoutGuide.snp.top).offset(54)
+            case .bottom:
+                // safe area bottom + tab bar height(49) + floating button(56) + spacing(16) + extra(16)
+                $0.bottom.equalTo(window.safeAreaLayoutGuide.snp.bottom).offset(-137)
+            }
             $0.leading.equalToSuperview().offset(20)
             $0.trailing.equalToSuperview().offset(-20)
             $0.height.greaterThanOrEqualTo(48)
@@ -101,6 +129,11 @@ final class ToastView: UIView {
             }
         }
     }
+
+    /// 에러 토스트 표시 (아이콘 없음, 하단 표시)
+    static func showError(message: String, duration: TimeInterval = 3.0) {
+        show(message: message, icon: .none, position: .bottom, duration: duration)
+    }
 }
 
 // MARK: - Setup
@@ -113,7 +146,16 @@ extension ToastView {
         isUserInteractionEnabled = true
 
         iconImageView.do {
-            $0.image = .Icon.checkCircle
+            switch icon {
+            case .success:
+                $0.image = .Icon.checkCircle
+                $0.isHidden = false
+            case .error:
+                $0.image = .Icon.xmarkCircle
+                $0.isHidden = false
+            case .none:
+                $0.isHidden = true
+            }
             $0.contentMode = .scaleAspectFit
         }
 
@@ -145,22 +187,34 @@ extension ToastView {
         addSubview(messageLabel)
         addSubview(actionButton)
 
-        iconImageView.snp.makeConstraints {
-            $0.leading.equalToSuperview().offset(20)
-            $0.centerY.equalToSuperview()
-            $0.width.height.equalTo(20)
+        let hasIcon = icon != .none
+
+        if hasIcon {
+            iconImageView.snp.makeConstraints {
+                $0.leading.equalToSuperview().offset(20)
+                $0.centerY.equalToSuperview()
+                $0.width.height.equalTo(20)
+            }
         }
 
         if actionButton.isHidden {
             messageLabel.snp.makeConstraints {
-                $0.leading.equalTo(iconImageView.snp.trailing).offset(8)
+                if hasIcon {
+                    $0.leading.equalTo(iconImageView.snp.trailing).offset(8)
+                } else {
+                    $0.leading.equalToSuperview().offset(20)
+                }
                 $0.trailing.equalToSuperview().offset(-20)
                 $0.top.equalToSuperview().offset(12)
                 $0.bottom.equalToSuperview().offset(-12)
             }
         } else {
             messageLabel.snp.makeConstraints {
-                $0.leading.equalTo(iconImageView.snp.trailing).offset(8)
+                if hasIcon {
+                    $0.leading.equalTo(iconImageView.snp.trailing).offset(8)
+                } else {
+                    $0.leading.equalToSuperview().offset(20)
+                }
                 $0.top.equalToSuperview().offset(12)
                 $0.bottom.equalToSuperview().offset(-12)
             }
