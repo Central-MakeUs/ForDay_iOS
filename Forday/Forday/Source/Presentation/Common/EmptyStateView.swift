@@ -75,6 +75,28 @@ final class EmptyStateView: UIView {
 
         self.onActionTapped = onActionTapped
     }
+
+    /// Configure for hobby cards empty state
+    func configureForHobbyCards() {
+        iconImageView.image = .Icon.emptyBox
+        iconImageView.alpha = 0.4
+        titleLabel.setTextWithTypography("취미카드를 준비 중이에요.", style: .header16)
+        subtitleLabel.setTextWithTypography("지금 하고 있는 취미를\n꾸준히 이어가 보세요!", style: .label14)
+        subtitleLabel.isHidden = false
+        actionButton.isHidden = true
+        self.onActionTapped = nil
+    }
+
+    /// Configure for scraps empty state
+    func configureForScraps() {
+        iconImageView.image = .Icon.emptyBox
+        iconImageView.alpha = 0.4
+        titleLabel.setTextWithTypography("아직 스크랩한 기록이 없어요.", style: .header16)
+        subtitleLabel.setTextWithTypography("마음에 드는 취미활동을 둘러볼까요?", style: .label14)
+        subtitleLabel.isHidden = false
+        actionButton.isHidden = true
+        self.onActionTapped = nil
+    }
 }
 
 // MARK: - Setup

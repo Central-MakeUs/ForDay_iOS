@@ -319,15 +319,8 @@ extension ActivityRecordViewController {
     }
 
     private func showErrorAlert(title: String, message: String, action: (() -> Void)? = nil) {
-        let alert = UIAlertController(
-            title: title,
-            message: message,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "확인", style: .default) { _ in
-            action?()
-        })
-        present(alert, animated: true)
+        ToastView.showError(message: message)
+        action?()
     }
 
 

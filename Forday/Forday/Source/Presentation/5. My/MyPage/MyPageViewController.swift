@@ -82,7 +82,8 @@ final class MyPageViewController: UIViewController {
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        navigationController?.setNavigationBarHidden(false, animated: animated)
+        // Navigation bar는 각 하위 VC가 자체적으로 관리
+        // ProfileSettings, GeneralSettings 등 커스텀 내비게이션을 사용하는 화면에서 잔상 방지
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -109,7 +110,6 @@ final class MyPageViewController: UIViewController {
 extension MyPageViewController {
     private func setupCustomNavigationBar() {
         // Setup custom navigation buttons from ProfileView
-        myPageView.notificationButton.addTarget(self, action: #selector(notificationButtonTapped), for: .touchUpInside)
         myPageView.settingsButton.addTarget(self, action: #selector(settingsButtonTapped), for: .touchUpInside)
     }
 
@@ -377,11 +377,6 @@ extension MyPageViewController {
         }
     }
 
-    @objc private func notificationButtonTapped() {
-        // TODO: Show notifications
-        print("🔔 Notification button tapped")
-    }
-
     private func showSettingsDropdown() {
         dismissSettingsDropdown() // Dismiss if already showing
 
@@ -468,12 +463,17 @@ extension MyPageViewController {
         // Pass all hobbies to the viewModel (진행 중 + 보관)
         viewModel.setHobbies(self.viewModel.myHobbies)
 
+        // Hide navigation bar before pushing to avoid flash
+        navigationController?.setNavigationBarHidden(true, animated: false)
         navigationController?.pushViewController(vc, animated: true)
     }
 
     private func showGeneralSettings() {
         let vc = GeneralSettingsViewController()
         vc.coordinator = coordinator
+
+        // Hide navigation bar before pushing to avoid flash
+        navigationController?.setNavigationBarHidden(true, animated: false)
         navigationController?.pushViewController(vc, animated: true)
     }
 
@@ -515,6 +515,9 @@ extension MyPageViewController {
             // Notify AppCoordinator
             coordinator?.parentCoordinator?.logout()
 
+        } catch let appError as AppError {
+            print("❌ Logout failed: \(appError)")
+            showError(appError.userMessage)
         } catch {
             print("❌ Logout failed: \(error)")
             showError(error.localizedDescription)
@@ -549,13 +552,7 @@ extension MyPageViewController {
     }
 
     private func showError(_ message: String) {
-        let alert = UIAlertController(
-            title: "오류",
-            message: message,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
+        ToastView.showError(message: message)
     }
 }
 

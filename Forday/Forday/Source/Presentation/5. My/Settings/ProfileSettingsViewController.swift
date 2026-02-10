@@ -47,17 +47,11 @@ final class ProfileSettingsViewController: UIViewController {
         setupActions()
         bind()
         loadUserInfo()
-    }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+        // Hide navigation bar immediately in viewDidLoad
         navigationController?.setNavigationBarHidden(true, animated: false)
     }
 
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        navigationController?.setNavigationBarHidden(false, animated: false)
-    }
 }
 
 // MARK: - Setup
@@ -365,13 +359,7 @@ extension ProfileSettingsViewController: PHPickerViewControllerDelegate {
 
 extension ProfileSettingsViewController {
     private func showError(_ error: AppError) {
-        let alert = UIAlertController(
-            title: "오류",
-            message: error.userMessage,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
+        ToastView.showError(message: error.userMessage)
     }
 }
 

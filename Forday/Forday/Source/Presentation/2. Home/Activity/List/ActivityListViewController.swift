@@ -211,6 +211,10 @@ extension ActivityListViewController {
                 await MainActor.run {
                     AppEventBus.shared.activityUpdated.send(hobbyId)
                 }
+            } catch let appError as AppError {
+                await MainActor.run {
+                    showError(appError.userMessage)
+                }
             } catch {
                 await MainActor.run {
                     showError(error.localizedDescription)
@@ -227,6 +231,10 @@ extension ActivityListViewController {
                 // 홈 화면 업데이트를 위한 이벤트 발생
                 await MainActor.run {
                     AppEventBus.shared.activityDeleted.send(hobbyId)
+                }
+            } catch let appError as AppError {
+                await MainActor.run {
+                    showError(appError.userMessage)
                 }
             } catch {
                 await MainActor.run {
@@ -264,21 +272,12 @@ extension ActivityListViewController {
     }
 
     private func showError(_ message: String) {
-        let alert = UIAlertController(
-            title: "오류",
-            message: message,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
+        ToastView.showError(message: message)
     }
 
     private func showAIRecommendationToast() {
         let toast = AIRecommendationToastView()
         toast.configure(with: "포데이 AI가 알맞은 취미활동을 추천해드려요")
-
-        // Set interaction based on aiCallRemaining
-        toast.setInteractionEnabled(aiCallRemaining)
 
         // Set tap callback
         toast.onTap = { [weak self] in
@@ -320,6 +319,12 @@ extension ActivityListViewController {
                     // Dismiss loading and show selection
                     self.dismiss(animated: true) {
                         self.showAISelectionView(with: aiRecommendations)
+                    }
+                }
+            } catch let appError as AppError {
+                await MainActor.run {
+                    self.dismiss(animated: true) {
+                        self.showError(appError.userMessage)
                     }
                 }
             } catch {

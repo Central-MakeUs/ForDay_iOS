@@ -27,17 +27,11 @@ final class GeneralSettingsViewController: UIViewController {
         super.viewDidLoad()
         setupActions()
         setupAppVersion()
-    }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+        // Hide navigation bar immediately in viewDidLoad
         navigationController?.setNavigationBarHidden(true, animated: false)
     }
 
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        navigationController?.setNavigationBarHidden(false, animated: false)
-    }
 }
 
 // MARK: - Setup
@@ -132,6 +126,9 @@ extension GeneralSettingsViewController {
             // Notify AppCoordinator
             coordinator?.parentCoordinator?.logout()
 
+        } catch let appError as AppError {
+            print("❌ Logout failed: \(appError)")
+            showError(appError.userMessage)
         } catch {
             print("❌ Logout failed: \(error)")
             showError(error.localizedDescription)
@@ -139,13 +136,7 @@ extension GeneralSettingsViewController {
     }
 
     private func showError(_ message: String) {
-        let alert = UIAlertController(
-            title: "오류",
-            message: message,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
+        ToastView.showError(message: message)
     }
 }
 

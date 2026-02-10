@@ -157,13 +157,13 @@ extension GuestLoginBottomSheetViewController {
     }
 
     private func showError(_ error: Error) {
-        let alert = UIAlertController(
-            title: "로그인 실패",
-            message: error.localizedDescription,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
+        let message: String
+        if let appError = error as? AppError {
+            message = appError.userMessage
+        } else {
+            message = error.localizedDescription
+        }
+        ToastView.showError(message: message)
     }
 }
 
