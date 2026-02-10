@@ -285,8 +285,6 @@ extension HobbyActivityInputView {
         let toast = AIRecommendationInputToastView()
         toast.configure(with: "포데이 AI 추천 활동 보기")
 
-        toast.setInteractionEnabled(aiCallRemaining)
-
         // Set tap callback
         toast.onTap = { [weak self] in
             self?.onAIToastTapped?()

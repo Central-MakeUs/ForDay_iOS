@@ -115,13 +115,7 @@ extension DeleteAccountViewController {
     }
 
     private func showErrorPopup(message: String) {
-        let popup = CommonPopupViewController(
-            title: "오류",
-            message: message,
-            primaryButtonTitle: "확인"
-        )
-
-        present(popup, animated: true)
+        ToastView.showError(message: message)
     }
 
     private func navigateToLogin() {

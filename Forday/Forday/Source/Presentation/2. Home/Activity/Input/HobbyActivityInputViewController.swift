@@ -182,6 +182,10 @@ extension HobbyActivityInputViewController {
                     // Parent view controller will handle dismiss and navigation
                     onActivityCreated?()
                 }
+            } catch let appError as AppError {
+                await MainActor.run {
+                    showError(appError.userMessage)
+                }
             } catch {
                 await MainActor.run {
                     showError(error.localizedDescription)
@@ -189,15 +193,9 @@ extension HobbyActivityInputViewController {
             }
         }
     }
-    
+
     private func showError(_ message: String) {
-        let alert = UIAlertController(
-            title: "오류",
-            message: message,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
+        ToastView.showError(message: message)
     }
 
     private func handleAIToastTapped() {
@@ -224,6 +222,12 @@ extension HobbyActivityInputViewController {
                     // Dismiss loading and show selection
                     self.dismiss(animated: true) {
                         self.showAISelectionView(with: aiRecommendations)
+                    }
+                }
+            } catch let appError as AppError {
+                await MainActor.run {
+                    self.dismiss(animated: true) {
+                        self.showError(appError.userMessage)
                     }
                 }
             } catch {

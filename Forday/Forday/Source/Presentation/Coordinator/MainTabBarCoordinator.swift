@@ -39,17 +39,6 @@ class MainTabBarCoordinator: NSObject, Coordinator {
         self.homeViewController = homeVC
         let homeNav = createNavigationController(rootViewController: homeVC)
 
-        // 발견 탭
-        let recommendVC = UIViewController()
-        recommendVC.view.backgroundColor = .systemBackground
-        recommendVC.title = "발견"
-        recommendVC.tabBarItem = UITabBarItem(
-            title: "발견",
-            image: .Gnb.recommendation,
-            selectedImage: .Gnb.recommendationFill
-        )
-        let recommendNav = createNavigationController(rootViewController: recommendVC)
-
         // 작성 탭 (더미 - 실제로는 presentActivityRecord()에서 present됨)
         let recordVC = UIViewController()
         recordVC.tabBarItem = UITabBarItem(
@@ -57,16 +46,6 @@ class MainTabBarCoordinator: NSObject, Coordinator {
             image: .Gnb.write,
             selectedImage: .Gnb.write
         )
-
-        // 소식 탭
-        let storiesVC = StoriesViewController()
-        storiesVC.coordinator = self
-        storiesVC.tabBarItem = UITabBarItem(
-            title: "소식",
-            image: .Gnb.story,
-            selectedImage: .Gnb.storyFill
-        )
-        let storyNav = createNavigationController(rootViewController: storiesVC)
 
         // 프로필 탭
         let profileVC = MyPageViewController()
@@ -80,17 +59,16 @@ class MainTabBarCoordinator: NSObject, Coordinator {
         )
         let profileNav = createNavigationController(rootViewController: profileVC)
 
-        // TabBar 설정
+        // TabBar 설정 (홈, 작성, 마이)
         tabBarController.viewControllers = [
             homeNav,
-            recommendNav,
             recordVC,
-            storyNav,
             profileNav,
         ]
-        
+
         tabBarController.delegate = self
         tabBarController.tabBar.tintColor = .neutral900
+        tabBarController.tabBar.backgroundColor = .neutralWhite
     }
 
     private func createNavigationController(rootViewController: UIViewController) -> UINavigationController {
@@ -115,21 +93,27 @@ class MainTabBarCoordinator: NSObject, Coordinator {
 
 extension MainTabBarCoordinator: UITabBarControllerDelegate {
     func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
-        
-        // 가운데 탭(index 2) 선택 시
+
+        // 작성 탭(index 1) 선택 시
         if let viewControllers = tabBarController.viewControllers,
-           viewControllers.firstIndex(of: viewController) == 2 {
-            
+           viewControllers.firstIndex(of: viewController) == 1 {
+
             // ActivityRecordViewController present
             presentActivityRecord()
-            
+
             return false  // 탭 전환 막음
         }
-        
+
         return true  // 다른 탭은 정상 전환
     }
     
     private func presentActivityRecord() {
+        // 오늘 이미 활동 기록을 완료했는지 확인
+        if homeViewController?.isActivityRecordedToday() == true {
+            ToastView.showError(message: "오늘은 활동 기록을 이미 완료했어요")
+            return
+        }
+
         // HomeViewController에서 currentHobbyId 가져오기
         guard let hobbyId = homeViewController?.getCurrentHobbyId() else {
             print("❌ 취미 ID 없음 - ActivityRecordViewController를 표시할 수 없습니다")
@@ -183,7 +167,22 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
 
         // Push to MyPage navigation stack
         if let myPageNav = tabBarController.viewControllers?.last as? UINavigationController {
+            // Hide navigation bar before pushing to avoid flash
+            myPageNav.setNavigationBarHidden(true, animated: false)
             myPageNav.pushViewController(profileSettingsVC, animated: true)
+        }
+    }
+
+    func showGeneralSettings() {
+        // Create ViewController
+        let generalSettingsVC = GeneralSettingsViewController()
+        generalSettingsVC.coordinator = self
+
+        // Push to currently selected navigation stack
+        if let currentNav = tabBarController.selectedViewController as? UINavigationController {
+            // Hide navigation bar before pushing to avoid flash
+            currentNav.setNavigationBarHidden(true, animated: false)
+            currentNav.pushViewController(generalSettingsVC, animated: true)
         }
     }
 
@@ -256,8 +255,8 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
     }
 
     func updateTabBarRecordingButtonState(enabled: Bool) {
-        // Get recording tab (index 2)
-        guard let recordVC = tabBarController.viewControllers?[2] else { return }
+        // Get recording tab (index 1)
+        guard let recordVC = tabBarController.viewControllers?[1] else { return }
         recordVC.tabBarItem.isEnabled = enabled
     }
 
@@ -268,8 +267,8 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
 
         // When UserProfileViewController is ready:
         // let profileVC = UserProfileViewController(userId: userId)
-        // if let storiesNav = tabBarController.viewControllers?[3] as? UINavigationController {
-        //     storiesNav.pushViewController(profileVC, animated: true)
+        // if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
+        //     homeNav.pushViewController(profileVC, animated: true)
         // }
     }
 

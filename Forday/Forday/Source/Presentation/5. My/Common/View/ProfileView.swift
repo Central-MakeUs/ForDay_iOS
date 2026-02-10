@@ -15,7 +15,6 @@ final class ProfileView: UIView {
 
     private let navigationView = UIView()
     private let titleLabel = UILabel()
-    let notificationButton = UIButton()
     let settingsButton = UIButton()
 
     let scrollView = UIScrollView()
@@ -41,12 +40,6 @@ final class ProfileView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - Public Methods
-
-    func updateNotificationIcon(hasNotification: Bool) {
-        let icon: UIImage? = hasNotification ? .Icon.notificationOn : .Icon.notificationOff
-        notificationButton.setImage(icon, for: .normal)
-    }
 }
 
 // MARK: - Setup
@@ -62,11 +55,6 @@ extension ProfileView {
         titleLabel.do {
             $0.setTextWithTypography("마이페이지", style: .header22)
             $0.textColor = .neutral900
-        }
-
-        notificationButton.do {
-            $0.setImage(.Icon.notificationOff, for: .normal)
-            $0.tintColor = .neutral900
         }
 
         settingsButton.do {
@@ -93,7 +81,6 @@ extension ProfileView {
         addSubview(navigationView)
         navigationView.addSubview(titleLabel)
         navigationView.addSubview(settingsButton)
-        navigationView.addSubview(notificationButton)
 
         addSubview(scrollView)
         scrollView.addSubview(scrollContentView)
@@ -115,12 +102,6 @@ extension ProfileView {
 
         settingsButton.snp.makeConstraints {
             $0.trailing.equalToSuperview().offset(-20)
-            $0.centerY.equalToSuperview()
-            $0.width.height.equalTo(24)
-        }
-
-        notificationButton.snp.makeConstraints {
-            $0.trailing.equalTo(settingsButton.snp.leading).offset(-16)
             $0.centerY.equalToSuperview()
             $0.width.height.equalTo(24)
         }

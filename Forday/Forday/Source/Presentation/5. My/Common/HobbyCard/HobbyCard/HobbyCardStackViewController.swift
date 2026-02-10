@@ -49,9 +49,8 @@ extension HobbyCardStackViewController {
         view.backgroundColor = .systemBackground
 
         titleLabel.do {
-            $0.text = "66일이 지속된 취미카드예요!"
-            $0.font = .systemFont(ofSize: 20, weight: .bold)
-            $0.textColor = .label
+            $0.setTextWithTypography("66일이 지속된 취미카드예요!", style: .header18)
+            $0.textColor = .neutral900
             $0.textAlignment = .left
         }
     }
@@ -88,23 +87,23 @@ extension HobbyCardStackViewController {
         if cards.isEmpty {
             // Show empty state
             cardStackView.isHidden = true
-            titleLabel.isHidden = true
+            titleLabel.text = "아직 생성된 취미카드가 없어요."
+            titleLabel.isHidden = false
 
             if emptyStateView.superview == nil {
                 view.addSubview(emptyStateView)
                 emptyStateView.snp.makeConstraints {
-                    $0.edges.equalToSuperview()
+                    $0.top.equalTo(titleLabel.snp.bottom).offset(100)
+                    $0.leading.trailing.equalToSuperview()
+                    $0.height.equalTo(200)
                 }
             }
 
-            emptyStateView.configure(
-                icon: UIImage(systemName: "rectangle.stack"),
-                message: "66일을 완료한 취미카드가 없습니다.\n취미를 완료하면 카드가 생성됩니다!",
-                actionTitle: nil
-            )
+            emptyStateView.configureForHobbyCards()
         } else {
             // Show cards
             cardStackView.isHidden = false
+            titleLabel.text = "66일이 지속된 취미카드예요!"
             titleLabel.isHidden = false
             emptyStateView.removeFromSuperview()
 

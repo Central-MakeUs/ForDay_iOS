@@ -130,14 +130,12 @@ extension ScrapGridViewController {
             guard emptyStateView.superview == nil else { return }
             view.addSubview(emptyStateView)
             emptyStateView.snp.makeConstraints {
-                $0.edges.equalToSuperview()
+                $0.top.equalToSuperview().offset(100)
+                $0.leading.trailing.equalToSuperview()
+                $0.height.equalTo(200)
             }
 
-            emptyStateView.configure(
-                icon: UIImage(systemName: "bookmark"),
-                message: "스크랩한 활동이 없습니다.\n마음에 드는 활동을 스크랩해보세요!",
-                actionTitle: nil
-            )
+            emptyStateView.configureForScraps()
         }
     }
 }

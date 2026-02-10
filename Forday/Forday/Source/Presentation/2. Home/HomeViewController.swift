@@ -362,6 +362,7 @@ extension HomeViewController {
         // AI 추천 토스트 설정 및 펼치기 애니메이션
         if hasHobbies {
             homeView.configureToast(with: homeInfo.greetingMessage, aiCallRemaining: homeInfo.aiCallRemaining)
+            homeView.toastView.setInteractionEnabled(true)  // 터치 활성화
             // 약간의 딜레이 후 펼치기 애니메이션
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
                 self?.homeView.expandToast(animated: true)
@@ -535,8 +536,7 @@ extension HomeViewController {
             coordinator?.showAddHobbyOnboarding()
 
         case .generalSettings:
-            // TODO: 전체설정 화면으로 이동
-            print("전체설정 탭")
+            coordinator?.showGeneralSettings()
         }
     }
 
@@ -710,6 +710,12 @@ extension HomeViewController {
     }
 
     private func showAIRecommendationModal() {
+        // AI 호출 횟수 초과 시 토스트 표시
+        if viewModel.homeInfo?.aiCallRemaining == false {
+            ToastView.showError(message: "AI 호출 횟수를 초과하였습니다")
+            return
+        }
+
         let containerVC = AIRecommendationContainerViewController(viewModel: viewModel)
         containerVC.modalPresentationStyle = .pageSheet
 
@@ -719,6 +725,11 @@ extension HomeViewController {
         }
 
         present(containerVC, animated: true)
+    }
+
+    /// 오늘 활동 기록 완료 여부 확인
+    func isActivityRecordedToday() -> Bool {
+        return stickerBoardViewModel.stickerBoard?.activityRecordedToday == true
     }
 
     // MARK: - Floating Action Menu

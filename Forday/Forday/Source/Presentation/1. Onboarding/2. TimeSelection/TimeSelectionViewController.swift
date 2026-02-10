@@ -137,6 +137,10 @@ class TimeSelectionViewController: BaseOnboardingViewController {
                         self.onChangeComplete?()
                     }
                 }
+            } catch let appError as AppError {
+                await MainActor.run {
+                    self.showError(appError.userMessage)
+                }
             } catch {
                 await MainActor.run {
                     self.showError(error.localizedDescription)
@@ -146,13 +150,7 @@ class TimeSelectionViewController: BaseOnboardingViewController {
     }
 
     private func showError(_ message: String) {
-        let alert = UIAlertController(
-            title: "오류",
-            message: message,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
+        ToastView.showError(message: message)
     }
 }
 

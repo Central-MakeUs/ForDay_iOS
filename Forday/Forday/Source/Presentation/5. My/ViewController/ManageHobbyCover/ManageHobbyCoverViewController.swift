@@ -43,17 +43,11 @@ class ManageHobbyCoverViewController: UIViewController {
         setupCollectionViews()
         bind()
         loadInitialData()
+
+        // Hide navigation bar immediately in viewDidLoad
+        navigationController?.setNavigationBarHidden(true, animated: false)
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(true, animated: animated)
-    }
-
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        navigationController?.setNavigationBarHidden(false, animated: animated)
-    }
 
     // MARK: - Setup
 
@@ -257,11 +251,6 @@ extension ManageHobbyCoverViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if collectionView == manageCoverView.hobbyCollectionView {
             let hobby = viewModel.hobbies[indexPath.item]
-
-            // Archived 취미는 선택 불가
-            guard hobby.status != .archived else {
-                return
-            }
 
             // 카메라 아이콘 클릭으로 간주 → 바텀시트
             showCoverImageOptions(for: hobby)
