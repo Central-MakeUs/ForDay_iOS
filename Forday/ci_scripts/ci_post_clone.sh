@@ -8,7 +8,7 @@ mkdir -p "$(dirname "$CONFIG_PATH")"
 
 cat <<EOF > "$CONFIG_PATH"
 KAKAO_APP_KEY = $KAKAO_APP_KEY
-BASE_URL = https:/\$()/$BASE_URL
+BASE_URL = $BASE_URL
 EOF
 
 echo "✅ Config.xcconfig 파일 생성 완료: $CONFIG_PATH"
