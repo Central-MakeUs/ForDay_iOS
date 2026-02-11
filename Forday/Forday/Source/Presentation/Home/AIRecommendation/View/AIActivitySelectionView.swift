@@ -13,7 +13,7 @@ import Combine
 
 class AIActivitySelectionView: UIView {
 
-    // Properties
+    // MARK: - UI Components
 
     private let scrollView = UIScrollView()
     private let contentView = UIView()
@@ -27,12 +27,22 @@ class AIActivitySelectionView: UIView {
     private let refreshCountLabel = UILabel()
     private let nextButton = UIButton()
 
-    private let result: AIRecommendationResult
+    // Skeleton Views
+    private let iconSkeleton = SkeletonView()
+    private let titleSkeleton1 = SkeletonView()
+    private let titleSkeleton2 = SkeletonView()
+    private let skeletonStackView = UIStackView()
+    private var activitySkeletons: [ActivityItemSkeletonView] = []
+
+    // MARK: - Properties
+
+    private var result: AIRecommendationResult
     private let hobbyId: Int?
     private let createActivitiesUseCase: CreateActivitiesUseCase?
 
     private var activityViews: [ActivityItemView] = []
     private var selectedActivityView: ActivityItemView?
+    private var isSkeletonVisible = false
 
     // Callbacks
     /// 저장 모드: hobbyId가 있을 때 CreateActivitiesUseCase로 저장 후 호출
@@ -116,6 +126,32 @@ extension AIActivitySelectionView {
             $0.distribution = .fill
         }
 
+        // Skeleton styles
+        iconSkeleton.do {
+            $0.layer.cornerRadius = 30
+            $0.isHidden = true
+        }
+
+        titleSkeleton1.do {
+            $0.layer.cornerRadius = 4
+            $0.isHidden = true
+        }
+
+        titleSkeleton2.do {
+            $0.layer.cornerRadius = 4
+            $0.isHidden = true
+        }
+
+        skeletonStackView.do {
+            $0.axis = .vertical
+            $0.spacing = 12
+            $0.distribution = .fill
+            $0.isHidden = true
+        }
+
+        // Setup skeleton items
+        setupSkeletonItems()
+
         refreshButton.do {
             var config = UIButton.Configuration.plain()
             config.image = .Icon.reload
@@ -147,6 +183,15 @@ extension AIActivitySelectionView {
         }
     }
 
+    private func setupSkeletonItems() {
+        // Create 3 skeleton items
+        for _ in 0..<3 {
+            let skeleton = ActivityItemSkeletonView()
+            activitySkeletons.append(skeleton)
+            skeletonStackView.addArrangedSubview(skeleton)
+        }
+    }
+
     private func layout() {
         addSubview(scrollView)
         scrollView.addSubview(contentView)
@@ -154,6 +199,12 @@ extension AIActivitySelectionView {
         contentView.addSubview(iconImageView)
         contentView.addSubview(titleLabel)
         contentView.addSubview(activityStackView)
+
+        // Skeleton views
+        contentView.addSubview(iconSkeleton)
+        contentView.addSubview(titleSkeleton1)
+        contentView.addSubview(titleSkeleton2)
+        contentView.addSubview(skeletonStackView)
 
         addSubview(refreshButton)
         addSubview(refreshCountLabel)
@@ -187,6 +238,35 @@ extension AIActivitySelectionView {
         // Activity Stack
         activityStackView.snp.makeConstraints {
             $0.top.equalTo(titleLabel.snp.bottom).offset(24)
+            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.bottom.equalToSuperview().offset(-20)
+        }
+
+        // Icon Skeleton
+        iconSkeleton.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(24)
+            $0.centerX.equalToSuperview()
+            $0.width.height.equalTo(60)
+        }
+
+        // Title Skeletons
+        titleSkeleton1.snp.makeConstraints {
+            $0.top.equalTo(iconSkeleton.snp.bottom).offset(16)
+            $0.centerX.equalToSuperview()
+            $0.width.equalTo(200)
+            $0.height.equalTo(20)
+        }
+
+        titleSkeleton2.snp.makeConstraints {
+            $0.top.equalTo(titleSkeleton1.snp.bottom).offset(8)
+            $0.centerX.equalToSuperview()
+            $0.width.equalTo(150)
+            $0.height.equalTo(20)
+        }
+
+        // Skeleton Stack
+        skeletonStackView.snp.makeConstraints {
+            $0.top.equalTo(titleSkeleton2.snp.bottom).offset(24)
             $0.leading.trailing.equalToSuperview().inset(20)
             $0.bottom.equalToSuperview().offset(-20)
         }
@@ -293,6 +373,7 @@ extension AIActivitySelectionView {
     }
 
     @objc private func refreshButtonTapped() {
+        showSkeleton()
         onRefreshTapped?()
     }
 
@@ -348,6 +429,75 @@ extension AIActivitySelectionView {
         var config = nextButton.configuration
         config?.baseBackgroundColor = isEnabled ? .systemOrange : .systemGray4
         nextButton.configuration = config
+    }
+}
+
+// MARK: - Skeleton
+
+extension AIActivitySelectionView {
+    func showSkeleton() {
+        guard !isSkeletonVisible else { return }
+        isSkeletonVisible = true
+
+        // Hide actual content
+        iconImageView.isHidden = true
+        titleLabel.isHidden = true
+        activityStackView.isHidden = true
+
+        // Show skeleton views
+        iconSkeleton.isHidden = false
+        titleSkeleton1.isHidden = false
+        titleSkeleton2.isHidden = false
+        skeletonStackView.isHidden = false
+
+        // Start animations
+        iconSkeleton.startAnimating()
+        titleSkeleton1.startAnimating()
+        titleSkeleton2.startAnimating()
+        activitySkeletons.forEach { $0.startAnimating() }
+
+        // Disable next button during loading
+        setNextButtonEnabled(false)
+    }
+
+    func hideSkeleton() {
+        guard isSkeletonVisible else { return }
+        isSkeletonVisible = false
+
+        // Stop animations
+        iconSkeleton.stopAnimating()
+        titleSkeleton1.stopAnimating()
+        titleSkeleton2.stopAnimating()
+        activitySkeletons.forEach { $0.stopAnimating() }
+
+        // Hide skeleton views
+        iconSkeleton.isHidden = true
+        titleSkeleton1.isHidden = true
+        titleSkeleton2.isHidden = true
+        skeletonStackView.isHidden = true
+
+        // Show actual content
+        iconImageView.isHidden = false
+        titleLabel.isHidden = false
+        activityStackView.isHidden = false
+    }
+
+    func update(with newResult: AIRecommendationResult) {
+        // Update result
+        self.result = newResult
+
+        // Clear existing activity views
+        activityViews.forEach { $0.removeFromSuperview() }
+        activityViews.removeAll()
+        selectedActivityView = nil
+
+        // Update UI
+        configure()
+        setupActivities()
+        updateRefreshButton()
+
+        // Hide skeleton
+        hideSkeleton()
     }
 }
 

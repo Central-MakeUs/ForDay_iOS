@@ -14,6 +14,8 @@ class HobbySelectionViewController: BaseOnboardingViewController {
 
     private let hobbyView = HobbySelectionView()
     private let viewModel: HobbySelectionViewModel
+    private var isShowingSkeleton = false
+    private let skeletonItemCount = 6  // 로딩 중 표시할 스켈레톤 셀 개수
 
     // MARK: - Initialization
 
@@ -113,8 +115,8 @@ extension HobbySelectionViewController {
 
         viewModel.$isLoading
             .receive(on: DispatchQueue.main)
-            .sink { isLoading in
-                // TODO: 로딩 인디케이터 표시/숨김
+            .sink { [weak self] isLoading in
+                self?.updateSkeletonState(isLoading: isLoading)
             }
             .store(in: &cancellables)
     }
@@ -145,12 +147,21 @@ extension HobbySelectionViewController {
         popup.modalTransitionStyle = .crossDissolve
         present(popup, animated: true)
     }
+
+    private func updateSkeletonState(isLoading: Bool) {
+        isShowingSkeleton = isLoading
+        hobbyView.collectionView.reloadData()
+        hobbyView.updateCollectionViewHeight()
+    }
 }
 
 // MARK: - UICollectionViewDataSource
 
 extension HobbySelectionViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if isShowingSkeleton {
+            return skeletonItemCount
+        }
         return viewModel.hobbies.count
     }
 
@@ -162,9 +173,14 @@ extension HobbySelectionViewController: UICollectionViewDataSource {
             return UICollectionViewCell()
         }
 
-        let hobby = viewModel.hobbies[indexPath.item]
-        let isSelected = viewModel.isSelected(at: indexPath.item)
-        cell.configure(with: hobby, isSelected: isSelected)
+        if isShowingSkeleton {
+            cell.showSkeleton()
+        } else {
+            cell.hideSkeleton()
+            let hobby = viewModel.hobbies[indexPath.item]
+            let isSelected = viewModel.isSelected(at: indexPath.item)
+            cell.configure(with: hobby, isSelected: isSelected)
+        }
 
         return cell
     }
@@ -174,6 +190,9 @@ extension HobbySelectionViewController: UICollectionViewDataSource {
 
 extension HobbySelectionViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        // Ignore selection while showing skeleton
+        guard !isShowingSkeleton else { return }
+
         viewModel.selectHobby(at: indexPath.item)
         hobbyView.resetCustomInputButton()
     }
