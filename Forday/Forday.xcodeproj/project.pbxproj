@@ -18,7 +18,18 @@
 		6C944CBD2F0AD02D007D9AB5 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6C944CBC2F0AD02D007D9AB5 /* SnapKit */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		6C325D512F3B5BB500F87C18 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6C944C982F0ACF42007D9AB5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6C944C9F2F0ACF42007D9AB5;
+			remoteInfo = Forday;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		6C325D4D2F3B5BB500F87C18 /* FordayTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FordayTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C944CA02F0ACF42007D9AB5 /* Forday.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Forday.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -33,6 +44,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		6C325D4E2F3B5BB500F87C18 /* FordayTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = FordayTests;
+			sourceTree = "<group>";
+		};
 		6C944CA22F0ACF42007D9AB5 /* Forday */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -44,6 +60,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		6C325D4A2F3B5BB500F87C18 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6C944C9D2F0ACF42007D9AB5 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -67,6 +90,7 @@
 			isa = PBXGroup;
 			children = (
 				6C944CA22F0ACF42007D9AB5 /* Forday */,
+				6C325D4E2F3B5BB500F87C18 /* FordayTests */,
 				6C944CA12F0ACF42007D9AB5 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -75,6 +99,7 @@
 			isa = PBXGroup;
 			children = (
 				6C944CA02F0ACF42007D9AB5 /* Forday.app */,
+				6C325D4D2F3B5BB500F87C18 /* FordayTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -82,6 +107,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		6C325D4C2F3B5BB500F87C18 /* FordayTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6C325D532F3B5BB500F87C18 /* Build configuration list for PBXNativeTarget "FordayTests" */;
+			buildPhases = (
+				6C325D492F3B5BB500F87C18 /* Sources */,
+				6C325D4A2F3B5BB500F87C18 /* Frameworks */,
+				6C325D4B2F3B5BB500F87C18 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6C325D522F3B5BB500F87C18 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				6C325D4E2F3B5BB500F87C18 /* FordayTests */,
+			);
+			name = FordayTests;
+			packageProductDependencies = (
+			);
+			productName = FordayTests;
+			productReference = 6C325D4D2F3B5BB500F87C18 /* FordayTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		6C944C9F2F0ACF42007D9AB5 /* Forday */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 6C944CB32F0ACF43007D9AB5 /* Build configuration list for PBXNativeTarget "Forday" */;
@@ -123,6 +171,10 @@
 				LastSwiftUpdateCheck = 2610;
 				LastUpgradeCheck = 2610;
 				TargetAttributes = {
+					6C325D4C2F3B5BB500F87C18 = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = 6C944C9F2F0ACF42007D9AB5;
+					};
 					6C944C9F2F0ACF42007D9AB5 = {
 						CreatedOnToolsVersion = 26.1.1;
 					};
@@ -151,11 +203,19 @@
 			projectRoot = "";
 			targets = (
 				6C944C9F2F0ACF42007D9AB5 /* Forday */,
+				6C325D4C2F3B5BB500F87C18 /* FordayTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		6C325D4B2F3B5BB500F87C18 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6C944C9E2F0ACF42007D9AB5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -166,6 +226,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		6C325D492F3B5BB500F87C18 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6C944C9C2F0ACF42007D9AB5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -175,7 +242,57 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		6C325D522F3B5BB500F87C18 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6C944C9F2F0ACF42007D9AB5 /* Forday */;
+			targetProxy = 6C325D512F3B5BB500F87C18 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		6C325D542F3B5BB500F87C18 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4YH4UGRTMH;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Soop.FordayTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Forday.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Forday";
+			};
+			name = Debug;
+		};
+		6C325D552F3B5BB500F87C18 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4YH4UGRTMH;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Soop.FordayTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Forday.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Forday";
+			};
+			name = Release;
+		};
 		6C944CB42F0ACF43007D9AB5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -211,7 +328,7 @@
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
@@ -251,7 +368,7 @@
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
@@ -384,6 +501,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		6C325D532F3B5BB500F87C18 /* Build configuration list for PBXNativeTarget "FordayTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6C325D542F3B5BB500F87C18 /* Debug */,
+				6C325D552F3B5BB500F87C18 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		6C944C9B2F0ACF42007D9AB5 /* Build configuration list for PBXProject "Forday" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
