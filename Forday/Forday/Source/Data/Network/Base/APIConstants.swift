@@ -9,10 +9,14 @@ import Foundation
 
 struct APIConstants {
     static let baseURL: String = {
-        guard let url = Bundle.main.infoDictionary?["BASE_URL"] as? String else {
-            fatalError("BASE_URL not found in Info.plist")
+        #if targetEnvironment(simulator)
+        return "http://localhost:8080"
+        #else
+        guard let ip = Bundle.main.infoDictionary?["LOCAL_MAC_IP"] as? String else {
+            fatalError("LOCAL_MAC_IP not found in Info.plist")
         }
-        return url
+        return "http://\(ip):8080"
+        #endif
     }()
     static let contentType = "Content-Type"
     static let applicationJson = "application/json"
