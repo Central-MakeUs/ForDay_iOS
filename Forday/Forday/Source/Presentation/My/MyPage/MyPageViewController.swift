@@ -276,11 +276,15 @@ extension MyPageViewController {
     }
 
     private func loadData() {
+        // Show skeleton while loading
+        myPageView.showSkeleton()
+
         Task {
             await viewModel.fetchInitialData()
 
             // After data is loaded, setup child view controllers
             await MainActor.run {
+                myPageView.hideSkeleton()
                 setupChildViewControllers()
                 switchToTab(.activities)
             }

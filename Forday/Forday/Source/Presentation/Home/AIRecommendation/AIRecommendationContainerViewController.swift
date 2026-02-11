@@ -103,6 +103,13 @@ extension AIRecommendationContainerViewController {
     }
     
     private func showSelection(with result: AIRecommendationResult) {
+        // If selectionView exists, update it (refresh case)
+        if let existingView = selectionView {
+            existingView.update(with: result)
+            return
+        }
+
+        // First time showing selection
         currentStep = .selection
 
         guard let hobbyId = viewModel.currentHobbyId else {
@@ -118,7 +125,7 @@ extension AIRecommendationContainerViewController {
         }
 
         selectionView.onRefreshTapped = { [weak self] in
-            self?.startAIRecommendation() // 재요청
+            self?.refreshAIRecommendation()
         }
 
         selectionView.onError = { [weak self] errorMessage in
@@ -127,6 +134,20 @@ extension AIRecommendationContainerViewController {
 
         self.selectionView = selectionView
         transitionToView(selectionView)
+    }
+
+    /// Refresh without transitioning to loading view (uses skeleton in selection view)
+    private func refreshAIRecommendation() {
+        Task {
+            do {
+                try await viewModel.fetchAIRecommendations()
+            } catch {
+                await MainActor.run {
+                    self.selectionView?.hideSkeleton()
+                    self.showError(error)
+                }
+            }
+        }
     }
     
     private func transitionToView(_ newView: UIView) {
