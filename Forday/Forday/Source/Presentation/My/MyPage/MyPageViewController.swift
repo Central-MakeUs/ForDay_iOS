@@ -76,6 +76,9 @@ final class MyPageViewController: UIViewController {
             myPageView.showSkeleton()
         }
 
+        // 취미 필터 선택 상태 초기화 (전체 보기로 리셋)
+        viewModel.resetHobbyFilter()
+
         Task {
             await viewModel.fetchInitialData()
 

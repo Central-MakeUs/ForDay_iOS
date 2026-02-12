@@ -128,6 +128,11 @@ final class MyPageViewModel {
         currentTab = tab
     }
 
+    /// 취미 필터 선택 상태 초기화 (전체 보기로 리셋)
+    func resetHobbyFilter() {
+        selectedHobbyIds = []
+    }
+
     func filterByHobbies(hobbyIds: Set<Int>) async {
         guard !isGuestUser else { return }
 
