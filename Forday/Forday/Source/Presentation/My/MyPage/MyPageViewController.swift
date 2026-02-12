@@ -36,8 +36,8 @@ final class MyPageViewController: UIViewController {
     // Guest login bottom sheet
     private var hasShownGuestLoginSheet = false
 
-    // Track if hobbies need refresh (set by event bus, consumed by viewWillAppear)
-    private var needsHobbiesRefresh = false
+    // Track if this is the first load
+    private var isFirstLoad = true
 
     // MARK: - Initialization
 
@@ -63,19 +63,29 @@ final class MyPageViewController: UIViewController {
         setupSegmentedControl()
         setupScrollView()
         bind()
-        setupEventBus()
-        loadData()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        loadMyPageData()
+    }
 
-        // Refresh hobbies if flag is set (e.g., after cover image update)
-        if needsHobbiesRefresh {
-            needsHobbiesRefresh = false
-            Task {
-                await viewModel.refreshHobbies()
+    private func loadMyPageData() {
+        if isFirstLoad {
+            myPageView.showSkeleton()
+        }
+
+        Task {
+            await viewModel.fetchInitialData()
+
+            await MainActor.run {
+                if isFirstLoad {
+                    myPageView.hideSkeleton()
+                    setupChildViewControllers()
+                    switchToTab(.activities)
+                    isFirstLoad = false
+                }
             }
         }
     }
@@ -129,84 +139,6 @@ extension MyPageViewController {
 
     private func setupScrollView() {
         myPageView.scrollView.delegate = self
-    }
-
-    private func setupEventBus() {
-        // Listen to profile updates
-        AppEventBus.shared.profileDidUpdate
-            .sink { [weak self] in
-                Task {
-                    await self?.viewModel.refreshUserProfile()
-                }
-            }
-            .store(in: &cancellables)
-
-        // Listen to hobbies updates
-        AppEventBus.shared.hobbiesDidUpdate
-            .sink { [weak self] in
-                // Set flag to refresh when view appears (after navigation completes)
-                // This ensures we get fresh data after server has updated
-                self?.needsHobbiesRefresh = true
-            }
-            .store(in: &cancellables)
-
-        // Listen to hobby creation
-        AppEventBus.shared.hobbyCreated
-            .sink { [weak self] hobbyId in
-                Task {
-                    // Refresh both hobbies and activities
-                    await self?.viewModel.refreshHobbies()
-                    await self?.viewModel.refreshActivities()
-                }
-            }
-            .store(in: &cancellables)
-
-        // Listen to hobby settings updates
-        AppEventBus.shared.hobbySettingsUpdated
-            .sink { [weak self] hobbyId in
-                Task {
-                    await self?.viewModel.refreshHobbies()
-                }
-            }
-            .store(in: &cancellables)
-
-        // Listen to hobby deletion
-        AppEventBus.shared.hobbyDeleted
-            .sink { [weak self] in
-                Task {
-                    // Refresh both hobbies and activities
-                    await self?.viewModel.refreshHobbies()
-                    await self?.viewModel.refreshActivities()
-                }
-            }
-            .store(in: &cancellables)
-
-        // Listen to activity record creation
-        AppEventBus.shared.activityRecordCreated
-            .sink { [weak self] hobbyId in
-                Task {
-                    await self?.viewModel.refreshActivities()
-                }
-            }
-            .store(in: &cancellables)
-
-        // Listen to activity record deletion
-        AppEventBus.shared.activityRecordDeleted
-            .sink { [weak self] in
-                Task {
-                    await self?.viewModel.refreshActivities()
-                }
-            }
-            .store(in: &cancellables)
-
-        // Listen to scrap updates (add/remove)
-        AppEventBus.shared.scrapDidUpdate
-            .sink { [weak self] in
-                Task {
-                    await self?.viewModel.refreshScraps()
-                }
-            }
-            .store(in: &cancellables)
     }
 
     private func bind() {
@@ -273,22 +205,6 @@ extension MyPageViewController {
                 self?.handleError(error)
             }
             .store(in: &cancellables)
-    }
-
-    private func loadData() {
-        // Show skeleton while loading
-        myPageView.showSkeleton()
-
-        Task {
-            await viewModel.fetchInitialData()
-
-            // After data is loaded, setup child view controllers
-            await MainActor.run {
-                myPageView.hideSkeleton()
-                setupChildViewControllers()
-                switchToTab(.activities)
-            }
-        }
     }
 
     private func setupChildViewControllers() {
@@ -537,7 +453,7 @@ extension MyPageViewController {
         case .network:
             title = "네트워크 오류"
             actions.append(UIAlertAction(title: "다시 시도", style: .default) { [weak self] _ in
-                self?.loadData()
+                self?.loadMyPageData()
             })
             actions.append(UIAlertAction(title: "취소", style: .cancel))
 
