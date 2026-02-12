@@ -83,16 +83,20 @@ final class FeedItemCell: UICollectionViewCell {
             )
         }
 
-        // Selection mode일 때 선택되지 않은 셀만 dim 처리
-        // Selection mode가 아닐 때는 dim 없음 (그라디언트/이미지가 바로 보임)
-        dimView.isHidden = !isSelectionMode || isSelected
+        // 선택 모드가 아닐 때: 모든 셀에 dim 처리 (opacity 40%)
+        // 선택 모드일 때: dim 없음
+        dimView.isHidden = isSelectionMode
 
-        // Selection mode이고 선택된 경우 라디오 버튼 표시
-        radioButton.isHidden = !isSelectionMode || !isSelected
+        // 선택 모드일 때만 라디오 버튼 표시
+        radioButton.isHidden = !isSelectionMode
 
-        if isSelected {
-            radioButton.image = UIImage(systemName: "checkmark.circle.fill")
-            radioButton.tintColor = .action001
+        // 라디오 버튼 이미지 설정
+        if isSelectionMode {
+            if isSelected {
+                radioButton.image = .Onoff.checkboxTrue
+            } else {
+                radioButton.image = .Onoff.radioFalse
+            }
         }
     }
 
@@ -241,11 +245,11 @@ extension FeedItemCell {
             $0.edges.equalToSuperview()
         }
 
-        // Radio button
+        // Radio button (오른쪽 상단)
         radioButton.snp.makeConstraints {
             $0.trailing.equalToSuperview().offset(-8)
-            $0.bottom.equalToSuperview().offset(-8)
-            $0.width.height.equalTo(24)
+            $0.top.equalToSuperview().offset(8)
+            $0.width.height.equalTo(20)
         }
     }
 }

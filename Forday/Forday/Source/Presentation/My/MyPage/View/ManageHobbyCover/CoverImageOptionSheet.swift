@@ -25,16 +25,6 @@ final class CoverImageOptionSheet: UIViewController {
     private let optionsStackView = UIStackView()
     private let galleryOptionCard = OptionCardView()
     private let activityOptionCard = OptionCardView()
-    private let bottomButtonView = UIView()
-    private let bottomGradientView = UIView()
-    private let confirmButton = UIButton(type: .system)
-
-    private var selectedOption: OptionType?
-
-    private enum OptionType {
-        case gallery
-        case activity
-    }
 
     // MARK: - Initialization
 
@@ -124,23 +114,6 @@ extension CoverImageOptionSheet {
         activityOptionCard.do {
             $0.configure(title: "내 활동 중에서 사진 선택")
         }
-
-        bottomButtonView.do {
-            $0.backgroundColor = .clear
-        }
-
-        confirmButton.do {
-            var config = UIButton.Configuration.filled()
-            config.baseForegroundColor = .neutralWhite
-            config.baseBackgroundColor = .action001
-            config.cornerStyle = .fixed
-            config.background.cornerRadius = 12
-            config.attributedTitle = AttributedString(
-                "설정완료",
-                attributes: AttributeContainer([.font: TypographyStyle.header16.font])
-            )
-            $0.configuration = config
-        }
     }
 
     private func layout() {
@@ -150,9 +123,6 @@ extension CoverImageOptionSheet {
         containerView.addSubview(optionsStackView)
         optionsStackView.addArrangedSubview(galleryOptionCard)
         optionsStackView.addArrangedSubview(activityOptionCard)
-        containerView.addSubview(bottomButtonView)
-        bottomButtonView.addSubview(bottomGradientView)
-        bottomButtonView.addSubview(confirmButton)
 
         dimmerView.snp.makeConstraints {
             $0.edges.equalToSuperview()
@@ -171,6 +141,7 @@ extension CoverImageOptionSheet {
             $0.top.equalTo(titleLabel.snp.bottom).offset(20)
             $0.leading.equalToSuperview().offset(20)
             $0.trailing.equalToSuperview().offset(-20)
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
         }
 
         galleryOptionCard.snp.makeConstraints {
@@ -179,24 +150,6 @@ extension CoverImageOptionSheet {
 
         activityOptionCard.snp.makeConstraints {
             $0.height.equalTo(54)
-        }
-
-        bottomButtonView.snp.makeConstraints {
-            $0.top.equalTo(optionsStackView.snp.bottom).offset(20)
-            $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalToSuperview()
-            $0.height.equalTo(88)
-        }
-
-        bottomGradientView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
-        }
-
-        confirmButton.snp.makeConstraints {
-            $0.leading.equalToSuperview().offset(16)
-            $0.trailing.equalToSuperview().offset(-16)
-            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-16)
-            $0.height.equalTo(56)
         }
 
         // Initial position for animation (off-screen)
@@ -212,8 +165,6 @@ extension CoverImageOptionSheet {
 
         let activityTap = UITapGestureRecognizer(target: self, action: #selector(activityOptionTapped))
         activityOptionCard.addGestureRecognizer(activityTap)
-
-        confirmButton.addTarget(self, action: #selector(confirmButtonTapped), for: .touchUpInside)
     }
 }
 
@@ -225,30 +176,14 @@ extension CoverImageOptionSheet {
     }
 
     @objc private func galleryOptionTapped() {
-        selectedOption = .gallery
-        galleryOptionCard.setSelected(true)
-        activityOptionCard.setSelected(false)
+        animateDismissal { [weak self] in
+            self?.onGallerySelected()
+        }
     }
 
     @objc private func activityOptionTapped() {
-        selectedOption = .activity
-        galleryOptionCard.setSelected(false)
-        activityOptionCard.setSelected(true)
-    }
-
-    @objc private func confirmButtonTapped() {
-        guard let option = selectedOption else {
-            // 선택하지 않은 경우 토스트 등으로 알림
-            return
-        }
-
         animateDismissal { [weak self] in
-            switch option {
-            case .gallery:
-                self?.onGallerySelected()
-            case .activity:
-                self?.onActivitySelected()
-            }
+            self?.onActivitySelected()
         }
     }
 
