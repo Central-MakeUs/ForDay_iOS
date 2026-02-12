@@ -17,6 +17,9 @@ final class ActivityRecordSuccessOverlayView: UIView {
     private let gradientView = UIView()
     private let containerView = UIView()
 
+    // 로띠 배경 이미지 (화면 가로 꽉차게, 정방형)
+    private let lottieBackgroundImageView = UIImageView()
+
     private let lottieView: LottieAnimationView = {
         if let dataAsset = NSDataAsset(name: "lottie/successRecord"),
            let animation = try? LottieAnimation.from(data: dataAsset.data) {
@@ -53,6 +56,12 @@ extension ActivityRecordSuccessOverlayView {
             $0.backgroundColor = .clear
         }
 
+        // Lottie 배경 이미지
+        lottieBackgroundImageView.do {
+            $0.image = .Lottie.successRecordBackground
+            $0.contentMode = .scaleAspectFill
+        }
+
         // Lottie
         lottieView.do {
             $0.loopMode = .playOnce
@@ -69,6 +78,7 @@ extension ActivityRecordSuccessOverlayView {
 
     private func layout() {
         addSubview(gradientView)
+        addSubview(lottieBackgroundImageView)
         addSubview(containerView)
         containerView.addSubview(lottieView)
         containerView.addSubview(messageLabel)
@@ -77,11 +87,19 @@ extension ActivityRecordSuccessOverlayView {
             $0.edges.equalToSuperview()
         }
 
+        // 배경 이미지: 화면 정가운데, 가로 꽉차게 (정방형)
+        lottieBackgroundImageView.snp.makeConstraints {
+            $0.centerX.centerY.equalToSuperview()
+            $0.leading.trailing.equalToSuperview()
+            $0.height.equalTo(lottieBackgroundImageView.snp.width)
+        }
+
         containerView.snp.makeConstraints {
             $0.center.equalToSuperview()
             $0.leading.trailing.equalToSuperview().inset(20)
         }
 
+        // 로띠 애니메이션: 화면 정가운데
         lottieView.snp.makeConstraints {
             $0.top.equalToSuperview()
             $0.centerX.equalToSuperview()

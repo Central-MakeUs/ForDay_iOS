@@ -18,6 +18,9 @@ class HomeViewController: UIViewController {
     let viewModel = HomeViewModel()
     private let stickerBoardViewModel = StickerBoardViewModel()
     private var cancellables = Set<AnyCancellable>()
+
+    // TODO: HomeInfo API에 nickname 필드 추가되면 getCurrentNickname() 수정 필요
+    // 현재는 greetingMessage에서 파싱하여 사용 중
     
     // Coordinator
     weak var coordinator: MainTabBarCoordinator?
@@ -727,6 +730,17 @@ extension HomeViewController {
 
     func getCurrentHobbyName() -> String? {
         return viewModel.homeInfo?.inProgressHobbies.first(where: { $0.currentHobby })?.hobbyName
+    }
+
+    func getCurrentNickname() -> String? {
+        // greetingMessage에서 닉네임 추출 (예: "유지님, 안녕하세요!" → "유지")
+        guard let greetingMessage = viewModel.homeInfo?.greetingMessage else { return nil }
+
+        // "님" 전까지의 문자열을 닉네임으로 추출
+        if let range = greetingMessage.range(of: "님") {
+            return String(greetingMessage[..<range.lowerBound])
+        }
+        return nil
     }
 }
 
