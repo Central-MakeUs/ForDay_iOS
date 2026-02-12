@@ -653,7 +653,10 @@ extension HomeViewController {
         }
 
         let activityListVC = ActivityListViewController(hobbyId: hobbyId)
-        navigationController?.pushViewController(activityListVC, animated: true)
+        activityListVC.isPresentedModally = true
+        let nav = UINavigationController(rootViewController: activityListVC)
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true)
     }
     
     @objc private func addActivityButtonTapped() {
@@ -704,9 +707,12 @@ extension HomeViewController {
         }
 
         let activityListVC = ActivityListViewController(hobbyId: hobbyId)
+        activityListVC.isPresentedModally = true
         activityListVC.shouldShowAIRecommendationToast = true
         activityListVC.aiCallRemaining = viewModel.homeInfo?.aiCallRemaining ?? true
-        navigationController?.pushViewController(activityListVC, animated: true)
+        let nav = UINavigationController(rootViewController: activityListVC)
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true)
     }
 
     private func showAIRecommendationModal() {
