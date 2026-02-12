@@ -294,7 +294,18 @@ extension ActivityRecordViewController {
                     // Notify HomeViewController to refresh sticker board
                     AppEventBus.shared.activityRecordCreated.send(viewModel.currentHobbyId)
 
-                    dismiss(animated: true)
+                    // 수정 모드면 기존대로 dismiss, 생성 모드면 상세 화면으로 전환
+                    if viewModel.isEditMode {
+                        dismiss(animated: true)
+                    } else {
+                        // 기록 완료 후 상세 화면으로 전환
+                        let nickname = coordinator?.getCurrentNickname() ?? "회원"
+                        coordinator?.showActivityDetailAfterRecord(
+                            activityRecordId: result.activityRecordId,
+                            nickname: nickname,
+                            from: self
+                        )
+                    }
                 }
             } catch ActivityRecordError.missingRequiredFields {
                 await MainActor.run {

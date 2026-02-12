@@ -20,12 +20,25 @@ final class ActivityDetailView: UIView {
         case withoutImageAndMemo // 이미지도 메모도 없는 경우
     }
 
+    // MARK: - Display Mode
+
+    enum DisplayMode {
+        case normal           // 일반 상세보기 (반응 버튼 표시)
+        case afterRecord      // 기록 완료 후 (홈으로 가기 버튼 표시)
+    }
+
     // MARK: - Properties
+
+    private var displayMode: DisplayMode = .normal
 
     // Custom Navigation
     private let navigationView = UIView()
+    private let navigationTitleLabel = UILabel()
     let backButton = UIButton()
     let moreButton = UIButton()
+
+    // 홈으로 가기 버튼 (기록 완료 후 모드에서만 표시)
+    let goHomeButton = UIButton()
 
     private let scrollView = UIScrollView()
     private let contentView = UIView()
@@ -232,6 +245,24 @@ extension ActivityDetailView {
             $0.tintColor = .neutral900
         }
 
+        navigationTitleLabel.do {
+            $0.setTextWithTypography("내 활동 보기", style: .header16)
+            $0.textColor = .neutral800
+            $0.textAlignment = .center
+            $0.isHidden = true  // 기본적으로 숨김
+        }
+
+        goHomeButton.do {
+            var config = UIButton.Configuration.filled()
+            config.title = "홈으로 가기"
+            config.baseBackgroundColor = .action001
+            config.baseForegroundColor = .neutralWhite
+            config.background.cornerRadius = 12
+            config.contentInsets = NSDirectionalEdgeInsets(top: 19, leading: 0, bottom: 19, trailing: 0)
+            $0.configuration = config
+            $0.isHidden = true  // 기본적으로 숨김
+        }
+
         scrollView.do {
             $0.showsVerticalScrollIndicator = true
         }
@@ -284,6 +315,10 @@ extension ActivityDetailView {
         addSubview(navigationView)
         navigationView.addSubview(backButton)
         navigationView.addSubview(moreButton)
+        navigationView.addSubview(navigationTitleLabel)
+
+        // 홈으로 가기 버튼
+        addSubview(goHomeButton)
 
         addSubview(scrollView)
         addSubview(reactionUsersScrollView)
@@ -309,6 +344,10 @@ extension ActivityDetailView {
             $0.width.height.equalTo(24)
         }
 
+        navigationTitleLabel.snp.makeConstraints {
+            $0.center.equalToSuperview()
+        }
+
         // Scroll view constraints
         scrollView.snp.makeConstraints {
             $0.top.equalTo(navigationView.snp.bottom)
@@ -326,6 +365,13 @@ extension ActivityDetailView {
         // Reaction buttons - safe area 고려
         reactionButtonsView.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview()
+            $0.bottom.equalTo(safeAreaLayoutGuide).offset(-16)
+        }
+
+        // 홈으로 가기 버튼
+        goHomeButton.snp.makeConstraints {
+            $0.leading.equalToSuperview().offset(16)
+            $0.trailing.equalToSuperview().offset(-16)
             $0.bottom.equalTo(safeAreaLayoutGuide).offset(-16)
         }
 
@@ -406,6 +452,53 @@ extension ActivityDetailView {
             $0.trailing.equalTo(memoContainerView).offset(-8)
             $0.bottom.equalTo(memoContainerView).offset(-8)
             $0.size.equalTo(64)
+        }
+    }
+}
+
+// MARK: - Public Methods
+
+extension ActivityDetailView {
+
+    /// 화면 표시 모드 설정
+    func setDisplayMode(_ mode: DisplayMode) {
+        displayMode = mode
+        updateDisplayMode()
+    }
+
+    private func updateDisplayMode() {
+        switch displayMode {
+        case .normal:
+            // 일반 모드: 네비게이션 버튼 표시, 반응 버튼 표시, 홈으로 가기 숨김
+            backButton.isHidden = false
+            moreButton.isHidden = false
+            navigationTitleLabel.isHidden = true
+            reactionButtonsView.isHidden = false
+            reactionUsersScrollView.isHidden = false
+            goHomeButton.isHidden = true
+
+            // 스크롤뷰 하단 여백 조정
+            scrollView.snp.remakeConstraints {
+                $0.top.equalTo(navigationView.snp.bottom)
+                $0.leading.trailing.equalToSuperview()
+                $0.bottom.equalTo(reactionUsersScrollView.snp.top)
+            }
+
+        case .afterRecord:
+            // 기록 완료 후 모드: 네비게이션 버튼 숨김, 타이틀만 표시, 반응 버튼 숨김, 홈으로 가기 표시
+            backButton.isHidden = true
+            moreButton.isHidden = true
+            navigationTitleLabel.isHidden = false
+            reactionButtonsView.isHidden = true
+            reactionUsersScrollView.isHidden = true
+            goHomeButton.isHidden = false
+
+            // 스크롤뷰 하단 여백 조정 (홈으로 가기 버튼 위까지)
+            scrollView.snp.remakeConstraints {
+                $0.top.equalTo(navigationView.snp.bottom)
+                $0.leading.trailing.equalToSuperview()
+                $0.bottom.equalTo(goHomeButton.snp.top).offset(-16)
+            }
         }
     }
 }
