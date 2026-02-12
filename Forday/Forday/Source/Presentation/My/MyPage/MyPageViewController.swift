@@ -413,9 +413,11 @@ extension MyPageViewController {
         let vc = GeneralSettingsViewController()
         vc.coordinator = coordinator
 
-        // Hide navigation bar before pushing to avoid flash
-        navigationController?.setNavigationBarHidden(true, animated: false)
-        navigationController?.pushViewController(vc, animated: true)
+        // Wrap in navigation controller for navigation support
+        let navController = UINavigationController(rootViewController: vc)
+        navController.setNavigationBarHidden(true, animated: false)
+        navController.modalPresentationStyle = .fullScreen
+        present(navController, animated: true)
     }
 
     private func showComingSoonAlert(feature: String) {

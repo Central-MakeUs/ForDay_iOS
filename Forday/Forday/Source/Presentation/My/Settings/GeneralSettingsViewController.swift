@@ -74,7 +74,12 @@ extension GeneralSettingsViewController {
 
 extension GeneralSettingsViewController {
     @objc private func backButtonTapped() {
-        navigationController?.popViewController(animated: true)
+        // Dismiss when presented as modal, pop when pushed
+        if presentingViewController != nil {
+            dismiss(animated: true)
+        } else {
+            navigationController?.popViewController(animated: true)
+        }
     }
 
     @objc private func termsOfServiceTapped() {

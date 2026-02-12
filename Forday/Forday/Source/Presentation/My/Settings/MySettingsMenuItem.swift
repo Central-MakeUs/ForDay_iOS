@@ -24,21 +24,11 @@ enum MySettingsMenuItem: DropdownMenuItem {
     }
 
     var textColor: UIColor {
-        switch self {
-        case .generalSettings:
-            return .action001
-        default:
-            return .neutral800
-        }
+        return .neutral800
     }
 
     var fontWeight: TypographyStyle {
-        switch self {
-        case .generalSettings:
-            return .header16
-        default:
-            return .body16
-        }
+        return .body16
     }
 
     // MARK: - User Type-Based Menu Items
