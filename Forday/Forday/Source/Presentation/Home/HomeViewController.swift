@@ -547,7 +547,7 @@ extension HomeViewController {
     
     @objc private func myActivityChevronTapped() {
         print("나의 취미활동 쉐브론 탭")
-        showActivityList()
+        presentActivityList()
     }
 
     @objc private func activityDropdownTapped() {
@@ -645,8 +645,7 @@ extension HomeViewController {
         }
     }
 
-    private func showActivityList() {
-        // 현재 취미 ID 가져오기
+    private func presentActivityList() {
         guard let hobbyId = viewModel.currentHobbyId else {
             print("❌ 취미 ID 없음")
             return
@@ -689,28 +688,13 @@ extension HomeViewController {
         let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId)
         inputVC.aiCallRemaining = viewModel.homeInfo?.aiCallRemaining ?? true
         inputVC.onActivityCreated = { [weak self] in
-            // Dismiss modal first, then push ActivityListViewController
+            // Dismiss modal first, then present ActivityListViewController
             self?.dismiss(animated: true) {
-                self?.showActivityListAfterSave()
+                self?.presentActivityList()
             }
         }
 
         let nav = UINavigationController(rootViewController: inputVC)
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
-    }
-
-    private func showActivityListAfterSave() {
-        guard let hobbyId = viewModel.currentHobbyId else {
-            print("❌ 취미 ID 없음")
-            return
-        }
-
-        let activityListVC = ActivityListViewController(hobbyId: hobbyId)
-        activityListVC.isPresentedModally = true
-        activityListVC.shouldShowAIRecommendationToast = true
-        activityListVC.aiCallRemaining = viewModel.homeInfo?.aiCallRemaining ?? true
-        let nav = UINavigationController(rootViewController: activityListVC)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
@@ -760,7 +744,7 @@ extension HomeViewController {
             showActivityInputFromFloatingButton()
 
         case .viewActivityList:
-            showActivityListFromFloatingButton()
+            presentActivityList()
         }
     }
 
@@ -777,19 +761,6 @@ extension HomeViewController {
         }
 
         let nav = UINavigationController(rootViewController: inputVC)
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
-    }
-
-    private func showActivityListFromFloatingButton() {
-        guard let hobbyId = viewModel.currentHobbyId else {
-            print("❌ 취미 ID 없음")
-            return
-        }
-
-        let activityListVC = ActivityListViewController(hobbyId: hobbyId)
-        activityListVC.isPresentedModally = true
-        let nav = UINavigationController(rootViewController: activityListVC)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
