@@ -72,7 +72,7 @@ class MainTabBarCoordinator: NSObject, Coordinator {
     }
 
     private func createNavigationController(rootViewController: UIViewController) -> UINavigationController {
-        let nav = UINavigationController(rootViewController: rootViewController)
+        let nav = BaseNavigationController(rootViewController: rootViewController)
 
         // 네비게이션 바 기본 설정
         nav.navigationBar.prefersLargeTitles = false

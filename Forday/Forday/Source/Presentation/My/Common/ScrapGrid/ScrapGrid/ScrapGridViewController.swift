@@ -171,6 +171,9 @@ extension ScrapGridViewController: UICollectionViewDelegate {
     }
 
     private func showActivityDetail(activityRecordId: Int) {
+        // 부모(MyPageViewController)에게 자식 뷰로 이동함을 알림 (필터 유지용)
+        (parent as? MyPageViewController)?.willNavigateToChildView()
+
         let detailViewModel = ActivityDetailViewModel(activityRecordId: activityRecordId)
         let detailVC = ActivityDetailViewController(viewModel: detailViewModel)
         detailVC.coordinator = coordinator
