@@ -39,6 +39,9 @@ final class MyPageViewController: UIViewController {
     // Track if this is the first load
     private var isFirstLoad = true
 
+    // Track if navigating to child view (상세 화면 등으로 push할 때 true)
+    private var isNavigatingToChildView = false
+
     // MARK: - Initialization
 
     init(viewModel: MyPageViewModel = MyPageViewModel()) {
@@ -68,16 +71,21 @@ final class MyPageViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
-        loadMyPageData()
+
+        // 자식 뷰(상세 등)에서 돌아온 경우 필터 유지, 그 외(탭 전환, 초기 진입)에는 필터 초기화
+        loadMyPageData(resetFilter: !isNavigatingToChildView)
+        isNavigatingToChildView = false
     }
 
-    private func loadMyPageData() {
+    private func loadMyPageData(resetFilter: Bool = true) {
         if isFirstLoad {
             myPageView.showSkeleton()
         }
 
-        // 취미 필터 선택 상태 초기화 (전체 보기로 리셋)
-        viewModel.resetHobbyFilter()
+        // 재진입 시에만 필터 초기화 (상세에서 돌아올 때는 유지)
+        if resetFilter {
+            viewModel.resetHobbyFilter()
+        }
 
         Task {
             await viewModel.fetchInitialData()
@@ -95,13 +103,18 @@ final class MyPageViewController: UIViewController {
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        // Navigation bar는 각 하위 VC가 자체적으로 관리
-        // ProfileSettings, GeneralSettings 등 커스텀 내비게이션을 사용하는 화면에서 잔상 방지
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         checkGuestAccess()
+    }
+
+    // MARK: - Child Navigation
+
+    /// 자식 뷰(상세 등)로 이동하기 전에 호출 - 돌아올 때 필터 유지를 위함
+    func willNavigateToChildView() {
+        isNavigatingToChildView = true
     }
 
     // MARK: - Guest Access Check
@@ -376,10 +389,13 @@ extension MyPageViewController {
     }
 
     private func showProfileEdit() {
+        willNavigateToChildView()
         coordinator?.showProfileSettings()
     }
 
     private func showHobbyCoverManagement() {
+        willNavigateToChildView()
+
         let viewModel = ManageHobbyCoverViewModel()
         let vc = ManageHobbyCoverViewController(viewModel: viewModel)
 
@@ -392,6 +408,8 @@ extension MyPageViewController {
     }
 
     private func showGeneralSettings() {
+        willNavigateToChildView()
+
         let vc = GeneralSettingsViewController()
         vc.coordinator = coordinator
 
