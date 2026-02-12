@@ -43,18 +43,19 @@ class HomeViewController: UIViewController {
         setupActions()
         setupStickerBoardCallbacks()
         bind()
-
-        // 홈 정보 로드
-        Task {
-            await viewModel.fetchHomeInfo()
-            // fetchHomeInfo 완료 후 currentHobbyId를 stickerBoardViewModel에 전달
-            await stickerBoardViewModel.loadInitialStickerBoard(hobbyId: viewModel.currentHobbyId)
-        }
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: false)
+        loadHomeData()
+    }
+
+    private func loadHomeData() {
+        Task {
+            await viewModel.fetchHomeInfo(hobbyId: viewModel.currentHobbyId)
+            await stickerBoardViewModel.loadInitialStickerBoard(hobbyId: viewModel.currentHobbyId)
+        }
     }
 }
 
@@ -195,90 +196,6 @@ extension HomeViewController {
 
         // 스티커판 상태 바인딩
         bindStickerBoard()
-
-        // 이벤트 구독
-        setupEventBus()
-    }
-
-    // MARK: - Event Subscriptions
-    // 구독 중인 이벤트:
-    // - activityRecordCreated: 활동 기록 생성 시 스티커 보드 새로고침
-    // - hobbySettingsUpdated: 취미 설정 변경 시 홈 정보 새로고침
-    // - hobbyCreated: 새 취미 생성 시 홈 정보 및 스티커 보드 새로고침
-    // - hobbyDeleted: 취미 삭제 시 홈 정보 및 스티커 보드 새로고침
-    // - activityUpdated: 활동 수정 시 홈 정보 새로고침
-    // - activityDeleted: 활동 삭제 시 홈 정보 새로고침
-
-    private func setupEventBus() {
-        // 활동 기록 생성 이벤트 구독
-        AppEventBus.shared.activityRecordCreated
-            .sink { [weak self] hobbyId in
-                print("🎉 활동 기록 생성됨! hobbyId: \(hobbyId)")
-                Task {
-                    // 해당 취미의 홈 정보 새로고침
-                    await self?.viewModel.fetchHomeInfo(hobbyId: hobbyId)
-                    // 해당 취미의 스티커 보드 새로고침
-                    await self?.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: hobbyId)
-                }
-            }
-            .store(in: &cancellables)
-
-        // 취미 설정 변경 이벤트 구독
-        AppEventBus.shared.hobbySettingsUpdated
-            .sink { [weak self] hobbyId in
-                print("⚙️ 취미 설정 변경됨! hobbyId: \(hobbyId)")
-                Task {
-                    // 해당 취미의 홈 정보 새로고침
-                    await self?.viewModel.fetchHomeInfo(hobbyId: hobbyId)
-                }
-            }
-            .store(in: &cancellables)
-
-        // 새 취미 생성 이벤트 구독
-        AppEventBus.shared.hobbyCreated
-            .sink { [weak self] hobbyId in
-                print("🎉 새 취미 생성됨! hobbyId: \(hobbyId)")
-                Task {
-                    // 새로 생성된 취미의 홈 정보 및 스티커 보드 로드
-                    await self?.viewModel.fetchHomeInfo(hobbyId: hobbyId)
-                    await self?.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: hobbyId)
-                }
-            }
-            .store(in: &cancellables)
-
-        // 취미 삭제 이벤트 구독
-        AppEventBus.shared.hobbyDeleted
-            .sink { [weak self] in
-                print("🗑️ 취미 삭제됨!")
-                Task {
-                    // 홈 정보 및 스티커 보드 새로고침 (서버가 기본 취미 반환)
-                    await self?.viewModel.fetchHomeInfo()
-                    await self?.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: self?.viewModel.currentHobbyId)
-                }
-            }
-            .store(in: &cancellables)
-
-        // 활동 수정 이벤트 구독
-        AppEventBus.shared.activityUpdated
-            .sink { [weak self] hobbyId in
-                print("✏️ 활동 수정됨! hobbyId: \(hobbyId)")
-                Task {
-                    // 해당 취미의 홈 정보 새로고침
-                    await self?.viewModel.fetchHomeInfo(hobbyId: hobbyId)
-                }
-            }
-            .store(in: &cancellables)
-
-        // 활동 삭제 이벤트 구독
-        AppEventBus.shared.activityDeleted
-            .sink { [weak self] hobbyId in
-                print("🗑️ 활동 삭제됨! hobbyId: \(hobbyId)")
-                Task {
-                    // 해당 취미의 홈 정보 새로고침
-                    await self?.viewModel.fetchHomeInfo(hobbyId: hobbyId)
-                }
-            }
-            .store(in: &cancellables)
     }
 
     private func bindStickerBoard() {
@@ -412,14 +329,11 @@ extension HomeViewController {
 extension HomeViewController {
     @objc private func refreshHomeData() {
         Task {
-            defer {
-                Task { @MainActor in
-                    homeView.refreshControl.endRefreshing()
-                }
-            }
-
-            await viewModel.fetchHomeInfo()
+            await viewModel.fetchHomeInfo(hobbyId: viewModel.currentHobbyId)
             await stickerBoardViewModel.loadInitialStickerBoard(hobbyId: viewModel.currentHobbyId)
+            await MainActor.run {
+                homeView.refreshControl.endRefreshing()
+            }
         }
     }
 
