@@ -15,6 +15,11 @@ class AIActivitySelectionView: UIView {
 
     // MARK: - UI Components
 
+    // Navigation Bar
+    private let navigationBar = UIView()
+    private let backButton = UIButton()
+    private let navigationTitleLabel = UILabel()
+
     private let scrollView = UIScrollView()
     private let contentView = UIView()
 
@@ -23,7 +28,10 @@ class AIActivitySelectionView: UIView {
 
     private let activityStackView = UIStackView()
 
+    // Bottom Buttons
+    private let bottomContainerView = UIView()
     private let refreshButton = UIButton()
+    private let refreshIconImageView = UIImageView()
     private let refreshCountLabel = UILabel()
     private let nextButton = UIButton()
 
@@ -44,24 +52,30 @@ class AIActivitySelectionView: UIView {
     private var selectedActivityView: ActivityItemView?
     private var isSkeletonVisible = false
 
+    /// 내비게이션 표시 여부 (fullscreen 모드에서만 true)
+    private var showNavigation: Bool = true
+
     // Callbacks
     /// 저장 모드: hobbyId가 있을 때 CreateActivitiesUseCase로 저장 후 호출
     var onActivitySaved: (() -> Void)?
     /// 선택 모드: 선택된 활동 content를 반환 (저장하지 않음)
     var onActivitySelected: ((String) -> Void)?
     var onRefreshTapped: (() -> Void)?
+    var onBackTapped: (() -> Void)?
     var onError: ((String) -> Void)?
 
-    // Initialization
+    // MARK: - Initialization
 
     /// 저장 모드: hobbyId를 전달하면 다음 버튼 클릭 시 바로 저장
     init(
         result: AIRecommendationResult,
         hobbyId: Int,
+        showNavigation: Bool = true,
         createActivitiesUseCase: CreateActivitiesUseCase = CreateActivitiesUseCase()
     ) {
         self.result = result
         self.hobbyId = hobbyId
+        self.showNavigation = showNavigation
         self.createActivitiesUseCase = createActivitiesUseCase
         super.init(frame: .zero)
         style()
@@ -74,9 +88,10 @@ class AIActivitySelectionView: UIView {
     }
 
     /// 선택 모드: hobbyId 없이 생성하면 다음 버튼 클릭 시 onActivitySelected 콜백으로 content 반환
-    init(result: AIRecommendationResult) {
+    init(result: AIRecommendationResult, showNavigation: Bool = true) {
         self.result = result
         self.hobbyId = nil
+        self.showNavigation = showNavigation
         self.createActivitiesUseCase = nil
         super.init(frame: .zero)
         style()
@@ -93,7 +108,7 @@ class AIActivitySelectionView: UIView {
     }
 }
 
-// Setup
+// MARK: - Setup
 
 extension AIActivitySelectionView {
     private func configure() {
@@ -101,11 +116,28 @@ extension AIActivitySelectionView {
     }
 
     private func style() {
-        backgroundColor = .bg001
+        backgroundColor = .neutralWhite
+
+        // Navigation Bar
+        navigationBar.do {
+            $0.backgroundColor = .neutralWhite
+        }
+
+        backButton.do {
+            $0.setImage(.Icon.chevronLeft, for: .normal)
+            $0.tintColor = .neutral800
+        }
+
+        navigationTitleLabel.do {
+            $0.setTextWithTypography("AI 추천 활동", style: .header16)
+            $0.textColor = .neutral800
+            $0.textAlignment = .center
+        }
 
         scrollView.do {
             $0.showsVerticalScrollIndicator = false
             $0.keyboardDismissMode = .onDrag
+            $0.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 20, right: 0)
         }
 
         iconImageView.do {
@@ -122,13 +154,14 @@ extension AIActivitySelectionView {
 
         activityStackView.do {
             $0.axis = .vertical
-            $0.spacing = 12
+            $0.spacing = 10
             $0.distribution = .fill
+            $0.alignment = .fill
         }
 
         // Skeleton styles
         iconSkeleton.do {
-            $0.layer.cornerRadius = 30
+            $0.layer.cornerRadius = 21
             $0.isHidden = true
         }
 
@@ -144,7 +177,7 @@ extension AIActivitySelectionView {
 
         skeletonStackView.do {
             $0.axis = .vertical
-            $0.spacing = 12
+            $0.spacing = 10
             $0.distribution = .fill
             $0.isHidden = true
         }
@@ -152,20 +185,22 @@ extension AIActivitySelectionView {
         // Setup skeleton items
         setupSkeletonItems()
 
+        // Refresh Button - 정사각형 안에 아이콘 + 횟수
         refreshButton.do {
-            var config = UIButton.Configuration.plain()
-            config.image = .Icon.reload
-            config.baseForegroundColor = .neutral800
-
-            $0.configuration = config
-            $0.backgroundColor = .bg001
-            $0.layer.cornerRadius = 28 // 56/2
+            $0.backgroundColor = .neutralWhite
+            $0.layer.cornerRadius = 12
             $0.layer.borderWidth = 1
-            $0.layer.borderColor = UIColor.neutral200.cgColor
+            $0.layer.borderColor = UIColor.stroke002.cgColor
+        }
+
+        refreshIconImageView.do {
+            $0.image = .Icon.reload
+            $0.tintColor = .neutral800
+            $0.contentMode = .scaleAspectFit
         }
 
         refreshCountLabel.do {
-            $0.textColor = .neutral500
+            $0.textColor = .neutral400
             $0.textAlignment = .center
         }
 
@@ -193,6 +228,13 @@ extension AIActivitySelectionView {
     }
 
     private func layout() {
+        // Navigation Bar (showNavigation이 true일 때만 표시)
+        if showNavigation {
+            addSubview(navigationBar)
+            navigationBar.addSubview(backButton)
+            navigationBar.addSubview(navigationTitleLabel)
+        }
+
         addSubview(scrollView)
         scrollView.addSubview(contentView)
 
@@ -206,32 +248,58 @@ extension AIActivitySelectionView {
         contentView.addSubview(titleSkeleton2)
         contentView.addSubview(skeletonStackView)
 
+        // Bottom buttons
         addSubview(refreshButton)
-        addSubview(refreshCountLabel)
+        refreshButton.addSubview(refreshIconImageView)
+        refreshButton.addSubview(refreshCountLabel)
         addSubview(nextButton)
 
-        // ScrollView
+        // Navigation Bar (showNavigation이 true일 때만 레이아웃)
+        if showNavigation {
+            navigationBar.snp.makeConstraints {
+                $0.top.equalTo(safeAreaLayoutGuide)
+                $0.leading.trailing.equalToSuperview()
+                $0.height.equalTo(44)
+            }
+
+            backButton.snp.makeConstraints {
+                $0.leading.equalToSuperview().offset(20)
+                $0.centerY.equalToSuperview()
+                $0.size.equalTo(24)
+            }
+
+            navigationTitleLabel.snp.makeConstraints {
+                $0.center.equalToSuperview()
+            }
+        }
+
+        // ScrollView - showNavigation에 따라 상단 위치 결정
         scrollView.snp.makeConstraints {
-            $0.top.leading.trailing.equalToSuperview()
+            if showNavigation {
+                $0.top.equalTo(navigationBar.snp.bottom)
+            } else {
+                $0.top.equalTo(safeAreaLayoutGuide).offset(16)
+            }
+            $0.leading.trailing.equalToSuperview()
             $0.bottom.equalTo(refreshButton.snp.top).offset(-16)
         }
 
         // ContentView
         contentView.snp.makeConstraints {
-            $0.edges.equalTo(scrollView)
-            $0.width.equalTo(scrollView)
+            $0.edges.equalTo(scrollView.contentLayoutGuide)
+            $0.width.equalTo(scrollView.frameLayoutGuide)
         }
 
         // Icon
         iconImageView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(24)
+            $0.top.equalToSuperview().offset(20)
             $0.centerX.equalToSuperview()
-            $0.width.height.equalTo(60)
+            $0.size.equalTo(42)
         }
 
         // Title
         titleLabel.snp.makeConstraints {
-            $0.top.equalTo(iconImageView.snp.bottom).offset(16)
+            $0.top.equalTo(iconImageView.snp.bottom).offset(10)
             $0.leading.trailing.equalToSuperview().inset(20)
         }
 
@@ -239,19 +307,19 @@ extension AIActivitySelectionView {
         activityStackView.snp.makeConstraints {
             $0.top.equalTo(titleLabel.snp.bottom).offset(24)
             $0.leading.trailing.equalToSuperview().inset(20)
-            $0.bottom.equalToSuperview().offset(-20)
+            $0.bottom.lessThanOrEqualToSuperview().offset(-20)
         }
 
         // Icon Skeleton
         iconSkeleton.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(24)
+            $0.top.equalToSuperview().offset(20)
             $0.centerX.equalToSuperview()
-            $0.width.height.equalTo(60)
+            $0.size.equalTo(42)
         }
 
         // Title Skeletons
         titleSkeleton1.snp.makeConstraints {
-            $0.top.equalTo(iconSkeleton.snp.bottom).offset(16)
+            $0.top.equalTo(iconSkeleton.snp.bottom).offset(10)
             $0.centerX.equalToSuperview()
             $0.width.equalTo(200)
             $0.height.equalTo(20)
@@ -266,28 +334,37 @@ extension AIActivitySelectionView {
 
         // Skeleton Stack
         skeletonStackView.snp.makeConstraints {
-            $0.top.equalTo(titleSkeleton2.snp.bottom).offset(24)
+            $0.top.equalTo(titleSkeleton2.snp.bottom).offset(40)
             $0.leading.trailing.equalToSuperview().inset(20)
-            $0.bottom.equalToSuperview().offset(-20)
+            $0.bottom.lessThanOrEqualToSuperview().offset(-20)
         }
 
+        // Refresh Button - 정사각형
         refreshButton.snp.makeConstraints {
-            $0.leading.equalToSuperview().offset(20)
-            $0.bottom.equalTo(safeAreaLayoutGuide).offset(-24)
-            $0.width.height.equalTo(56)
+            $0.leading.equalToSuperview().offset(16)
+            $0.bottom.equalTo(safeAreaLayoutGuide).offset(-16)
+            $0.size.equalTo(56)
         }
 
-        // Refresh Count
+        // Refresh Icon - 버튼 내부 상단
+        refreshIconImageView.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(10)
+            $0.centerX.equalToSuperview()
+            $0.size.equalTo(20)
+        }
+
+        // Refresh Count - 버튼 내부 아이콘 아래
         refreshCountLabel.snp.makeConstraints {
-            $0.centerX.equalTo(refreshButton)
-            $0.top.equalTo(refreshButton.snp.bottom).offset(4)
+            $0.top.equalTo(refreshIconImageView.snp.bottom).offset(2)
+            $0.centerX.equalToSuperview()
         }
 
         // Next Button
         nextButton.snp.makeConstraints {
-            $0.leading.equalTo(refreshButton.snp.trailing).offset(16)
-            $0.trailing.equalToSuperview().offset(-20)
+            $0.leading.equalTo(refreshButton.snp.trailing).offset(12)
+            $0.trailing.equalToSuperview().offset(-16)
             $0.centerY.equalTo(refreshButton)
+            $0.height.equalTo(56)
         }
     }
 
@@ -312,6 +389,12 @@ extension AIActivitySelectionView {
     }
 
     private func setupActions() {
+        backButton.addTarget(
+            self,
+            action: #selector(backButtonTapped),
+            for: .touchUpInside
+        )
+
         refreshButton.addTarget(
             self,
             action: #selector(refreshButtonTapped),
@@ -370,6 +453,10 @@ extension AIActivitySelectionView {
 
     @objc private func dismissKeyboard() {
         activityViews.forEach { $0.dismissKeyboard() }
+    }
+
+    @objc private func backButtonTapped() {
+        onBackTapped?()
     }
 
     @objc private func refreshButtonTapped() {
