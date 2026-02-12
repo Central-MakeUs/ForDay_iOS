@@ -51,6 +51,8 @@ extension ActivityItemView {
         containerView.do {
             $0.backgroundColor = .white
             $0.layer.cornerRadius = 12
+            $0.layer.borderWidth = 1
+            $0.layer.borderColor = UIColor.stroke001.cgColor
         }
 
         titleStackView.do {
@@ -200,8 +202,8 @@ extension ActivityItemView {
     func setSelected(_ isSelected: Bool) {
         isSelectedState = isSelected
         checkboxButton.isSelected = isSelected
-        containerView.layer.borderWidth = isSelected ? 2 : 0
-        containerView.layer.borderColor = isSelected ? UIColor.systemOrange.cgColor : UIColor.clear.cgColor
+        containerView.layer.borderWidth = isSelected ? 2 : 1
+        containerView.layer.borderColor = isSelected ? UIColor.systemOrange.cgColor : UIColor.stroke001.cgColor
     }
 
     func setEditEnabled(_ isEnabled: Bool) {
