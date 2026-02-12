@@ -215,10 +215,10 @@ extension HomeViewController {
             .sink { [weak self] hobbyId in
                 print("🎉 활동 기록 생성됨! hobbyId: \(hobbyId)")
                 Task {
-                    // 홈 정보 새로고침 (ActivityPreview 포함)
-                    await self?.viewModel.fetchHomeInfo()
-                    // 스티커 보드 새로고침
-                    await self?.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: self?.viewModel.currentHobbyId)
+                    // 해당 취미의 홈 정보 새로고침
+                    await self?.viewModel.fetchHomeInfo(hobbyId: hobbyId)
+                    // 해당 취미의 스티커 보드 새로고침
+                    await self?.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: hobbyId)
                 }
             }
             .store(in: &cancellables)
@@ -228,8 +228,8 @@ extension HomeViewController {
             .sink { [weak self] hobbyId in
                 print("⚙️ 취미 설정 변경됨! hobbyId: \(hobbyId)")
                 Task {
-                    // 홈 정보 새로고침
-                    await self?.viewModel.fetchHomeInfo()
+                    // 해당 취미의 홈 정보 새로고침
+                    await self?.viewModel.fetchHomeInfo(hobbyId: hobbyId)
                 }
             }
             .store(in: &cancellables)
@@ -239,9 +239,9 @@ extension HomeViewController {
             .sink { [weak self] hobbyId in
                 print("🎉 새 취미 생성됨! hobbyId: \(hobbyId)")
                 Task {
-                    // 홈 정보 및 스티커 보드 새로고침
-                    await self?.viewModel.fetchHomeInfo()
-                    await self?.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: self?.viewModel.currentHobbyId)
+                    // 새로 생성된 취미의 홈 정보 및 스티커 보드 로드
+                    await self?.viewModel.fetchHomeInfo(hobbyId: hobbyId)
+                    await self?.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: hobbyId)
                 }
             }
             .store(in: &cancellables)
@@ -251,7 +251,7 @@ extension HomeViewController {
             .sink { [weak self] in
                 print("🗑️ 취미 삭제됨!")
                 Task {
-                    // 홈 정보 및 스티커 보드 새로고침
+                    // 홈 정보 및 스티커 보드 새로고침 (서버가 기본 취미 반환)
                     await self?.viewModel.fetchHomeInfo()
                     await self?.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: self?.viewModel.currentHobbyId)
                 }
@@ -263,8 +263,8 @@ extension HomeViewController {
             .sink { [weak self] hobbyId in
                 print("✏️ 활동 수정됨! hobbyId: \(hobbyId)")
                 Task {
-                    // 홈 정보 새로고침 (드롭다운 미리보기 업데이트)
-                    await self?.viewModel.fetchHomeInfo()
+                    // 해당 취미의 홈 정보 새로고침
+                    await self?.viewModel.fetchHomeInfo(hobbyId: hobbyId)
                 }
             }
             .store(in: &cancellables)
@@ -274,8 +274,8 @@ extension HomeViewController {
             .sink { [weak self] hobbyId in
                 print("🗑️ 활동 삭제됨! hobbyId: \(hobbyId)")
                 Task {
-                    // 홈 정보 새로고침 (드롭다운 미리보기 업데이트)
-                    await self?.viewModel.fetchHomeInfo()
+                    // 해당 취미의 홈 정보 새로고침
+                    await self?.viewModel.fetchHomeInfo(hobbyId: hobbyId)
                 }
             }
             .store(in: &cancellables)
