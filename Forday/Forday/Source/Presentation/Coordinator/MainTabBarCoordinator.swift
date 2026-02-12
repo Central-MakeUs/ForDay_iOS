@@ -120,7 +120,9 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
             return
         }
 
-        let recordVC = ActivityRecordViewController(hobbyId: hobbyId)
+        let hobbyName = homeViewController?.getCurrentHobbyName() ?? "취미"
+
+        let recordVC = ActivityRecordViewController(hobbyId: hobbyId, hobbyName: hobbyName)
         let nav = UINavigationController(rootViewController: recordVC)
         nav.modalPresentationStyle = .fullScreen
 
@@ -207,7 +209,9 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
             return
         }
 
-        let recordVC = ActivityRecordViewController(hobbyId: hobbyId)
+        let hobbyName = homeViewController?.getCurrentHobbyName() ?? "취미"
+
+        let recordVC = ActivityRecordViewController(hobbyId: hobbyId, hobbyName: hobbyName)
         let nav = UINavigationController(rootViewController: recordVC)
         nav.modalPresentationStyle = .fullScreen
 

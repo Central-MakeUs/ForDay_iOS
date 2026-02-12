@@ -272,7 +272,8 @@ extension ActivityDetailViewController {
         print("✏️ 수정하기")
 
         // ActivityRecordViewController를 수정 모드로 열기
-        let recordVC = ActivityRecordViewController(hobbyId: viewModel.hobbyId, activityDetail: detail)
+        // hobbyName은 수정 모드에서는 크게 필요하지 않으므로 기본값 사용
+        let recordVC = ActivityRecordViewController(hobbyId: viewModel.hobbyId, hobbyName: "취미", activityDetail: detail)
         let nav = UINavigationController(rootViewController: recordVC)
         nav.modalPresentationStyle = .fullScreen
 

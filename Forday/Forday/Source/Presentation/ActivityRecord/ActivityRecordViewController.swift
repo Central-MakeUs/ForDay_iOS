@@ -17,6 +17,7 @@ class ActivityRecordViewController: UIViewController {
 
     private let recordView = ActivityRecordView()
     private let viewModel: ActivityRecordViewModel
+    private let hobbyName: String
     private var cancellables = Set<AnyCancellable>()
     private var activityDropdownView: ActivityDropdownView?
     private var privacyDropdownView: PrivacyDropdownView?
@@ -27,8 +28,9 @@ class ActivityRecordViewController: UIViewController {
 
     // Initialization
 
-    init(hobbyId: Int, activityDetail: ActivityDetail? = nil) {
+    init(hobbyId: Int, hobbyName: String, activityDetail: ActivityDetail? = nil) {
         self.viewModel = ActivityRecordViewModel(hobbyId: hobbyId, activityDetail: activityDetail)
+        self.hobbyName = hobbyName
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -236,12 +238,13 @@ extension ActivityRecordViewController {
     @objc private func addActivityButtonTapped() {
         // 현재 화면 dismiss 후 HobbyActivityInputViewController 표시
         let hobbyId = viewModel.currentHobbyId
+        let currentHobbyName = hobbyName
         let presentingVC = presentingViewController
 
         dismiss(animated: true) {
             guard let presenter = presentingVC else { return }
 
-            let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId)
+            let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: currentHobbyName)
             inputVC.onActivityCreated = { [weak inputVC] in
                 // 활동 생성 완료 시 dismiss
                 inputVC?.dismiss(animated: true)
