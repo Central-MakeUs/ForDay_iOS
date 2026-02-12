@@ -61,7 +61,7 @@ extension GuestLoginBottomSheetView {
 
         // Subtitle
         subtitleLabel.do {
-            $0.setTextWithTypography("당신만의 취미 루틴, AI가 추천해드립니다", style: .label14)
+            $0.setTextWithTypography("당신만의 취미, AI가 추천해드립니다", style: .label14)
             $0.textColor = .secondary003
             $0.textAlignment = .center
         }
