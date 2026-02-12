@@ -53,7 +53,10 @@ class HomeViewController: UIViewController {
 
     private func loadHomeData() {
         Task {
-            await viewModel.fetchHomeInfo(hobbyId: viewModel.currentHobbyId)
+            // nil을 전달하여 서버가 현재 상태에 맞는 취미를 결정하도록 함
+            // (취미설정에서 보관/꺼내기 후 돌아왔을 때 정확한 상태 반영)
+            await viewModel.fetchHomeInfo(hobbyId: nil)
+            // fetchHomeInfo 완료 후 업데이트된 currentHobbyId 사용
             await stickerBoardViewModel.loadInitialStickerBoard(hobbyId: viewModel.currentHobbyId)
         }
     }
@@ -194,8 +197,27 @@ extension HomeViewController {
             }
             .store(in: &cancellables)
 
+        // AppEventBus 이벤트 구독
+        bindAppEvents()
+
         // 스티커판 상태 바인딩
         bindStickerBoard()
+    }
+
+    private func bindAppEvents() {
+        // 바텀시트에서 활동 저장 후 홈 새로고침
+        // (바텀시트 dismiss 시 viewWillAppear가 호출되지 않으므로 이벤트로 처리)
+        AppEventBus.shared.activityRecordCreated
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                print("🔄 활동 기록 생성됨 - 홈 새로고침")
+                self?.loadHomeData()
+            }
+            .store(in: &cancellables)
+
+        // NOTE: hobbyCreated, hobbySettingsUpdated, hobbiesDidUpdate, hobbyDeleted 등
+        // 취미 관련 이벤트는 fullscreen modal에서 발생하므로
+        // dismiss 시 viewWillAppear에서 자동으로 새로고침됨 → 별도 구독 불필요
     }
 
     private func bindStickerBoard() {
@@ -565,7 +587,9 @@ extension HomeViewController {
             return
         }
 
-        let activityListVC = ActivityListViewController(hobbyId: hobbyId)
+        let hobbyName = viewModel.homeInfo?.inProgressHobbies.first(where: { $0.currentHobby })?.hobbyName ?? "취미"
+
+        let activityListVC = ActivityListViewController(hobbyId: hobbyId, hobbyName: hobbyName)
         activityListVC.isPresentedModally = true
         let nav = UINavigationController(rootViewController: activityListVC)
         nav.modalPresentationStyle = .fullScreen
@@ -599,7 +623,9 @@ extension HomeViewController {
             return
         }
 
-        let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId)
+        let hobbyName = viewModel.homeInfo?.inProgressHobbies.first(where: { $0.currentHobby })?.hobbyName ?? "취미"
+
+        let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: hobbyName)
         inputVC.aiCallRemaining = viewModel.homeInfo?.aiCallRemaining ?? true
         inputVC.onActivityCreated = { [weak self] in
             // Dismiss modal first, then present ActivityListViewController
@@ -668,7 +694,9 @@ extension HomeViewController {
             return
         }
 
-        let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId)
+        let hobbyName = viewModel.homeInfo?.inProgressHobbies.first(where: { $0.currentHobby })?.hobbyName ?? "취미"
+
+        let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: hobbyName)
         inputVC.aiCallRemaining = viewModel.homeInfo?.aiCallRemaining ?? true
         inputVC.onActivityCreated = { [weak self] in
             self?.dismiss(animated: true)
@@ -695,6 +723,10 @@ extension HomeViewController {
 
     func getCurrentHobbyId() -> Int? {
         return viewModel.currentHobbyId
+    }
+
+    func getCurrentHobbyName() -> String? {
+        return viewModel.homeInfo?.inProgressHobbies.first(where: { $0.currentHobby })?.hobbyName
     }
 }
 
