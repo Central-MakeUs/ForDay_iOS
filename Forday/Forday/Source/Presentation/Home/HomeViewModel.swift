@@ -76,6 +76,12 @@ class HomeViewModel {
 
     func selectHobby(hobbyId: Int) async {
         print("🔄 취미 선택: \(hobbyId)")
+
+        // 취미 전환 시 이전 AI 추천 결과 초기화
+        await MainActor.run {
+            self.aiRecommendationResult = nil
+        }
+
         await fetchHomeInfo(hobbyId: hobbyId)
     }
 
