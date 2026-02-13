@@ -144,9 +144,6 @@ class EditProfileViewController: UIViewController {
                 try await viewModel.saveProfile()
 
                 await MainActor.run {
-                    // Notify MyPageViewController to refresh profile data
-                    AppEventBus.shared.profileDidUpdate.send()
-
                     ToastView.show(message: "프로필 수정 완료!")
                     self.navigationController?.popViewController(animated: true)
                 }

@@ -78,9 +78,8 @@ final class MyPageViewController: UIViewController {
     }
 
     private func loadMyPageData(resetFilter: Bool = true) {
-        if isFirstLoad {
-            myPageView.showSkeleton()
-        }
+        // 매번 스켈레톤 표시
+        myPageView.showSkeleton()
 
         // 재진입 시에만 필터 초기화 (상세에서 돌아올 때는 유지)
         if resetFilter {
@@ -91,8 +90,9 @@ final class MyPageViewController: UIViewController {
             await viewModel.fetchInitialData()
 
             await MainActor.run {
+                myPageView.hideSkeleton()
+
                 if isFirstLoad {
-                    myPageView.hideSkeleton()
                     setupChildViewControllers()
                     switchToTab(.activities)
                     isFirstLoad = false

@@ -45,6 +45,7 @@ final class HobbyFilterView: UIView {
     func configure(with hobbies: [MyPageHobby]) {
         self.hobbies = hobbies
         collectionView.reloadData()
+        collectionView.layoutIfNeeded()
     }
 
     func selectHobbies(_ hobbyIds: Set<Int>) {

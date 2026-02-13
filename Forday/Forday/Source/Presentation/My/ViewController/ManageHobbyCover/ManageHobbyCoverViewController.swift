@@ -136,9 +136,6 @@ class ManageHobbyCoverViewController: UIViewController {
                 let message = try await viewModel.updateCoverImageWithRecord()
 
                 await MainActor.run {
-                    // Notify MyPageViewController to refresh hobbies data
-                    AppEventBus.shared.hobbiesDidUpdate.send()
-
                     ToastView.show(message: message)
                     self.navigationController?.popViewController(animated: true)
                 }
@@ -352,9 +349,6 @@ extension ManageHobbyCoverViewController: PHPickerViewControllerDelegate {
                     await MainActor.run {
                         // Clear pending state
                         self.pendingGalleryHobbyId = nil
-
-                        // Notify MyPageViewController to refresh hobbies data
-                        AppEventBus.shared.hobbiesDidUpdate.send()
 
                         ToastView.show(message: message)
                         self.navigationController?.popViewController(animated: true)

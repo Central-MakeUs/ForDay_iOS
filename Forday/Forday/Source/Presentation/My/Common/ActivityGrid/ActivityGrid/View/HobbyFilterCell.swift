@@ -38,7 +38,6 @@ final class HobbyFilterCell: UICollectionViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         iconImageView.kf.cancelDownloadTask()
-        iconImageView.image = nil
     }
 
     // MARK: - Configuration
@@ -54,7 +53,7 @@ final class HobbyFilterCell: UICollectionViewCell {
                 placeholder: UIImage(systemName: "camera.fill"),
                 options: [
                     .transition(.fade(0.2)),
-                    .forceRefresh  // Always fetch fresh image when URL changes
+                    .cacheOriginalImage
                 ]
             )
             iconImageView.contentMode = .scaleAspectFill
