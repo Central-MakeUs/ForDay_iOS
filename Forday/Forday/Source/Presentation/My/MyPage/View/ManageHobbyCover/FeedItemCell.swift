@@ -110,21 +110,7 @@ final class FeedItemCell: UICollectionViewCell {
         gradientContainerView.isHidden = true
 
         // Load image
-        guard let url = URL(string: imageUrl) else {
-            thumbnailImageView.image = UIImage(systemName: "photo")
-            thumbnailImageView.tintColor = .systemGray3
-            return
-        }
-
-        let placeholder = UIImage(systemName: "photo")
-        thumbnailImageView.kf.setImage(
-            with: url,
-            placeholder: placeholder,
-            options: [
-                .transition(.fade(0.2)),
-                .cacheOriginalImage
-            ]
-        )
+        thumbnailImageView.setImage(with: imageUrl)
     }
 
     private func showGradientMode(memo: String?, stickerType: StickerType?) {
@@ -172,7 +158,7 @@ extension FeedItemCell {
         thumbnailImageView.do {
             $0.contentMode = .scaleAspectFill
             $0.clipsToBounds = true
-            $0.backgroundColor = .systemGray5
+            $0.backgroundColor = .bg003
         }
 
         gradientContainerView.do {

@@ -133,23 +133,9 @@ final class ActivityDetailView: UIView {
     }
 
     private func loadImage(from urlString: String) {
-        guard !urlString.isEmpty, let url = URL(string: urlString) else {
-            imageView.image = UIImage(systemName: "photo.fill")
-            imageView.tintColor = .systemGray3
-            return
-        }
-
-        let placeholder = UIImage(systemName: "photo.fill")
-        imageView.kf.setImage(
-            with: url,
-            placeholder: placeholder,
-            options: [
-                .transition(.fade(0.2)),
-                .cacheOriginalImage
-            ]
-        ) { [weak self] result in
-            // 이미지 로드 후 원본 비율로 높이 조정
+        imageView.setImage(with: urlString) { [weak self] result in
             if case .success(let imageResult) = result {
+                // 이미지 로드 후 원본 비율로 높이 조정
                 self?.updateImageHeight(for: imageResult.image)
             }
         }
@@ -287,7 +273,7 @@ extension ActivityDetailView {
         imageView.do {
             $0.contentMode = .scaleAspectFit // 원본 비율 유지
             $0.clipsToBounds = true
-            $0.backgroundColor = .clear
+            $0.backgroundColor = .bg003
             $0.layer.cornerRadius = 12
         }
 

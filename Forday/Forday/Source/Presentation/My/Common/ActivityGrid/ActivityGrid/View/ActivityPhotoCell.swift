@@ -95,21 +95,7 @@ final class ActivityPhotoCell: UICollectionViewCell {
         gradientContainerView.isHidden = true
 
         // Load image
-        guard let url = URL(string: imageUrl) else {
-            imageView.image = UIImage(systemName: "photo")
-            imageView.tintColor = .systemGray3
-            return
-        }
-
-        let placeholder = UIImage(systemName: "photo")
-        imageView.kf.setImage(
-            with: url,
-            placeholder: placeholder,
-            options: [
-                .transition(.fade(0.2)),
-                .cacheOriginalImage
-            ]
-        )
+        imageView.setImage(with: imageUrl)
     }
 
     private func showGradientMode(memo: String?, stickerType: StickerType?) {
@@ -157,7 +143,7 @@ extension ActivityPhotoCell {
         imageView.do {
             $0.contentMode = .scaleAspectFill
             $0.clipsToBounds = true
-            $0.backgroundColor = .systemGray5
+            $0.backgroundColor = .bg003
         }
 
         gradientContainerView.do {

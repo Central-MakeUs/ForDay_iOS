@@ -45,29 +45,22 @@ final class HobbyFilterCell: UICollectionViewCell {
     func configure(with hobby: MyPageHobby, isSelected: Bool) {
         // Load thumbnail if available, otherwise show hobby-specific icon
         if let thumbnailImageUrl = hobby.thumbnailImageUrl,
-           !thumbnailImageUrl.isEmpty,
-           let url = URL(string: thumbnailImageUrl) {
+           !thumbnailImageUrl.isEmpty {
             // Has thumbnail - load from URL (fill the circle)
-            iconImageView.kf.setImage(
-                with: url,
-                placeholder: UIImage(systemName: "camera.fill"),
-                options: [
-                    .transition(.fade(0.2)),
-                    .cacheOriginalImage
-                ]
-            )
+            iconImageView.setImage(with: thumbnailImageUrl)
             iconImageView.contentMode = .scaleAspectFill
             iconImageView.snp.remakeConstraints {
                 $0.edges.equalToSuperview()
             }
         } else {
             // No thumbnail - show hobby-specific icon (small centered)
+            iconImageView.backgroundColor = .bg003
             if let imageAsset = HobbyImageAsset(hobbyName: hobby.hobbyName) {
                 iconImageView.image = imageAsset.icon
                 iconImageView.contentMode = .scaleAspectFit
             } else {
                 // Fallback if hobby name doesn't match
-                iconImageView.image = UIImage(systemName: "camera.fill")
+                iconImageView.image = nil
                 iconImageView.contentMode = .scaleAspectFit
             }
             iconImageView.snp.remakeConstraints {
@@ -107,7 +100,7 @@ extension HobbyFilterCell {
         contentView.backgroundColor = .clear
 
         iconContainerView.do {
-            $0.backgroundColor = .neutralWhite
+            $0.backgroundColor = .bg003
             $0.layer.cornerRadius = 24
             $0.clipsToBounds = true
         }

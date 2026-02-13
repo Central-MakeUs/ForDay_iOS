@@ -35,15 +35,7 @@ final class ReactionUserCell: UIView {
     func configure(with user: ReactionUser) {
         nicknameLabel.setTextWithTypography(user.nickname, style: .label10)
         newReactionDot.isHidden = !user.newReactionUser
-
-        if let profileImageUrl = user.profileImageUrl, let url = URL(string: profileImageUrl) {
-            profileImageView.kf.setImage(
-                with: url,
-                placeholder: UIImage(systemName: "person.circle.fill")?.withTintColor(.neutral300, renderingMode: .alwaysOriginal)
-            )
-        } else {
-            profileImageView.image = UIImage(systemName: "person.circle.fill")?.withTintColor(.neutral300, renderingMode: .alwaysOriginal)
-        }
+        profileImageView.setImage(with: user.profileImageUrl)
     }
 }
 
@@ -55,7 +47,7 @@ extension ReactionUserCell {
             $0.contentMode = .scaleAspectFill
             $0.clipsToBounds = true
             $0.layer.cornerRadius = 14  // 28pt / 2
-            $0.backgroundColor = .neutral200
+            $0.backgroundColor = .bg003
         }
 
         nicknameLabel.do {
