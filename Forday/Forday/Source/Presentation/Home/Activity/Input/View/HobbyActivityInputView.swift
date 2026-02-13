@@ -245,8 +245,14 @@ extension HobbyActivityInputView {
     }
 
     func setRecommendations(_ activities: [OthersActivity]) {
-        let titles = activities.map { $0.content }
-        flowLayoutView.configure(with: titles)
+        let isEmpty = activities.isEmpty
+        recommendationLabel.isHidden = isEmpty
+        flowLayoutView.isHidden = isEmpty
+
+        if !isEmpty {
+            let titles = activities.map { $0.content }
+            flowLayoutView.configure(with: titles)
+        }
     }
 
     func fillLastFieldWithText(_ text: String) {
