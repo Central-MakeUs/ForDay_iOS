@@ -16,15 +16,7 @@ final class AppEventBus {
 
     private init() {}
 
-    // MARK: - User Profile Events
-
-    /// Published when user profile (nickname, profile image) is updated
-    let profileDidUpdate = PassthroughSubject<Void, Never>()
-
     // MARK: - Hobby Events
-
-    /// Published when hobbies (cover images, status) are updated
-    let hobbiesDidUpdate = PassthroughSubject<Void, Never>()
 
     /// Published when hobby settings (time, frequency, goal days) are updated
     /// Payload: hobbyId of the updated hobby
