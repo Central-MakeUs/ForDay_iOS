@@ -51,14 +51,15 @@ class HomeViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: false)
-        loadHomeData()
+        // 이미 선택된 취미가 있으면 유지, 없으면 서버가 결정
+        loadHomeData(hobbyId: viewModel.currentHobbyId)
     }
 
-    private func loadHomeData() {
+    private func loadHomeData(hobbyId: Int? = nil) {
         Task {
-            // nil을 전달하여 서버가 현재 상태에 맞는 취미를 결정하도록 함
+            // hobbyId가 전달되면 해당 취미로, 아니면 서버가 결정하도록 함
             // (취미설정에서 보관/꺼내기 후 돌아왔을 때 정확한 상태 반영)
-            await viewModel.fetchHomeInfo(hobbyId: nil)
+            await viewModel.fetchHomeInfo(hobbyId: hobbyId)
             // fetchHomeInfo 완료 후 업데이트된 currentHobbyId 사용
             await stickerBoardViewModel.loadInitialStickerBoard(hobbyId: viewModel.currentHobbyId)
         }
@@ -212,15 +213,15 @@ extension HomeViewController {
         // (바텀시트 dismiss 시 viewWillAppear가 호출되지 않으므로 이벤트로 처리)
         AppEventBus.shared.activityRecordCreated
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                print("🔄 활동 기록 생성됨 - 홈 새로고침")
-                self?.loadHomeData()
+            .sink { [weak self] hobbyId in
+                print("🔄 활동 기록 생성됨 - 홈 새로고침 (hobbyId: \(hobbyId))")
+                self?.loadHomeData(hobbyId: hobbyId)
             }
             .store(in: &cancellables)
 
-        // NOTE: hobbyCreated, hobbySettingsUpdated, hobbiesDidUpdate, hobbyDeleted 등
-        // 취미 관련 이벤트는 fullscreen modal에서 발생하므로
-        // dismiss 시 viewWillAppear에서 자동으로 새로고침됨 → 별도 구독 불필요
+        // NOTE: activityDeleted, hobbyCreated, hobbySettingsUpdated, hobbyDeleted 등
+        // Navigation push/fullscreen modal에서 발생하는 이벤트는
+        // dismiss/pop 시 viewWillAppear에서 currentHobbyId를 유지하며 자동 새로고침됨 → 별도 구독 불필요
     }
 
     private func bindStickerBoard() {
