@@ -10,6 +10,7 @@ import UIKit
 import Combine
 import PhotosUI
 import SnapKit
+import AVFoundation
 
 class ActivityRecordViewController: UIViewController {
 
@@ -123,12 +124,8 @@ extension ActivityRecordViewController {
             for: .touchUpInside
         )
 
-        // 사진 추가
-        recordView.photoAddButton.addTarget(
-            self,
-            action: #selector(photoAddButtonTapped),
-            for: .touchUpInside
-        )
+        // 사진 추가 (UIMenu 설정)
+        setupPhotoAddButtonMenu()
 
         // 사진 삭제
         recordView.photoDeleteButton.addTarget(
@@ -185,6 +182,8 @@ extension ActivityRecordViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] image in
                 self?.recordView.updatePhotoImage(image)
+                // 이미지가 있으면 메뉴 비활성화, 없으면 활성화
+                self?.recordView.photoAddButton.showsMenuAsPrimaryAction = (image == nil)
             }
             .store(in: &cancellables)
 
@@ -217,6 +216,79 @@ extension ActivityRecordViewController {
                 print("❌ 활동 목록 로드 실패: \(error)")
             }
         }
+    }
+
+    private func setupPhotoAddButtonMenu() {
+        let albumAction = UIAction(
+            title: "앨범에서 선택",
+            image: UIImage(systemName: "photo.on.rectangle")
+        ) { [weak self] _ in
+            self?.presentPhotoPicker()
+        }
+
+        let cameraAction = UIAction(
+            title: "카메라로 촬영",
+            image: UIImage(systemName: "camera")
+        ) { [weak self] _ in
+            self?.checkCameraPermissionAndPresent()
+        }
+
+        let menu = UIMenu(children: [albumAction, cameraAction])
+        recordView.photoAddButton.menu = menu
+        recordView.photoAddButton.showsMenuAsPrimaryAction = true
+    }
+
+    private func checkCameraPermissionAndPresent() {
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+
+        switch status {
+        case .authorized:
+            presentCamera()
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                DispatchQueue.main.async {
+                    if granted {
+                        self?.presentCamera()
+                    } else {
+                        self?.showCameraPermissionDeniedAlert()
+                    }
+                }
+            }
+        case .denied, .restricted:
+            showCameraPermissionDeniedAlert()
+        @unknown default:
+            break
+        }
+    }
+
+    private func presentCamera() {
+        guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
+            ToastView.showError(message: "카메라를 사용할 수 없습니다.")
+            return
+        }
+
+        let imagePicker = UIImagePickerController()
+        imagePicker.sourceType = .camera
+        imagePicker.delegate = self
+        imagePicker.allowsEditing = false
+        present(imagePicker, animated: true)
+    }
+
+    private func showCameraPermissionDeniedAlert() {
+        let alert = UIAlertController(
+            title: "카메라 접근 권한 필요",
+            message: "활동 기록에 사진을 추가하기 위해 카메라 접근 권한이 필요합니다.\n설정에서 권한을 허용해주세요.",
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        alert.addAction(UIAlertAction(title: "설정으로 이동", style: .default) { _ in
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsURL)
+            }
+        })
+
+        present(alert, animated: true)
     }
 }
 
@@ -260,12 +332,6 @@ extension ActivityRecordViewController {
         view.endEditing(true)
         dismissActivityDropdown()
         dismissPrivacyDropdown()
-    }
-
-    @objc private func photoAddButtonTapped() {
-        if viewModel.selectedImage == nil {
-            presentPhotoPicker()
-        }
     }
 
     @objc private func photoDeleteButtonTapped() {
@@ -439,9 +505,9 @@ extension ActivityRecordViewController: UICollectionViewDelegate, UICollectionVi
     }
 }
 
-// PHPickerViewControllerDelegate
+// PHPickerViewControllerDelegate & UIImagePickerControllerDelegate
 
-extension ActivityRecordViewController: PHPickerViewControllerDelegate {
+extension ActivityRecordViewController: PHPickerViewControllerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
 
@@ -470,6 +536,33 @@ extension ActivityRecordViewController: PHPickerViewControllerDelegate {
                 }
             }
         }
+    }
+
+    // UIImagePickerControllerDelegate (카메라)
+    func imagePickerController(
+        _ picker: UIImagePickerController,
+        didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
+    ) {
+        picker.dismiss(animated: true)
+
+        guard let image = info[.originalImage] as? UIImage else {
+            print("❌ 카메라 이미지 가져오기 실패")
+            return
+        }
+
+        // 이미지 업로드
+        Task {
+            do {
+                try await viewModel.uploadImage(image)
+                print("✅ 카메라 이미지 업로드 성공")
+            } catch {
+                print("❌ 카메라 이미지 업로드 실패: \(error)")
+            }
+        }
+    }
+
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true)
     }
 }
 
