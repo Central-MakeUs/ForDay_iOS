@@ -141,8 +141,8 @@ class HomeViewModel {
         // 기존 타이머 정리
         stopToastMessageRotation()
 
-        // 2초 간격 타이머 시작
-        messageRotationTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+        // 3초 간격 타이머 시작
+        messageRotationTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
             self?.rotateToNextMessage()
         }
     }

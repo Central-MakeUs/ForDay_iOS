@@ -312,19 +312,12 @@ extension HomeViewController {
         }
 
         // AI 추천 토스트 설정 및 펼치기 애니메이션
-        if hasHobbies {
-            homeView.configureToast(with: homeInfo.greetingMessage, aiCallRemaining: homeInfo.aiCallRemaining)
-            homeView.toastView.setInteractionEnabled(true)  // 터치 활성화
-            // 약간의 딜레이 후 펼치기 애니메이션 및 메시지 순환 시작
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-                self?.homeView.expandToast(animated: true)
-                self?.viewModel.startToastMessageRotation()
-            }
-        } else {
-            // 취미가 없으면 토스트 접고 터치 비활성화
-            viewModel.stopToastMessageRotation()
-            homeView.collapseToast(animated: false)
-            homeView.toastView.setInteractionEnabled(false)
+        homeView.configureToast(with: homeInfo.greetingMessage, aiCallRemaining: homeInfo.aiCallRemaining)
+        homeView.toastView.setInteractionEnabled(hasHobbies)  // 취미 있을 때만 터치 활성화
+        // 약간의 딜레이 후 펼치기 애니메이션 및 메시지 순환 시작
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.homeView.expandToast(animated: true)
+            self?.viewModel.startToastMessageRotation()
         }
 
         // Update floating button state
