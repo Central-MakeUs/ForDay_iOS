@@ -19,8 +19,12 @@ class HomeViewModel {
     @Published var currentHobbyId: Int?
     @Published var isLoading: Bool = false
     @Published var error: AppError?
+    @Published var currentToastMessage: String = ""
 
     private var cancellables = Set<AnyCancellable>()
+    private var toastMessages: [String] = []
+    private var currentMessageIndex: Int = 0
+    private var messageRotationTimer: Timer?
 
     // UseCase
     private let fetchHomeInfoUseCase: FetchHomeInfoUseCase
@@ -114,5 +118,44 @@ class HomeViewModel {
         }
 
         return activities
+    }
+
+    // MARK: - Toast Message Rotation
+
+    func startToastMessageRotation() {
+        guard let homeInfo = homeInfo else { return }
+
+        // 세 메시지 배열 구성
+        toastMessages = [
+            homeInfo.greetingMessage,
+            homeInfo.userSummaryText,
+            homeInfo.recommendMessage
+        ].filter { !$0.isEmpty }
+
+        guard !toastMessages.isEmpty else { return }
+
+        // 초기 메시지 설정
+        currentMessageIndex = 0
+        currentToastMessage = toastMessages[currentMessageIndex]
+
+        // 기존 타이머 정리
+        stopToastMessageRotation()
+
+        // 2초 간격 타이머 시작
+        messageRotationTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+            self?.rotateToNextMessage()
+        }
+    }
+
+    func stopToastMessageRotation() {
+        messageRotationTimer?.invalidate()
+        messageRotationTimer = nil
+    }
+
+    private func rotateToNextMessage() {
+        guard !toastMessages.isEmpty else { return }
+
+        currentMessageIndex = (currentMessageIndex + 1) % toastMessages.count
+        currentToastMessage = toastMessages[currentMessageIndex]
     }
 }

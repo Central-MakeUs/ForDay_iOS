@@ -130,6 +130,24 @@ extension AIRecommendationToastView {
         messageLabel.setTextWithTypography(message, style: .body14)
     }
 
+    func updateMessage(with message: String, animated: Bool = true) {
+        guard animated else {
+            messageLabel.setTextWithTypography(message, style: .body14)
+            return
+        }
+
+        // 텍스트만 페이드 전환 애니메이션
+        UIView.transition(
+            with: messageLabel,
+            duration: 0.3,
+            options: .transitionCrossDissolve,
+            animations: { [weak self] in
+                self?.messageLabel.setTextWithTypography(message, style: .body14)
+            },
+            completion: nil
+        )
+    }
+
     func expand(animated: Bool = true) {
         guard !isExpanded else { return }
         isExpanded = true
