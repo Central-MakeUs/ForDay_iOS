@@ -20,6 +20,7 @@ final class ScrapGridViewController: UIViewController {
     weak var coordinator: MainTabBarCoordinator?
 
     // UI Components
+    private let countLabel = UILabel()
     private let scrapCollectionView: UICollectionView
     private let emptyStateView = EmptyStateView()
 
@@ -66,6 +67,12 @@ extension ScrapGridViewController {
     private func style() {
         view.backgroundColor = .systemBackground
 
+        countLabel.do {
+            $0.font = TypographyStyle.label12.font
+            $0.textColor = .neutral500
+            $0.text = "0개"
+        }
+
         scrapCollectionView.do {
             $0.backgroundColor = .systemBackground
             $0.isScrollEnabled = false  // Disable scroll - parent scrollView handles it
@@ -73,10 +80,17 @@ extension ScrapGridViewController {
     }
 
     private func layout() {
+        view.addSubview(countLabel)
         view.addSubview(scrapCollectionView)
 
+        countLabel.snp.makeConstraints {
+            $0.top.equalToSuperview()
+            $0.leading.equalToSuperview().offset(20)
+        }
+
         scrapCollectionView.snp.makeConstraints {
-            $0.top.leading.trailing.equalToSuperview()
+            $0.top.equalTo(countLabel.snp.bottom).offset(8)
+            $0.leading.trailing.equalToSuperview()
             $0.bottom.lessThanOrEqualToSuperview()
             // Store height constraint for dynamic updates
             collectionViewHeightConstraint = $0.height.equalTo(0).priority(.high).constraint
@@ -104,8 +118,9 @@ extension ScrapGridViewController {
         guard height > 0 else { return }
         collectionViewHeightConstraint?.update(offset: height)
 
-        // Notify parent about height change
-        onContentHeightChanged?(height)
+        // Notify parent about height change (countLabel ~17 + spacing 8 + collectionView)
+        let totalHeight = 17 + 8 + height
+        onContentHeightChanged?(totalHeight)
     }
 
     private func bind() {
@@ -115,6 +130,14 @@ extension ScrapGridViewController {
             .sink { [weak self] scraps in
                 self?.scrapCollectionView.reloadData()
                 self?.updateEmptyState(hasScraps: !scraps.isEmpty)
+            }
+            .store(in: &cancellables)
+
+        // Scrap count (totalScrapCount from server)
+        viewModel.$totalScrapCount
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] count in
+                self?.countLabel.text = "\(count)개"
             }
             .store(in: &cancellables)
     }
