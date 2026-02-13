@@ -96,8 +96,14 @@ extension ActivityListViewController {
         let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: hobbyName)
         inputVC.aiCallRemaining = aiCallRemaining
         inputVC.onActivityCreated = { [weak self] in
+            // Dismiss the input modal first
             self?.dismiss(animated: true) {
-                self?.navigationController?.popToRootViewController(animated: true)
+                // Then dismiss ActivityListViewController if it was presented modally
+                if self?.isPresentedModally == true {
+                    self?.dismiss(animated: true)
+                } else {
+                    self?.navigationController?.popToRootViewController(animated: true)
+                }
             }
         }
 
@@ -161,9 +167,14 @@ extension ActivityListViewController {
         let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: hobbyName)
         inputVC.aiCallRemaining = aiCallRemaining
         inputVC.onActivityCreated = { [weak self] in
-            // Dismiss modal first, then pop to HomeViewController
+            // Dismiss the input modal first
             self?.dismiss(animated: true) {
-                self?.navigationController?.popToRootViewController(animated: true)
+                // Then dismiss ActivityListViewController if it was presented modally
+                if self?.isPresentedModally == true {
+                    self?.dismiss(animated: true)
+                } else {
+                    self?.navigationController?.popToRootViewController(animated: true)
+                }
             }
         }
 
@@ -328,9 +339,14 @@ extension ActivityListViewController {
         inputVC.aiRecommendedContent = content  // AI 추천 활동 내용 전달 (aiRecommended: true)
 
         inputVC.onActivityCreated = { [weak self] in
-            // Dismiss modal first, then pop to HomeViewController
+            // Dismiss the input modal first
             self?.dismiss(animated: true) {
-                self?.navigationController?.popToRootViewController(animated: true)
+                // Then dismiss ActivityListViewController if it was presented modally
+                if self?.isPresentedModally == true {
+                    self?.dismiss(animated: true)
+                } else {
+                    self?.navigationController?.popToRootViewController(animated: true)
+                }
             }
         }
 

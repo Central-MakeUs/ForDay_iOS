@@ -17,14 +17,19 @@ class ActivityCardCell: UITableViewCell {
     // MARK: - UI Components
 
     private let cardView = UIView()
-    private let contentStackView = UIStackView()
     private let aiIconImageView = UIImageView()
     private let activityLabel = UILabel()
+    private let stickerStackView = UIStackView()
     private let stickerImageView = UIImageView()
     private let stickerCountLabel = UILabel()
     private let buttonStackView = UIStackView()
     private let editButton = UIButton(type: .system)
     private let deleteButton = UIButton(type: .system)
+
+    // MARK: - Constraints
+
+    private var labelLeadingToAiIcon: Constraint?
+    private var labelLeadingToCard: Constraint?
 
     // MARK: - Callbacks
 
@@ -50,16 +55,47 @@ class ActivityCardCell: UITableViewCell {
         onDeleteTapped = nil
         aiIconImageView.isHidden = true
         deleteButton.isHidden = true
+
+        // Reset label constraint to default (no AI icon)
+        labelLeadingToAiIcon?.deactivate()
+        labelLeadingToCard?.activate()
     }
 
     // MARK: - Configuration
 
     func configure(with activity: Activity) {
-        activityLabel.setTextWithTypography(activity.content, style: .body14)
+        // 말줄임 처리를 위해 attributedText에 lineBreakMode 추가
+        let style = TypographyStyle.body14
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.minimumLineHeight = style.lineHeight
+        paragraphStyle.maximumLineHeight = style.lineHeight
+        paragraphStyle.lineBreakMode = .byTruncatingTail
+
+        let baselineOffset = (style.lineHeight - style.font.lineHeight) / 4
+
+        let attributedString = NSMutableAttributedString(string: activity.content)
+        attributedString.addAttributes([
+            .font: style.font,
+            .paragraphStyle: paragraphStyle,
+            .baselineOffset: baselineOffset,
+            .kern: style.letterSpacing
+        ], range: NSRange(location: 0, length: activity.content.utf16.count))
+
+        activityLabel.attributedText = attributedString
+
         stickerCountLabel.setTextWithTypography("\(activity.collectedStickerNum)", style: .label12)
 
-        // Show/hide AI badge
-        aiIconImageView.isHidden = !activity.aiRecommended
+        // Show/hide AI badge and update layout
+        let showAiIcon = activity.aiRecommended
+        aiIconImageView.isHidden = !showAiIcon
+
+        if showAiIcon {
+            labelLeadingToCard?.deactivate()
+            labelLeadingToAiIcon?.activate()
+        } else {
+            labelLeadingToAiIcon?.deactivate()
+            labelLeadingToCard?.activate()
+        }
 
         // Show/hide delete button based on deletable flag
         deleteButton.isHidden = !activity.deletable
@@ -82,12 +118,6 @@ extension ActivityCardCell {
             $0.clipsToBounds = true
         }
 
-        contentStackView.do {
-            $0.axis = .horizontal
-            $0.spacing = 4
-            $0.alignment = .center
-        }
-
         aiIconImageView.do {
             $0.image = .Ai.small
             $0.contentMode = .scaleAspectFit
@@ -97,6 +127,13 @@ extension ActivityCardCell {
         activityLabel.do {
             $0.textColor = .neutral900
             $0.numberOfLines = 1
+            $0.lineBreakMode = .byTruncatingTail
+        }
+
+        stickerStackView.do {
+            $0.axis = .horizontal
+            $0.spacing = 2
+            $0.alignment = .center
         }
 
         stickerImageView.do {
@@ -130,13 +167,13 @@ extension ActivityCardCell {
     private func setupLayout() {
         contentView.addSubview(cardView)
 
-        cardView.addSubview(contentStackView)
+        cardView.addSubview(aiIconImageView)
+        cardView.addSubview(activityLabel)
+        cardView.addSubview(stickerStackView)
         cardView.addSubview(buttonStackView)
 
-        contentStackView.addArrangedSubview(aiIconImageView)
-        contentStackView.addArrangedSubview(activityLabel)
-        contentStackView.addArrangedSubview(stickerImageView)
-        contentStackView.addArrangedSubview(stickerCountLabel)
+        stickerStackView.addArrangedSubview(stickerImageView)
+        stickerStackView.addArrangedSubview(stickerCountLabel)
 
         buttonStackView.addArrangedSubview(editButton)
         buttonStackView.addArrangedSubview(deleteButton)
@@ -147,20 +184,14 @@ extension ActivityCardCell {
             $0.bottom.equalToSuperview().offset(-10)
         }
 
-        contentStackView.snp.makeConstraints {
+        // AI 아이콘 (왼쪽 끝)
+        aiIconImageView.snp.makeConstraints {
             $0.leading.equalToSuperview().offset(16)
             $0.centerY.equalToSuperview()
-            $0.trailing.lessThanOrEqualTo(buttonStackView.snp.leading).offset(-8)
-        }
-
-        aiIconImageView.snp.makeConstraints {
             $0.size.equalTo(14)
         }
 
-        stickerImageView.snp.makeConstraints {
-            $0.size.equalTo(20)
-        }
-
+        // 버튼 스택 (오른쪽 끝)
         buttonStackView.snp.makeConstraints {
             $0.trailing.equalToSuperview().offset(-16)
             $0.centerY.equalToSuperview()
@@ -174,9 +205,31 @@ extension ActivityCardCell {
             $0.size.equalTo(24)
         }
 
-        // Set content hugging/compression priorities
-        activityLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        // 스티커 스택 (버튼 왼쪽)
+        stickerStackView.snp.makeConstraints {
+            $0.trailing.equalTo(buttonStackView.snp.leading).offset(-8)
+            $0.centerY.equalToSuperview()
+        }
+
+        stickerImageView.snp.makeConstraints {
+            $0.size.equalTo(20)
+        }
+
+        // 활동 라벨 (AI 아이콘과 스티커 사이, 남은 공간 차지)
+        activityLabel.snp.makeConstraints {
+            labelLeadingToAiIcon = $0.leading.equalTo(aiIconImageView.snp.trailing).offset(4).constraint
+            labelLeadingToCard = $0.leading.equalToSuperview().offset(16).constraint
+            $0.trailing.equalTo(stickerStackView.snp.leading).offset(-8)
+            $0.centerY.equalToSuperview()
+        }
+
+        // activityLabel이 줄어들 수 있도록 compression resistance 낮춤
         activityLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        activityLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        // 기본: AI 아이콘 숨김 상태
+        labelLeadingToAiIcon?.deactivate()
+        labelLeadingToCard?.activate()
     }
 
     private func setupActions() {
