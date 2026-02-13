@@ -26,10 +26,16 @@ class NicknameTransitionViewController: UIViewController {
         // 네비게이션 바 숨기기 (progress bar 제거)
         navigationController?.setNavigationBarHidden(true, animated: false)
 
-        // 1초 후 OnboardingComplete 화면으로 전환
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { [weak self] in
+        // 로띠 재생 완료 시 다음 화면으로 전환
+        transitionView.onAnimationCompleted = { [weak self] in
             self?.coordinator?.showOnboardingComplete()
         }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // 로띠 애니메이션 재생
+        transitionView.playAnimation()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
