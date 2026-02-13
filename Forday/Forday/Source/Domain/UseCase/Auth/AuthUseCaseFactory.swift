@@ -64,4 +64,11 @@ struct AuthUseCaseFactory {
             tokenStorage: tokenStorage
         )
     }
+
+    func makeAutoLoginUseCase() -> AutoLoginUseCase {
+        return AutoLoginUseCase(
+            authRepository: authRepository,
+            tokenStorage: tokenStorage
+        )
+    }
 }
