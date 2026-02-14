@@ -93,8 +93,18 @@ extension ActivityListViewController {
     }
 
     private func navigateToActivityInput() {
+        presentActivityInput()
+    }
+
+    /// 공통 HobbyActivityInputViewController 생성 및 표시
+    private func presentActivityInput(aiRecommendedContent: String? = nil) {
         let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: hobbyName)
         inputVC.aiCallRemaining = aiCallRemaining
+
+        if let content = aiRecommendedContent {
+            inputVC.aiRecommendedContent = content
+        }
+
         inputVC.onActivityCreated = { [weak self] in
             // Dismiss the input modal first
             self?.dismiss(animated: true) {
@@ -164,23 +174,7 @@ extension ActivityListViewController {
     }
 
     @objc private func addButtonTapped() {
-        let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: hobbyName)
-        inputVC.aiCallRemaining = aiCallRemaining
-        inputVC.onActivityCreated = { [weak self] in
-            // Dismiss the input modal first
-            self?.dismiss(animated: true) {
-                // Then dismiss ActivityListViewController if it was presented modally
-                if self?.isPresentedModally == true {
-                    self?.dismiss(animated: true)
-                } else {
-                    self?.navigationController?.popToRootViewController(animated: true)
-                }
-            }
-        }
-
-        let nav = UINavigationController(rootViewController: inputVC)
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
+        presentActivityInput()
     }
 
     private func showEditPopup(for activity: Activity) {
@@ -334,25 +328,7 @@ extension ActivityListViewController {
     }
 
     private func openActivityInputWithAIContent(_ content: String) {
-        let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: hobbyName)
-        inputVC.aiCallRemaining = aiCallRemaining
-        inputVC.aiRecommendedContent = content  // AI 추천 활동 내용 전달 (aiRecommended: true)
-
-        inputVC.onActivityCreated = { [weak self] in
-            // Dismiss the input modal first
-            self?.dismiss(animated: true) {
-                // Then dismiss ActivityListViewController if it was presented modally
-                if self?.isPresentedModally == true {
-                    self?.dismiss(animated: true)
-                } else {
-                    self?.navigationController?.popToRootViewController(animated: true)
-                }
-            }
-        }
-
-        let nav = UINavigationController(rootViewController: inputVC)
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
+        presentActivityInput(aiRecommendedContent: content)
     }
 }
 
