@@ -98,6 +98,12 @@ extension NicknameTransitionView {
 
 extension NicknameTransitionView {
     func playAnimation() {
+        // 애니메이션 로드 실패 시 바로 완료 처리
+        guard lottieView.animation != nil else {
+            onAnimationCompleted?()
+            return
+        }
+
         lottieView.play { [weak self] finished in
             if finished {
                 self?.onAnimationCompleted?()

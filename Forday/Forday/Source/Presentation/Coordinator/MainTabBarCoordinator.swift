@@ -181,12 +181,9 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         let generalSettingsVC = GeneralSettingsViewController()
         generalSettingsVC.coordinator = self
 
-        // Push to currently selected navigation stack
-        if let currentNav = tabBarController.selectedViewController as? UINavigationController {
-            // Hide navigation bar before pushing to avoid flash
-            currentNav.setNavigationBarHidden(true, animated: false)
-            currentNav.pushViewController(generalSettingsVC, animated: true)
-        }
+        // Present as fullscreen modal
+        generalSettingsVC.modalPresentationStyle = .fullScreen
+        tabBarController.present(generalSettingsVC, animated: true)
     }
 
     func showActivityDetail(activityRecordId: Int) {
