@@ -36,8 +36,11 @@ final class MyPageViewController: UIViewController {
     // Guest login bottom sheet
     private var hasShownGuestLoginSheet = false
 
-    // Track if hobbies need refresh (set by event bus, consumed by viewWillAppear)
-    private var needsHobbiesRefresh = false
+    // Track if this is the first load
+    private var isFirstLoad = true
+
+    // Track if navigating to child view (상세 화면 등으로 push할 때 true)
+    private var isNavigatingToChildView = false
 
     // MARK: - Initialization
 
@@ -63,32 +66,55 @@ final class MyPageViewController: UIViewController {
         setupSegmentedControl()
         setupScrollView()
         bind()
-        setupEventBus()
-        loadData()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
 
-        // Refresh hobbies if flag is set (e.g., after cover image update)
-        if needsHobbiesRefresh {
-            needsHobbiesRefresh = false
-            Task {
-                await viewModel.refreshHobbies()
+        // 자식 뷰(상세 등)에서 돌아온 경우 필터 유지, 그 외(탭 전환, 초기 진입)에는 필터 초기화
+        loadMyPageData(resetFilter: !isNavigatingToChildView)
+        isNavigatingToChildView = false
+    }
+
+    private func loadMyPageData(resetFilter: Bool = true) {
+        // 매번 스켈레톤 표시
+        myPageView.showSkeleton()
+
+        // 재진입 시에만 필터 초기화 (상세에서 돌아올 때는 유지)
+        if resetFilter {
+            viewModel.resetHobbyFilter()
+        }
+
+        Task {
+            await viewModel.fetchInitialData()
+
+            await MainActor.run {
+                myPageView.hideSkeleton()
+
+                if isFirstLoad {
+                    setupChildViewControllers()
+                    switchToTab(.activities)
+                    isFirstLoad = false
+                }
             }
         }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        // Navigation bar는 각 하위 VC가 자체적으로 관리
-        // ProfileSettings, GeneralSettings 등 커스텀 내비게이션을 사용하는 화면에서 잔상 방지
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         checkGuestAccess()
+    }
+
+    // MARK: - Child Navigation
+
+    /// 자식 뷰(상세 등)로 이동하기 전에 호출 - 돌아올 때 필터 유지를 위함
+    func willNavigateToChildView() {
+        isNavigatingToChildView = true
     }
 
     // MARK: - Guest Access Check
@@ -129,84 +155,6 @@ extension MyPageViewController {
 
     private func setupScrollView() {
         myPageView.scrollView.delegate = self
-    }
-
-    private func setupEventBus() {
-        // Listen to profile updates
-        AppEventBus.shared.profileDidUpdate
-            .sink { [weak self] in
-                Task {
-                    await self?.viewModel.refreshUserProfile()
-                }
-            }
-            .store(in: &cancellables)
-
-        // Listen to hobbies updates
-        AppEventBus.shared.hobbiesDidUpdate
-            .sink { [weak self] in
-                // Set flag to refresh when view appears (after navigation completes)
-                // This ensures we get fresh data after server has updated
-                self?.needsHobbiesRefresh = true
-            }
-            .store(in: &cancellables)
-
-        // Listen to hobby creation
-        AppEventBus.shared.hobbyCreated
-            .sink { [weak self] hobbyId in
-                Task {
-                    // Refresh both hobbies and activities
-                    await self?.viewModel.refreshHobbies()
-                    await self?.viewModel.refreshActivities()
-                }
-            }
-            .store(in: &cancellables)
-
-        // Listen to hobby settings updates
-        AppEventBus.shared.hobbySettingsUpdated
-            .sink { [weak self] hobbyId in
-                Task {
-                    await self?.viewModel.refreshHobbies()
-                }
-            }
-            .store(in: &cancellables)
-
-        // Listen to hobby deletion
-        AppEventBus.shared.hobbyDeleted
-            .sink { [weak self] in
-                Task {
-                    // Refresh both hobbies and activities
-                    await self?.viewModel.refreshHobbies()
-                    await self?.viewModel.refreshActivities()
-                }
-            }
-            .store(in: &cancellables)
-
-        // Listen to activity record creation
-        AppEventBus.shared.activityRecordCreated
-            .sink { [weak self] hobbyId in
-                Task {
-                    await self?.viewModel.refreshActivities()
-                }
-            }
-            .store(in: &cancellables)
-
-        // Listen to activity record deletion
-        AppEventBus.shared.activityRecordDeleted
-            .sink { [weak self] in
-                Task {
-                    await self?.viewModel.refreshActivities()
-                }
-            }
-            .store(in: &cancellables)
-
-        // Listen to scrap updates (add/remove)
-        AppEventBus.shared.scrapDidUpdate
-            .sink { [weak self] in
-                Task {
-                    await self?.viewModel.refreshScraps()
-                }
-            }
-            .store(in: &cancellables)
     }
 
     private func bind() {
@@ -273,22 +221,6 @@ extension MyPageViewController {
                 self?.handleError(error)
             }
             .store(in: &cancellables)
-    }
-
-    private func loadData() {
-        // Show skeleton while loading
-        myPageView.showSkeleton()
-
-        Task {
-            await viewModel.fetchInitialData()
-
-            // After data is loaded, setup child view controllers
-            await MainActor.run {
-                myPageView.hideSkeleton()
-                setupChildViewControllers()
-                switchToTab(.activities)
-            }
-        }
     }
 
     private func setupChildViewControllers() {
@@ -457,10 +389,13 @@ extension MyPageViewController {
     }
 
     private func showProfileEdit() {
+        willNavigateToChildView()
         coordinator?.showProfileSettings()
     }
 
     private func showHobbyCoverManagement() {
+        willNavigateToChildView()
+
         let viewModel = ManageHobbyCoverViewModel()
         let vc = ManageHobbyCoverViewController(viewModel: viewModel)
 
@@ -473,12 +408,16 @@ extension MyPageViewController {
     }
 
     private func showGeneralSettings() {
+        willNavigateToChildView()
+
         let vc = GeneralSettingsViewController()
         vc.coordinator = coordinator
 
-        // Hide navigation bar before pushing to avoid flash
-        navigationController?.setNavigationBarHidden(true, animated: false)
-        navigationController?.pushViewController(vc, animated: true)
+        // Wrap in navigation controller for navigation support
+        let navController = UINavigationController(rootViewController: vc)
+        navController.setNavigationBarHidden(true, animated: false)
+        navController.modalPresentationStyle = .fullScreen
+        present(navController, animated: true)
     }
 
     private func showComingSoonAlert(feature: String) {
@@ -537,7 +476,7 @@ extension MyPageViewController {
         case .network:
             title = "네트워크 오류"
             actions.append(UIAlertAction(title: "다시 시도", style: .default) { [weak self] _ in
-                self?.loadData()
+                self?.loadMyPageData()
             })
             actions.append(UIAlertAction(title: "취소", style: .cancel))
 

@@ -35,15 +35,7 @@ final class ReactionUserCell: UIView {
     func configure(with user: ReactionUser) {
         nicknameLabel.setTextWithTypography(user.nickname, style: .label10)
         newReactionDot.isHidden = !user.newReactionUser
-
-        if let profileImageUrl = user.profileImageUrl, let url = URL(string: profileImageUrl) {
-            profileImageView.kf.setImage(
-                with: url,
-                placeholder: UIImage(systemName: "person.circle.fill")?.withTintColor(.neutral300, renderingMode: .alwaysOriginal)
-            )
-        } else {
-            profileImageView.image = UIImage(systemName: "person.circle.fill")?.withTintColor(.neutral300, renderingMode: .alwaysOriginal)
-        }
+        profileImageView.setImage(with: user.profileImageUrl)
     }
 }
 
@@ -51,11 +43,13 @@ final class ReactionUserCell: UIView {
 
 extension ReactionUserCell {
     private func style() {
+        clipsToBounds = false
+
         profileImageView.do {
             $0.contentMode = .scaleAspectFill
             $0.clipsToBounds = true
             $0.layer.cornerRadius = 14  // 28pt / 2
-            $0.backgroundColor = .neutral200
+            $0.backgroundColor = .bg003
         }
 
         nicknameLabel.do {
@@ -75,16 +69,17 @@ extension ReactionUserCell {
         addSubview(nicknameLabel)
         addSubview(newReactionDot)
 
+        // top 기준 레이아웃 (newReactionDot 공간 확보를 위해 top 4pt)
         profileImageView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(8)
+            $0.top.equalToSuperview().offset(4)
             $0.centerX.equalToSuperview()
             $0.width.height.equalTo(28)
         }
 
         nicknameLabel.snp.makeConstraints {
             $0.top.equalTo(profileImageView.snp.bottom).offset(4)
-            $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalToSuperview().offset(-8)
+            $0.centerX.equalToSuperview()
+            $0.bottom.lessThanOrEqualToSuperview()
         }
 
         newReactionDot.snp.makeConstraints {

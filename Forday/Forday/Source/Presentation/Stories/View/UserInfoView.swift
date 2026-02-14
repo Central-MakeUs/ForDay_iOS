@@ -38,17 +38,7 @@ final class UserInfoView: UIView {
 
     func configure(profileImageUrl: String?, nickname: String) {
         nicknameLabel.setTextWithTypography(nickname, style: .label12)
-
-        if let urlString = profileImageUrl, let url = URL(string: urlString) {
-            profileImageView.kf.setImage(
-                with: url,
-                placeholder: UIImage(systemName: "person.circle.fill"),
-                options: [.transition(.fade(0.2))]
-            )
-        } else {
-            profileImageView.image = UIImage(systemName: "person.circle.fill")
-            profileImageView.tintColor = .systemGray3
-        }
+        profileImageView.setImage(with: profileImageUrl)
     }
 
     private func setupGesture() {
@@ -69,7 +59,7 @@ extension UserInfoView {
         profileImageView.do {
             $0.contentMode = .scaleAspectFill
             $0.clipsToBounds = true
-            $0.backgroundColor = .systemGray6
+            $0.backgroundColor = .bg003
         }
 
         nicknameLabel.do {

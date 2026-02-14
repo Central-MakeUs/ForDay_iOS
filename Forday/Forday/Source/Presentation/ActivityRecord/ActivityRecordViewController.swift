@@ -10,6 +10,7 @@ import UIKit
 import Combine
 import PhotosUI
 import SnapKit
+import AVFoundation
 
 class ActivityRecordViewController: UIViewController {
 
@@ -17,6 +18,7 @@ class ActivityRecordViewController: UIViewController {
 
     private let recordView = ActivityRecordView()
     private let viewModel: ActivityRecordViewModel
+    private let hobbyName: String
     private var cancellables = Set<AnyCancellable>()
     private var activityDropdownView: ActivityDropdownView?
     private var privacyDropdownView: PrivacyDropdownView?
@@ -27,8 +29,13 @@ class ActivityRecordViewController: UIViewController {
 
     // Initialization
 
-    init(hobbyId: Int, activityDetail: ActivityDetail? = nil) {
-        self.viewModel = ActivityRecordViewModel(hobbyId: hobbyId, activityDetail: activityDetail)
+    init(hobbyId: Int, hobbyName: String, activityDetail: ActivityDetail? = nil, preselectedActivityId: Int? = nil) {
+        self.viewModel = ActivityRecordViewModel(
+            hobbyId: hobbyId,
+            activityDetail: activityDetail,
+            preselectedActivityId: preselectedActivityId
+        )
+        self.hobbyName = hobbyName
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -121,7 +128,7 @@ extension ActivityRecordViewController {
             for: .touchUpInside
         )
 
-        // 사진 추가
+        // 사진 추가 버튼
         recordView.photoAddButton.addTarget(
             self,
             action: #selector(photoAddButtonTapped),
@@ -216,6 +223,76 @@ extension ActivityRecordViewController {
             }
         }
     }
+
+    private func showPhotoAddBottomSheet() {
+        let bottomSheet = PhotoAddBottomSheetViewController()
+        bottomSheet.modalPresentationStyle = .overFullScreen
+        bottomSheet.modalTransitionStyle = .crossDissolve
+
+        bottomSheet.onOptionSelected = { [weak self] option in
+            switch option {
+            case .album:
+                self?.presentPhotoPicker()
+            case .camera:
+                self?.checkCameraPermissionAndPresent()
+            }
+        }
+
+        present(bottomSheet, animated: false)
+    }
+
+    private func checkCameraPermissionAndPresent() {
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+
+        switch status {
+        case .authorized:
+            presentCamera()
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                DispatchQueue.main.async {
+                    if granted {
+                        self?.presentCamera()
+                    } else {
+                        self?.showCameraPermissionDeniedAlert()
+                    }
+                }
+            }
+        case .denied, .restricted:
+            showCameraPermissionDeniedAlert()
+        @unknown default:
+            break
+        }
+    }
+
+    private func presentCamera() {
+        guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
+            ToastView.showError(message: "카메라를 사용할 수 없습니다.")
+            return
+        }
+
+        let imagePicker = UIImagePickerController()
+        imagePicker.sourceType = .camera
+        imagePicker.delegate = self
+        imagePicker.allowsEditing = false
+        present(imagePicker, animated: true)
+    }
+
+    private func showCameraPermissionDeniedAlert() {
+        let alert = UIAlertController(
+            title: "카메라 접근 권한 필요",
+            message: "활동 기록에 사진을 추가하기 위해 카메라 접근 권한이 필요합니다.\n설정에서 권한을 허용해주세요.",
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        alert.addAction(UIAlertAction(title: "설정으로 이동", style: .default) { _ in
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsURL)
+            }
+        })
+
+        present(alert, animated: true)
+    }
 }
 
 // Actions
@@ -236,12 +313,13 @@ extension ActivityRecordViewController {
     @objc private func addActivityButtonTapped() {
         // 현재 화면 dismiss 후 HobbyActivityInputViewController 표시
         let hobbyId = viewModel.currentHobbyId
+        let currentHobbyName = hobbyName
         let presentingVC = presentingViewController
 
         dismiss(animated: true) {
             guard let presenter = presentingVC else { return }
 
-            let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId)
+            let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: currentHobbyName)
             inputVC.onActivityCreated = { [weak inputVC] in
                 // 활동 생성 완료 시 dismiss
                 inputVC?.dismiss(animated: true)
@@ -259,14 +337,14 @@ extension ActivityRecordViewController {
         dismissPrivacyDropdown()
     }
 
-    @objc private func photoAddButtonTapped() {
-        if viewModel.selectedImage == nil {
-            presentPhotoPicker()
-        }
-    }
-
     @objc private func photoDeleteButtonTapped() {
         deletePhoto()
+    }
+
+    @objc private func photoAddButtonTapped() {
+        // 이미지가 이미 있으면 아무 동작 안 함
+        guard viewModel.selectedImage == nil else { return }
+        showPhotoAddBottomSheet()
     }
 
     @objc private func privacyButtonTapped() {
@@ -291,7 +369,18 @@ extension ActivityRecordViewController {
                     // Notify HomeViewController to refresh sticker board
                     AppEventBus.shared.activityRecordCreated.send(viewModel.currentHobbyId)
 
-                    dismiss(animated: true)
+                    // 수정 모드면 기존대로 dismiss, 생성 모드면 상세 화면으로 전환
+                    if viewModel.isEditMode {
+                        dismiss(animated: true)
+                    } else {
+                        // 기록 완료 후 상세 화면으로 전환
+                        let nickname = coordinator?.getCurrentNickname() ?? "회원"
+                        coordinator?.showActivityDetailAfterRecord(
+                            activityRecordId: result.activityRecordId,
+                            nickname: nickname,
+                            from: self
+                        )
+                    }
                 }
             } catch ActivityRecordError.missingRequiredFields {
                 await MainActor.run {
@@ -425,9 +514,9 @@ extension ActivityRecordViewController: UICollectionViewDelegate, UICollectionVi
     }
 }
 
-// PHPickerViewControllerDelegate
+// PHPickerViewControllerDelegate & UIImagePickerControllerDelegate
 
-extension ActivityRecordViewController: PHPickerViewControllerDelegate {
+extension ActivityRecordViewController: PHPickerViewControllerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
 
@@ -456,6 +545,33 @@ extension ActivityRecordViewController: PHPickerViewControllerDelegate {
                 }
             }
         }
+    }
+
+    // UIImagePickerControllerDelegate (카메라)
+    func imagePickerController(
+        _ picker: UIImagePickerController,
+        didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
+    ) {
+        picker.dismiss(animated: true)
+
+        guard let image = info[.originalImage] as? UIImage else {
+            print("❌ 카메라 이미지 가져오기 실패")
+            return
+        }
+
+        // 이미지 업로드
+        Task {
+            do {
+                try await viewModel.uploadImage(image)
+                print("✅ 카메라 이미지 업로드 성공")
+            } catch {
+                print("❌ 카메라 이미지 업로드 실패: \(error)")
+            }
+        }
+    }
+
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true)
     }
 }
 

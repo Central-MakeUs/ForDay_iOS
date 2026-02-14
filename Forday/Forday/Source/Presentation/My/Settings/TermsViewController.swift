@@ -71,17 +71,17 @@ extension TermsViewController {
 
         Task {
             do {
-                let content: String
-
                 switch termsType {
                 case .termsOfService:
-                    content = try await termsService.fetchTermsOfService()
+                    let data = try await termsService.fetchTermsOfService()
+                    await MainActor.run {
+                        termsView.updateTermsOfService(data)
+                    }
                 case .privacyPolicy:
-                    content = try await termsService.fetchPrivacyPolicy()
-                }
-
-                await MainActor.run {
-                    termsView.updateContent(content)
+                    let data = try await termsService.fetchPrivacyPolicy()
+                    await MainActor.run {
+                        termsView.updatePrivacyPolicy(data)
+                    }
                 }
             } catch {
                 await MainActor.run {

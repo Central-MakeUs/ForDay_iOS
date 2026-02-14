@@ -72,7 +72,7 @@ class MainTabBarCoordinator: NSObject, Coordinator {
     }
 
     private func createNavigationController(rootViewController: UIViewController) -> UINavigationController {
-        let nav = UINavigationController(rootViewController: rootViewController)
+        let nav = BaseNavigationController(rootViewController: rootViewController)
 
         // 네비게이션 바 기본 설정
         nav.navigationBar.prefersLargeTitles = false
@@ -120,7 +120,15 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
             return
         }
 
-        let recordVC = ActivityRecordViewController(hobbyId: hobbyId)
+        let hobbyName = homeViewController?.getCurrentHobbyName() ?? "취미"
+        let preselectedActivityId = homeViewController?.getCurrentActivityId()
+
+        let recordVC = ActivityRecordViewController(
+            hobbyId: hobbyId,
+            hobbyName: hobbyName,
+            preselectedActivityId: preselectedActivityId
+        )
+        recordVC.coordinator = self
         let nav = UINavigationController(rootViewController: recordVC)
         nav.modalPresentationStyle = .fullScreen
 
@@ -178,12 +186,9 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         let generalSettingsVC = GeneralSettingsViewController()
         generalSettingsVC.coordinator = self
 
-        // Push to currently selected navigation stack
-        if let currentNav = tabBarController.selectedViewController as? UINavigationController {
-            // Hide navigation bar before pushing to avoid flash
-            currentNav.setNavigationBarHidden(true, animated: false)
-            currentNav.pushViewController(generalSettingsVC, animated: true)
-        }
+        // Present as fullscreen modal
+        generalSettingsVC.modalPresentationStyle = .fullScreen
+        tabBarController.present(generalSettingsVC, animated: true)
     }
 
     func showActivityDetail(activityRecordId: Int) {
@@ -200,6 +205,33 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         }
     }
 
+    /// 활동 기록 완료 후 상세 보기 표시
+    /// - Parameters:
+    ///   - activityRecordId: 기록 ID
+    ///   - nickname: 사용자 닉네임 (로띠 메시지에 사용)
+    ///   - from: 현재 표시 중인 ViewController (dismiss 용)
+    func showActivityDetailAfterRecord(activityRecordId: Int, nickname: String, from presentingVC: UIViewController) {
+        // Create ViewModel
+        let viewModel = ActivityDetailViewModel(activityRecordId: activityRecordId)
+
+        // Create ViewController with afterRecord mode
+        let detailVC = ActivityDetailViewController(
+            viewModel: viewModel,
+            displayMode: .afterRecord,
+            nickname: nickname
+        )
+        detailVC.coordinator = self
+        detailVC.modalPresentationStyle = .fullScreen
+
+        // 현재 present된 화면 dismiss 후 새 화면 표시
+        presentingVC.dismiss(animated: false) { [weak self] in
+            // Home navigation에서 present
+            if let homeNav = self?.tabBarController.viewControllers?.first as? UINavigationController {
+                homeNav.present(detailVC, animated: true)
+            }
+        }
+    }
+
     func showActivityRecord() {
         // Get current hobby ID from HomeViewController
         guard let hobbyId = homeViewController?.getCurrentHobbyId() else {
@@ -207,7 +239,15 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
             return
         }
 
-        let recordVC = ActivityRecordViewController(hobbyId: hobbyId)
+        let hobbyName = homeViewController?.getCurrentHobbyName() ?? "취미"
+        let preselectedActivityId = homeViewController?.getCurrentActivityId()
+
+        let recordVC = ActivityRecordViewController(
+            hobbyId: hobbyId,
+            hobbyName: hobbyName,
+            preselectedActivityId: preselectedActivityId
+        )
+        recordVC.coordinator = self
         let nav = UINavigationController(rootViewController: recordVC)
         nav.modalPresentationStyle = .fullScreen
 
@@ -274,5 +314,9 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
 
     func switchToHomeTab() {
         tabBarController.selectedIndex = 0
+    }
+
+    func getCurrentNickname() -> String? {
+        return homeViewController?.getCurrentNickname()
     }
 }

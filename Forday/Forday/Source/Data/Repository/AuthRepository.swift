@@ -40,11 +40,32 @@ final class AuthRepository: AuthRepositoryInterface {
         return response.data.toDomain()
     }
     
+    // MARK: - Validate Token
+
+    func validateToken() async throws -> Bool {
+        let response = try await apiService.validateToken()
+        return response.data.tokenValid
+    }
+
     // MARK: - Refresh Token
-    
+
     func refreshToken(refreshToken: String) async throws -> AuthToken {
-        // TODO: 나중에 구현
-        fatalError("Refresh Token not implemented yet")
+        let request = DTO.TokenRefreshRequest(refreshToken: refreshToken)
+        let response = try await apiService.refreshToken(request: request)
+
+        // 토큰 재발급 API는 accessToken, refreshToken만 반환
+        // 나머지 필드는 사용되지 않음 (AutoLoginUseCase에서 토큰만 저장)
+        // socialType 등 다른 필드가 필요한 경우 별도 API 호출 필요
+        return AuthToken(
+            accessToken: response.data.accessToken,
+            refreshToken: response.data.refreshToken,
+            isNewUser: false,
+            socialType: .guest,  // placeholder - 실제 사용되지 않음
+            guestUserId: nil,
+            onboardingCompleted: true,
+            nicknameSet: true,
+            onboardingData: nil
+        )
     }
     
     // MARK: - Logout

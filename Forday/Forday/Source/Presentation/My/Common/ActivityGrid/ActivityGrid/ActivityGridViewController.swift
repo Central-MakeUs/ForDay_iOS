@@ -21,6 +21,7 @@ final class ActivityGridViewController: UIViewController {
 
     // UI Components
     private let hobbyFilterView = HobbyFilterView()
+    private let countLabel = UILabel()
     private let activityCollectionView: UICollectionView
     private let emptyStateView = EmptyStateView()
 
@@ -68,6 +69,12 @@ extension ActivityGridViewController {
     private func style() {
         view.backgroundColor = .systemBackground
 
+        countLabel.do {
+            $0.font = TypographyStyle.label12.font
+            $0.textColor = .neutral500
+            $0.text = "0개"
+        }
+
         activityCollectionView.do {
             $0.backgroundColor = .systemBackground
             $0.isScrollEnabled = false  // Disable scroll - parent scrollView handles it
@@ -76,6 +83,7 @@ extension ActivityGridViewController {
 
     private func layout() {
         view.addSubview(hobbyFilterView)
+        view.addSubview(countLabel)
         view.addSubview(activityCollectionView)
 
         hobbyFilterView.snp.makeConstraints {
@@ -83,8 +91,13 @@ extension ActivityGridViewController {
             $0.height.equalTo(90)
         }
 
+        countLabel.snp.makeConstraints {
+            $0.top.equalTo(hobbyFilterView.snp.bottom).offset(16)
+            $0.leading.equalToSuperview().offset(20)
+        }
+
         activityCollectionView.snp.makeConstraints {
-            $0.top.equalTo(hobbyFilterView.snp.bottom).offset(24)
+            $0.top.equalTo(countLabel.snp.bottom).offset(8)
             $0.leading.trailing.equalToSuperview()
             $0.bottom.lessThanOrEqualToSuperview()
             // Store height constraint for dynamic updates
@@ -113,8 +126,8 @@ extension ActivityGridViewController {
         guard height > 0 else { return }
         collectionViewHeightConstraint?.update(offset: height)
 
-        // Notify parent about height change (hobbyFilter height + spacing + collectionView height)
-        let totalHeight = 90 + 24 + height
+        // Notify parent about height change (hobbyFilter 90 + spacing 16 + countLabel ~17 + spacing 8 + collectionView)
+        let totalHeight = 90 + 16 + 17 + 8 + height
         onContentHeightChanged?(totalHeight)
     }
 
@@ -133,6 +146,14 @@ extension ActivityGridViewController {
             .sink { [weak self] activities in
                 self?.activityCollectionView.reloadData()
                 self?.updateEmptyState(hasActivities: !activities.isEmpty)
+            }
+            .store(in: &cancellables)
+
+        // Activity count (hobbyCardCount from server)
+        viewModel.$hobbyCardCount
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] count in
+                self?.countLabel.text = "\(count)개"
             }
             .store(in: &cancellables)
 
@@ -210,6 +231,9 @@ extension ActivityGridViewController: UICollectionViewDelegate {
     }
 
     private func showActivityDetail(activityRecordId: Int) {
+        // 부모(MyPageViewController)에게 자식 뷰로 이동함을 알림 (필터 유지용)
+        (parent as? MyPageViewController)?.willNavigateToChildView()
+
         let detailViewModel = ActivityDetailViewModel(activityRecordId: activityRecordId)
         let detailVC = ActivityDetailViewController(viewModel: detailViewModel)
         detailVC.coordinator = coordinator

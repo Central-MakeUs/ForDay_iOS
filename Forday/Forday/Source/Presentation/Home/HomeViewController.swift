@@ -18,6 +18,9 @@ class HomeViewController: UIViewController {
     let viewModel = HomeViewModel()
     private let stickerBoardViewModel = StickerBoardViewModel()
     private var cancellables = Set<AnyCancellable>()
+
+    // TODO: HomeInfo API에 nickname 필드 추가되면 getCurrentNickname() 수정 필요
+    // 현재는 greetingMessage에서 파싱하여 사용 중
     
     // Coordinator
     weak var coordinator: MainTabBarCoordinator?
@@ -43,18 +46,23 @@ class HomeViewController: UIViewController {
         setupActions()
         setupStickerBoardCallbacks()
         bind()
-
-        // 홈 정보 로드
-        Task {
-            await viewModel.fetchHomeInfo()
-            // fetchHomeInfo 완료 후 currentHobbyId를 stickerBoardViewModel에 전달
-            await stickerBoardViewModel.loadInitialStickerBoard(hobbyId: viewModel.currentHobbyId)
-        }
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: false)
+        // 이미 선택된 취미가 있으면 유지, 없으면 서버가 결정
+        loadHomeData(hobbyId: viewModel.currentHobbyId)
+    }
+
+    private func loadHomeData(hobbyId: Int? = nil) {
+        Task {
+            // hobbyId가 전달되면 해당 취미로, 아니면 서버가 결정하도록 함
+            // (취미설정에서 보관/꺼내기 후 돌아왔을 때 정확한 상태 반영)
+            await viewModel.fetchHomeInfo(hobbyId: hobbyId)
+            // fetchHomeInfo 완료 후 업데이트된 currentHobbyId 사용
+            await stickerBoardViewModel.loadInitialStickerBoard(hobbyId: viewModel.currentHobbyId)
+        }
     }
 }
 
@@ -193,92 +201,36 @@ extension HomeViewController {
             }
             .store(in: &cancellables)
 
+        // 토스트 메시지 순환
+        viewModel.$currentToastMessage
+            .receive(on: DispatchQueue.main)
+            .dropFirst() // 초기값 무시
+            .sink { [weak self] message in
+                self?.homeView.toastView.updateMessage(with: message, animated: true)
+            }
+            .store(in: &cancellables)
+
+        // AppEventBus 이벤트 구독
+        bindAppEvents()
+
         // 스티커판 상태 바인딩
         bindStickerBoard()
-
-        // 이벤트 구독
-        setupEventBus()
     }
 
-    // MARK: - Event Subscriptions
-    // 구독 중인 이벤트:
-    // - activityRecordCreated: 활동 기록 생성 시 스티커 보드 새로고침
-    // - hobbySettingsUpdated: 취미 설정 변경 시 홈 정보 새로고침
-    // - hobbyCreated: 새 취미 생성 시 홈 정보 및 스티커 보드 새로고침
-    // - hobbyDeleted: 취미 삭제 시 홈 정보 및 스티커 보드 새로고침
-    // - activityUpdated: 활동 수정 시 홈 정보 새로고침
-    // - activityDeleted: 활동 삭제 시 홈 정보 새로고침
-
-    private func setupEventBus() {
-        // 활동 기록 생성 이벤트 구독
+    private func bindAppEvents() {
+        // 바텀시트에서 활동 저장 후 홈 새로고침
+        // (바텀시트 dismiss 시 viewWillAppear가 호출되지 않으므로 이벤트로 처리)
         AppEventBus.shared.activityRecordCreated
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] hobbyId in
-                print("🎉 활동 기록 생성됨! hobbyId: \(hobbyId)")
-                Task {
-                    // 홈 정보 새로고침 (ActivityPreview 포함)
-                    await self?.viewModel.fetchHomeInfo()
-                    // 스티커 보드 새로고침
-                    await self?.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: self?.viewModel.currentHobbyId)
-                }
+                print("🔄 활동 기록 생성됨 - 홈 새로고침 (hobbyId: \(hobbyId))")
+                self?.loadHomeData(hobbyId: hobbyId)
             }
             .store(in: &cancellables)
 
-        // 취미 설정 변경 이벤트 구독
-        AppEventBus.shared.hobbySettingsUpdated
-            .sink { [weak self] hobbyId in
-                print("⚙️ 취미 설정 변경됨! hobbyId: \(hobbyId)")
-                Task {
-                    // 홈 정보 새로고침
-                    await self?.viewModel.fetchHomeInfo()
-                }
-            }
-            .store(in: &cancellables)
-
-        // 새 취미 생성 이벤트 구독
-        AppEventBus.shared.hobbyCreated
-            .sink { [weak self] hobbyId in
-                print("🎉 새 취미 생성됨! hobbyId: \(hobbyId)")
-                Task {
-                    // 홈 정보 및 스티커 보드 새로고침
-                    await self?.viewModel.fetchHomeInfo()
-                    await self?.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: self?.viewModel.currentHobbyId)
-                }
-            }
-            .store(in: &cancellables)
-
-        // 취미 삭제 이벤트 구독
-        AppEventBus.shared.hobbyDeleted
-            .sink { [weak self] in
-                print("🗑️ 취미 삭제됨!")
-                Task {
-                    // 홈 정보 및 스티커 보드 새로고침
-                    await self?.viewModel.fetchHomeInfo()
-                    await self?.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: self?.viewModel.currentHobbyId)
-                }
-            }
-            .store(in: &cancellables)
-
-        // 활동 수정 이벤트 구독
-        AppEventBus.shared.activityUpdated
-            .sink { [weak self] hobbyId in
-                print("✏️ 활동 수정됨! hobbyId: \(hobbyId)")
-                Task {
-                    // 홈 정보 새로고침 (드롭다운 미리보기 업데이트)
-                    await self?.viewModel.fetchHomeInfo()
-                }
-            }
-            .store(in: &cancellables)
-
-        // 활동 삭제 이벤트 구독
-        AppEventBus.shared.activityDeleted
-            .sink { [weak self] hobbyId in
-                print("🗑️ 활동 삭제됨! hobbyId: \(hobbyId)")
-                Task {
-                    // 홈 정보 새로고침 (드롭다운 미리보기 업데이트)
-                    await self?.viewModel.fetchHomeInfo()
-                }
-            }
-            .store(in: &cancellables)
+        // NOTE: activityDeleted, hobbyCreated, hobbySettingsUpdated, hobbyDeleted 등
+        // Navigation push/fullscreen modal에서 발생하는 이벤트는
+        // dismiss/pop 시 viewWillAppear에서 currentHobbyId를 유지하며 자동 새로고침됨 → 별도 구독 불필요
     }
 
     private func bindStickerBoard() {
@@ -360,17 +312,12 @@ extension HomeViewController {
         }
 
         // AI 추천 토스트 설정 및 펼치기 애니메이션
-        if hasHobbies {
-            homeView.configureToast(with: homeInfo.greetingMessage, aiCallRemaining: homeInfo.aiCallRemaining)
-            homeView.toastView.setInteractionEnabled(true)  // 터치 활성화
-            // 약간의 딜레이 후 펼치기 애니메이션
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-                self?.homeView.expandToast(animated: true)
-            }
-        } else {
-            // 취미가 없으면 토스트 접고 터치 비활성화
-            homeView.collapseToast(animated: false)
-            homeView.toastView.setInteractionEnabled(false)
+        homeView.configureToast(with: homeInfo.greetingMessage, aiCallRemaining: homeInfo.aiCallRemaining)
+        homeView.toastView.setInteractionEnabled(hasHobbies)  // 취미 있을 때만 터치 활성화
+        // 약간의 딜레이 후 펼치기 애니메이션 및 메시지 순환 시작
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.homeView.expandToast(animated: true)
+            self?.viewModel.startToastMessageRotation()
         }
 
         // Update floating button state
@@ -388,6 +335,7 @@ extension HomeViewController {
         homeView.updateHobbies([])
         homeView.updateActivityPreview(nil)
         homeView.updateAddActivityButtonTitle(hasHobbies: false)
+        viewModel.stopToastMessageRotation()
         homeView.collapseToast(animated: false)
         homeView.hideFloatingMenu()
 
@@ -412,14 +360,11 @@ extension HomeViewController {
 extension HomeViewController {
     @objc private func refreshHomeData() {
         Task {
-            defer {
-                Task { @MainActor in
-                    homeView.refreshControl.endRefreshing()
-                }
-            }
-
-            await viewModel.fetchHomeInfo()
+            await viewModel.fetchHomeInfo(hobbyId: viewModel.currentHobbyId)
             await stickerBoardViewModel.loadInitialStickerBoard(hobbyId: viewModel.currentHobbyId)
+            await MainActor.run {
+                homeView.refreshControl.endRefreshing()
+            }
         }
     }
 
@@ -547,7 +492,7 @@ extension HomeViewController {
     
     @objc private func myActivityChevronTapped() {
         print("나의 취미활동 쉐브론 탭")
-        showActivityList()
+        presentActivityList()
     }
 
     @objc private func activityDropdownTapped() {
@@ -645,15 +590,19 @@ extension HomeViewController {
         }
     }
 
-    private func showActivityList() {
-        // 현재 취미 ID 가져오기
+    private func presentActivityList() {
         guard let hobbyId = viewModel.currentHobbyId else {
             print("❌ 취미 ID 없음")
             return
         }
 
-        let activityListVC = ActivityListViewController(hobbyId: hobbyId)
-        navigationController?.pushViewController(activityListVC, animated: true)
+        let hobbyName = viewModel.homeInfo?.inProgressHobbies.first(where: { $0.currentHobby })?.hobbyName ?? "취미"
+
+        let activityListVC = ActivityListViewController(hobbyId: hobbyId, hobbyName: hobbyName)
+        activityListVC.isPresentedModally = true
+        let nav = UINavigationController(rootViewController: activityListVC)
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true)
     }
     
     @objc private func addActivityButtonTapped() {
@@ -683,30 +632,20 @@ extension HomeViewController {
             return
         }
 
-        let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId)
+        let hobbyName = viewModel.homeInfo?.inProgressHobbies.first(where: { $0.currentHobby })?.hobbyName ?? "취미"
+
+        let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: hobbyName)
         inputVC.aiCallRemaining = viewModel.homeInfo?.aiCallRemaining ?? true
         inputVC.onActivityCreated = { [weak self] in
-            // Dismiss modal first, then push ActivityListViewController
+            // Dismiss modal first, then present ActivityListViewController
             self?.dismiss(animated: true) {
-                self?.showActivityListAfterSave()
+                self?.presentActivityList()
             }
         }
 
         let nav = UINavigationController(rootViewController: inputVC)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
-    }
-
-    private func showActivityListAfterSave() {
-        guard let hobbyId = viewModel.currentHobbyId else {
-            print("❌ 취미 ID 없음")
-            return
-        }
-
-        let activityListVC = ActivityListViewController(hobbyId: hobbyId)
-        activityListVC.shouldShowAIRecommendationToast = true
-        activityListVC.aiCallRemaining = viewModel.homeInfo?.aiCallRemaining ?? true
-        navigationController?.pushViewController(activityListVC, animated: true)
     }
 
     private func showAIRecommendationModal() {
@@ -754,7 +693,7 @@ extension HomeViewController {
             showActivityInputFromFloatingButton()
 
         case .viewActivityList:
-            showActivityListFromFloatingButton()
+            presentActivityList()
         }
     }
 
@@ -764,26 +703,15 @@ extension HomeViewController {
             return
         }
 
-        let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId)
+        let hobbyName = viewModel.homeInfo?.inProgressHobbies.first(where: { $0.currentHobby })?.hobbyName ?? "취미"
+
+        let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: hobbyName)
         inputVC.aiCallRemaining = viewModel.homeInfo?.aiCallRemaining ?? true
         inputVC.onActivityCreated = { [weak self] in
             self?.dismiss(animated: true)
         }
 
         let nav = UINavigationController(rootViewController: inputVC)
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
-    }
-
-    private func showActivityListFromFloatingButton() {
-        guard let hobbyId = viewModel.currentHobbyId else {
-            print("❌ 취미 ID 없음")
-            return
-        }
-
-        let activityListVC = ActivityListViewController(hobbyId: hobbyId)
-        activityListVC.isPresentedModally = true
-        let nav = UINavigationController(rootViewController: activityListVC)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
@@ -804,6 +732,25 @@ extension HomeViewController {
 
     func getCurrentHobbyId() -> Int? {
         return viewModel.currentHobbyId
+    }
+
+    func getCurrentHobbyName() -> String? {
+        return viewModel.homeInfo?.inProgressHobbies.first(where: { $0.currentHobby })?.hobbyName
+    }
+
+    func getCurrentActivityId() -> Int? {
+        return viewModel.homeInfo?.activityPreview?.activityId
+    }
+
+    func getCurrentNickname() -> String? {
+        // greetingMessage에서 닉네임 추출 (예: "유지님, 안녕하세요!" → "유지")
+        guard let greetingMessage = viewModel.homeInfo?.greetingMessage else { return nil }
+
+        // "님" 전까지의 문자열을 닉네임으로 추출
+        if let range = greetingMessage.range(of: "님") {
+            return String(greetingMessage[..<range.lowerBound])
+        }
+        return nil
     }
 }
 

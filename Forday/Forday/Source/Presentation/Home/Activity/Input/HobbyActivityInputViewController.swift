@@ -12,10 +12,11 @@ import Combine
 class HobbyActivityInputViewController: UIViewController {
     
     // Properties
-    
+
     private let activityInputView = HobbyActivityInputView()
     private let viewModel: HobbyActivityInputViewModel
     private let hobbyId: Int
+    private let hobbyName: String
     private var cancellables = Set<AnyCancellable>()
     
     // Callbacks
@@ -26,9 +27,10 @@ class HobbyActivityInputViewController: UIViewController {
     var aiRecommendedContent: String?  // AI 추천 활동 내용 (select 모드에서 전달받음, aiRecommended: true)
     
     // Initialization
-    
-    init(hobbyId: Int, viewModel: HobbyActivityInputViewModel = HobbyActivityInputViewModel()) {
+
+    init(hobbyId: Int, hobbyName: String, viewModel: HobbyActivityInputViewModel = HobbyActivityInputViewModel()) {
         self.hobbyId = hobbyId
+        self.hobbyName = hobbyName
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -207,72 +209,14 @@ extension HobbyActivityInputViewController {
     }
 
     private func showAIRecommendationFlow() {
-        // Show loading view
-        let loadingVC = AIRecommendationLoadingViewController(hobbyId: hobbyId)
-        loadingVC.modalPresentationStyle = .fullScreen
-        present(loadingVC, animated: true)
+        // Fullscreen AI 추천 활동 선택 화면 표시
+        let containerVC = AIRecommendationContainerViewController(hobbyId: hobbyId, hobbyName: hobbyName)
 
-        // Fetch AI recommendations
-        Task {
-            do {
-                let repository = ActivityRepository()
-                let aiRecommendations = try await repository.fetchAIRecommendations(hobbyId: hobbyId)
-
-                await MainActor.run {
-                    // Dismiss loading and show selection
-                    self.dismiss(animated: true) {
-                        self.showAISelectionView(with: aiRecommendations)
-                    }
-                }
-            } catch let appError as AppError {
-                await MainActor.run {
-                    self.dismiss(animated: true) {
-                        self.showError(appError.userMessage)
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    self.dismiss(animated: true) {
-                        self.showError(error.localizedDescription)
-                    }
-                }
-            }
-        }
-    }
-
-    private func showAISelectionView(with result: AIRecommendationResult) {
-        // Select 모드: AI 추천 활동 선택 후 텍스트필드에 채우기
-        let selectionView = AIActivitySelectionView(result: result)
-
-        selectionView.onActivitySelected = { [weak self] content in
+        containerVC.onActivitySelected = { [weak self] content in
             guard let self = self else { return }
-
-            // Dismiss AI selection view
-            self.dismiss(animated: true) {
-                // Fill the last text field with AI content (aiRecommended: true)
-                self.activityInputView.fillLastFieldWithAIRecommendation(content)
-                self.validateActivities()
-            }
-        }
-
-        selectionView.onRefreshTapped = { [weak self] in
-            self?.dismiss(animated: true) {
-                self?.showAIRecommendationFlow()
-            }
-        }
-
-        selectionView.onError = { [weak self] errorMessage in
-            self?.showError(errorMessage)
-        }
-
-        // Show as modal
-        let containerVC = UIViewController()
-        containerVC.view = selectionView
-        containerVC.modalPresentationStyle = .pageSheet
-
-        if let sheet = containerVC.sheetPresentationController {
-            sheet.detents = [.large()]
-            sheet.prefersGrabberVisible = true
+            // Fill the last text field with AI content (aiRecommended: true)
+            self.activityInputView.fillLastFieldWithAIRecommendation(content)
+            self.validateActivities()
         }
 
         present(containerVC, animated: true)
@@ -280,7 +224,7 @@ extension HobbyActivityInputViewController {
 }
 
 #Preview {
-    let inputVC = HobbyActivityInputViewController(hobbyId: 1)
+    let inputVC = HobbyActivityInputViewController(hobbyId: 1, hobbyName: "독서")
     let nav = UINavigationController(rootViewController: inputVC)
     return nav
 }

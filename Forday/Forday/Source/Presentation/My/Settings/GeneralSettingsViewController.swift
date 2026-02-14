@@ -74,7 +74,12 @@ extension GeneralSettingsViewController {
 
 extension GeneralSettingsViewController {
     @objc private func backButtonTapped() {
-        navigationController?.popViewController(animated: true)
+        // Pop if there are view controllers to pop to, otherwise dismiss
+        if let navController = navigationController, navController.viewControllers.count > 1 {
+            navController.popViewController(animated: true)
+        } else {
+            dismiss(animated: true)
+        }
     }
 
     @objc private func termsOfServiceTapped() {

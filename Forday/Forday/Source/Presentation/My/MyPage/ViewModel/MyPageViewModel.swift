@@ -26,6 +26,7 @@ final class MyPageViewModel {
     @Published var activities: [FeedItem] = []
     @Published var hobbyCards: [CompletedHobbyCard] = []
     @Published var scraps: [FeedItem] = []
+    @Published var totalScrapCount: Int = 0       // 스크랩 총 개수
     @Published var selectedHobbyIds: Set<Int> = [] // Empty = all hobbies
     @Published var isLoading: Bool = false
     @Published var isLoadingMore: Bool = false
@@ -126,6 +127,11 @@ final class MyPageViewModel {
 
     func switchTab(to tab: MyPageTab) {
         currentTab = tab
+    }
+
+    /// 취미 필터 선택 상태 초기화 (전체 보기로 리셋)
+    func resetHobbyFilter() {
+        selectedHobbyIds = []
     }
 
     func filterByHobbies(hobbyIds: Set<Int>) async {
@@ -252,6 +258,7 @@ final class MyPageViewModel {
 
             await MainActor.run {
                 self.scraps = result.feedList
+                self.totalScrapCount = result.totalFeedCount ?? 0
                 self.hasMoreScraps = result.hasNext
                 self.lastScrapRecordId = result.lastRecordId
                 self.isLoading = false

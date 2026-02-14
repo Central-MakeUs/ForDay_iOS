@@ -199,9 +199,6 @@ extension ProfileSettingsViewController {
                 try await viewModel.saveProfile()
 
                 await MainActor.run {
-                    // Notify profile update
-                    AppEventBus.shared.profileDidUpdate.send()
-
                     ToastView.show(message: "프로필 수정 완료!")
                     self.navigationController?.popViewController(animated: true)
                 }
@@ -292,7 +289,6 @@ extension ProfileSettingsViewController {
                 _ = try await repository.updateProfileImage(profileImageUrl: nil)
 
                 await MainActor.run {
-                    AppEventBus.shared.profileDidUpdate.send()
                     ToastView.show(message: "기본 이미지로 변경되었습니다.")
                 }
             } catch let appError as AppError {
@@ -335,8 +331,6 @@ extension ProfileSettingsViewController: PHPickerViewControllerDelegate {
                 _ = try await useCase.execute(image: image)
 
                 await MainActor.run {
-                    // 프로필 업데이트 이벤트 발송
-                    AppEventBus.shared.profileDidUpdate.send()
                     ToastView.show(message: "프로필 사진이 변경되었습니다.")
                 }
             } catch let appError as AppError {

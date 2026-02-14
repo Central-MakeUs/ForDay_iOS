@@ -8,6 +8,7 @@
 import UIKit
 import SnapKit
 import Then
+import Lottie
 
 class NicknameTransitionView: UIView {
 
@@ -15,8 +16,16 @@ class NicknameTransitionView: UIView {
 
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
-    private let checkmarkContainerView = UIView()
-    private let checkmarkImageView = UIImageView()
+
+    private let lottieView: LottieAnimationView = {
+        if let dataAsset = NSDataAsset(name: "lottie/successOnboarding"),
+           let animation = try? LottieAnimation.from(data: dataAsset.data) {
+            return LottieAnimationView(animation: animation)
+        }
+        return LottieAnimationView()
+    }()
+
+    var onAnimationCompleted: (() -> Void)?
 
     // Initialization
 
@@ -53,14 +62,8 @@ extension NicknameTransitionView {
             $0.numberOfLines = 0
         }
 
-        checkmarkContainerView.do {
-            $0.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.1)
-            $0.layer.cornerRadius = 80
-        }
-
-        checkmarkImageView.do {
-            $0.image = UIImage(systemName: "checkmark")
-            $0.tintColor = .systemOrange
+        lottieView.do {
+            $0.loopMode = .playOnce
             $0.contentMode = .scaleAspectFit
         }
     }
@@ -68,8 +71,7 @@ extension NicknameTransitionView {
     private func layout() {
         addSubview(titleLabel)
         addSubview(subtitleLabel)
-        addSubview(checkmarkContainerView)
-        checkmarkContainerView.addSubview(checkmarkImageView)
+        addSubview(lottieView)
 
         // Title
         titleLabel.snp.makeConstraints {
@@ -83,17 +85,29 @@ extension NicknameTransitionView {
             $0.leading.trailing.equalToSuperview().inset(20)
         }
 
-        // Checkmark Container (Circle)
-        checkmarkContainerView.snp.makeConstraints {
+        // Lottie Animation
+        lottieView.snp.makeConstraints {
             $0.centerX.equalToSuperview()
-            $0.top.equalTo(subtitleLabel.snp.bottom).offset(80)
-            $0.width.height.equalTo(160)
+            $0.top.equalTo(subtitleLabel.snp.bottom).offset(40)
+            $0.size.equalTo(240)
+        }
+    }
+}
+
+// MARK: - Public Methods
+
+extension NicknameTransitionView {
+    func playAnimation() {
+        // 애니메이션 로드 실패 시 바로 완료 처리
+        guard lottieView.animation != nil else {
+            onAnimationCompleted?()
+            return
         }
 
-        // Checkmark Icon
-        checkmarkImageView.snp.makeConstraints {
-            $0.center.equalToSuperview()
-            $0.width.height.equalTo(80)
+        lottieView.play { [weak self] finished in
+            if finished {
+                self?.onAnimationCompleted?()
+            }
         }
     }
 }

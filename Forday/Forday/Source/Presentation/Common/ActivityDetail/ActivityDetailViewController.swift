@@ -24,10 +24,21 @@ final class ActivityDetailViewController: UIViewController, UIGestureRecognizerD
 
     weak var coordinator: MainTabBarCoordinator?
 
+    // 기록 완료 후 모드 관련
+    private let displayMode: ActivityDetailView.DisplayMode
+    private let nickname: String?
+    private var successOverlayView: ActivityRecordSuccessOverlayView?
+
     // MARK: - Initialization
 
-    init(viewModel: ActivityDetailViewModel) {
+    init(
+        viewModel: ActivityDetailViewModel,
+        displayMode: ActivityDetailView.DisplayMode = .normal,
+        nickname: String? = nil
+    ) {
         self.viewModel = viewModel
+        self.displayMode = displayMode
+        self.nickname = nickname
         super.init(nibName: nil, bundle: nil)
         hidesBottomBarWhenPushed = true
     }
@@ -46,8 +57,24 @@ final class ActivityDetailViewController: UIViewController, UIGestureRecognizerD
         super.viewDidLoad()
         setupCustomNavigationBar()
         setupGestures()
+        setupDisplayMode()
         bind()
         loadData()
+    }
+
+    private func setupDisplayMode() {
+        detailView.setDisplayMode(displayMode)
+
+        if displayMode == .afterRecord {
+            // 홈으로 가기 버튼 액션 연결
+            detailView.goHomeButton.addTarget(self, action: #selector(goHomeButtonTapped), for: .touchUpInside)
+        }
+    }
+
+    @objc private func goHomeButtonTapped() {
+        // 모든 presented VC dismiss 후 홈으로 이동
+        coordinator?.switchToHomeTab()
+        dismiss(animated: true)
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -58,10 +85,26 @@ final class ActivityDetailViewController: UIViewController, UIGestureRecognizerD
         navigationController?.interactivePopGestureRecognizer?.isEnabled = true
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        // 기록 완료 후 모드일 때 로띠 오버레이 표시
+        if displayMode == .afterRecord, successOverlayView == nil {
+            showSuccessOverlay()
+        }
+    }
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         // 다른 화면으로 이동 시 기본 내비게이션 복원
         navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+
+    private func showSuccessOverlay() {
+        let overlay = ActivityRecordSuccessOverlayView()
+        overlay.configure(nickname: nickname ?? "회원")
+        overlay.show(in: view)
+        successOverlayView = overlay
     }
 
     // MARK: - UIGestureRecognizerDelegate
@@ -272,7 +315,8 @@ extension ActivityDetailViewController {
         print("✏️ 수정하기")
 
         // ActivityRecordViewController를 수정 모드로 열기
-        let recordVC = ActivityRecordViewController(hobbyId: viewModel.hobbyId, activityDetail: detail)
+        // hobbyName은 수정 모드에서는 크게 필요하지 않으므로 기본값 사용
+        let recordVC = ActivityRecordViewController(hobbyId: viewModel.hobbyId, hobbyName: "취미", activityDetail: detail)
         let nav = UINavigationController(rootViewController: recordVC)
         nav.modalPresentationStyle = .fullScreen
 

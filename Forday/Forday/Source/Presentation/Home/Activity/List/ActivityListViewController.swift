@@ -16,6 +16,7 @@ class ActivityListViewController: UIViewController {
     private let listView = ActivityListView()
     private let viewModel: ActivityListViewModel
     private let hobbyId: Int
+    private let hobbyName: String
     private var cancellables = Set<AnyCancellable>()
 
     // Coordinator
@@ -31,8 +32,9 @@ class ActivityListViewController: UIViewController {
 
     // MARK: - Initialization
 
-    init(hobbyId: Int, viewModel: ActivityListViewModel = ActivityListViewModel()) {
+    init(hobbyId: Int, hobbyName: String, viewModel: ActivityListViewModel = ActivityListViewModel()) {
         self.hobbyId = hobbyId
+        self.hobbyName = hobbyName
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -91,11 +93,27 @@ extension ActivityListViewController {
     }
 
     private func navigateToActivityInput() {
-        let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId)
+        presentActivityInput()
+    }
+
+    /// 공통 HobbyActivityInputViewController 생성 및 표시
+    private func presentActivityInput(aiRecommendedContent: String? = nil) {
+        let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: hobbyName)
         inputVC.aiCallRemaining = aiCallRemaining
+
+        if let content = aiRecommendedContent {
+            inputVC.aiRecommendedContent = content
+        }
+
         inputVC.onActivityCreated = { [weak self] in
+            // Dismiss the input modal first
             self?.dismiss(animated: true) {
-                self?.navigationController?.popToRootViewController(animated: true)
+                // Then dismiss ActivityListViewController if it was presented modally
+                if self?.isPresentedModally == true {
+                    self?.dismiss(animated: true)
+                } else {
+                    self?.navigationController?.popToRootViewController(animated: true)
+                }
             }
         }
 
@@ -156,18 +174,7 @@ extension ActivityListViewController {
     }
 
     @objc private func addButtonTapped() {
-        let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId)
-        inputVC.aiCallRemaining = aiCallRemaining
-        inputVC.onActivityCreated = { [weak self] in
-            // Dismiss modal first, then pop to HomeViewController
-            self?.dismiss(animated: true) {
-                self?.navigationController?.popToRootViewController(animated: true)
-            }
-        }
-
-        let nav = UINavigationController(rootViewController: inputVC)
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
+        presentActivityInput()
     }
 
     private func showEditPopup(for activity: Activity) {
@@ -305,90 +312,23 @@ extension ActivityListViewController {
     }
 
     private func showAIRecommendationFlow() {
-        // Show loading view
-        let loadingVC = AIRecommendationLoadingViewController(hobbyId: hobbyId)
-        loadingVC.modalPresentationStyle = .fullScreen
-        present(loadingVC, animated: true)
+        // Hide AI toast
+        aiToastView?.removeFromSuperview()
+        aiToastView = nil
 
-        // Fetch AI recommendations
-        Task {
-            do {
-                let aiRecommendations = try await viewModel.fetchAIRecommendations(hobbyId: hobbyId)
+        // Fullscreen AI 추천 활동 선택 화면 표시
+        let containerVC = AIRecommendationContainerViewController(hobbyId: hobbyId, hobbyName: hobbyName)
 
-                await MainActor.run {
-                    // Dismiss loading and show selection
-                    self.dismiss(animated: true) {
-                        self.showAISelectionView(with: aiRecommendations)
-                    }
-                }
-            } catch let appError as AppError {
-                await MainActor.run {
-                    self.dismiss(animated: true) {
-                        self.showError(appError.userMessage)
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    self.dismiss(animated: true) {
-                        self.showError(error.localizedDescription)
-                    }
-                }
-            }
-        }
-    }
-
-    private func showAISelectionView(with result: AIRecommendationResult) {
-        // Select 모드: AI 추천 활동 선택 후 HobbyActivityInputView로 이동
-        let selectionView = AIActivitySelectionView(result: result)
-
-        selectionView.onActivitySelected = { [weak self] content in
-            guard let self = self else { return }
-
-            // Dismiss AI selection view
-            self.dismiss(animated: true) {
-                // Open HobbyActivityInputViewController with AI content
-                self.openActivityInputWithAIContent(content)
-            }
-        }
-
-        selectionView.onRefreshTapped = { [weak self] in
-            self?.dismiss(animated: true) {
-                self?.showAIRecommendationFlow()
-            }
-        }
-
-        selectionView.onError = { [weak self] errorMessage in
-            self?.showError(errorMessage)
-        }
-
-        // Show as modal
-        let containerVC = UIViewController()
-        containerVC.view = selectionView
-        containerVC.modalPresentationStyle = .pageSheet
-
-        if let sheet = containerVC.sheetPresentationController {
-            sheet.detents = [.large()]
-            sheet.prefersGrabberVisible = true
+        containerVC.onActivitySelected = { [weak self] content in
+            // Open HobbyActivityInputViewController with AI content
+            self?.openActivityInputWithAIContent(content)
         }
 
         present(containerVC, animated: true)
     }
 
     private func openActivityInputWithAIContent(_ content: String) {
-        let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId)
-        inputVC.aiCallRemaining = aiCallRemaining
-        inputVC.aiRecommendedContent = content  // AI 추천 활동 내용 전달 (aiRecommended: true)
-
-        inputVC.onActivityCreated = { [weak self] in
-            // Dismiss modal first, then pop to HomeViewController
-            self?.dismiss(animated: true) {
-                self?.navigationController?.popToRootViewController(animated: true)
-            }
-        }
-
-        let nav = UINavigationController(rootViewController: inputVC)
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
+        presentActivityInput(aiRecommendedContent: content)
     }
 }
 
@@ -429,6 +369,6 @@ extension ActivityListViewController: UITableViewDelegate {
 
 #if DEBUG
 #Preview {
-    ActivityListViewController(hobbyId: 1)
+    ActivityListViewController(hobbyId: 1, hobbyName: "독서")
 }
 #endif

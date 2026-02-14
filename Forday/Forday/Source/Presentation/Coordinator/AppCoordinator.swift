@@ -32,28 +32,38 @@ class AppCoordinator: Coordinator {
     private func showSplash() {
         let splashVC = SplashViewController()
         splashVC.onSplashComplete = { [weak self] in
-            self?.showAuth()
+            self?.checkAutoLogin()
         }
         window.rootViewController = splashVC
     }
 
-    // 자동 로그인 처리
+    // 자동 로그인 체크
+    private func checkAutoLogin() {
+        let autoLoginUseCase = AuthUseCaseFactory().makeAutoLoginUseCase()
+
+        Task {
+            let result = await autoLoginUseCase.execute()
+
+            await MainActor.run {
+                switch result {
+                case .success:
+                    print("🟢 AppCoordinator - 자동 로그인 성공")
+                    self.performAutoLogin()
+                case .needsLogin:
+                    print("🔴 AppCoordinator - 로그인 필요")
+                    self.showAuth()
+                }
+            }
+        }
+    }
+
+    // 자동 로그인 처리 (토큰 유효 확인 후 호출)
     private func performAutoLogin() {
         window.rootViewController = navigationController
         let authCoordinator = AuthCoordinator(navigationController: navigationController)
         authCoordinator.parentCoordinator = self
         authCoordinator.autoLogin()
         self.authCoordinator = authCoordinator
-    }
-    
-    // 로그인 여부 확인
-    private func isLoggedIn() -> Bool {
-        do {
-            _ = try TokenStorage.shared.loadAccessToken()
-            return true
-        } catch {
-            return false
-        }
     }
     
     // 인증 화면 (로그인)

@@ -129,21 +129,22 @@ extension GeneralSettingsView {
         accountSectionView.addSubview(logoutRow)
         accountSectionView.addSubview(deleteAccountButton)
 
-        // Navigation Bar Layout
+        // Navigation Bar Layout (status bar 영역까지 확장)
         navigationBarView.snp.makeConstraints {
-            $0.top.equalTo(safeAreaLayoutGuide)
+            $0.top.equalToSuperview()
             $0.leading.trailing.equalToSuperview()
-            $0.height.equalTo(44)
+            $0.bottom.equalTo(safeAreaLayoutGuide.snp.top).offset(44)
         }
 
         backButton.snp.makeConstraints {
             $0.leading.equalToSuperview().offset(20)
-            $0.centerY.equalToSuperview()
+            $0.bottom.equalToSuperview().offset(-10)
             $0.width.height.equalTo(24)
         }
 
         titleLabel.snp.makeConstraints {
-            $0.center.equalToSuperview()
+            $0.centerX.equalToSuperview()
+            $0.centerY.equalTo(backButton)
         }
 
         // Scroll View Layout
@@ -288,9 +289,17 @@ extension SettingsRowView {
             $0.width.height.equalTo(24)
         }
 
-        valueLabel.snp.makeConstraints {
-            $0.trailing.equalTo(chevronImageView.snp.leading).offset(-8)
-            $0.centerY.equalToSuperview()
+        // chevron이 없으면 valueLabel이 trailing -20에 위치
+        if hasChevron {
+            valueLabel.snp.makeConstraints {
+                $0.trailing.equalTo(chevronImageView.snp.leading).offset(-8)
+                $0.centerY.equalToSuperview()
+            }
+        } else {
+            valueLabel.snp.makeConstraints {
+                $0.trailing.equalToSuperview().offset(-20)
+                $0.centerY.equalToSuperview()
+            }
         }
     }
 }
