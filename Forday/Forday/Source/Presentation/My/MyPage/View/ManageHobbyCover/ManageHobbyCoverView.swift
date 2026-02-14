@@ -95,18 +95,11 @@ extension ManageHobbyCoverView {
         titleLabel.setTextWithTypography("취미 대표사진 관리", style: .header18)
 
         doneButton.do {
-            $0.setTitleColor(.action001, for: .normal)
-            $0.setTitleColor(.neutral400, for: .disabled)
+            $0.setImage(.Icon.complete, for: .normal)
+            $0.tintColor = .neutral800
             $0.isHidden = true
             $0.isEnabled = false
         }
-        doneButton.setAttributedTitle(
-            NSAttributedString(
-                string: "완료",
-                attributes: [.font: TypographyStyle.header16.font]
-            ),
-            for: .normal
-        )
 
         hobbyListContainerView.do {
             $0.backgroundColor = .clear
@@ -269,5 +262,6 @@ extension ManageHobbyCoverView {
 
     func setDoneButtonEnabled(_ enabled: Bool) {
         doneButton.isEnabled = enabled
+        doneButton.tintColor = enabled ? .neutral800 : .neutral400
     }
 }
