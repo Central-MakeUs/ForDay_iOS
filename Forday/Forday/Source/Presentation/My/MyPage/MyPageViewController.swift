@@ -175,30 +175,19 @@ extension MyPageViewController {
             }
             .store(in: &cancellables)
 
-        // Hobbies count for segmented control
-        viewModel.$myHobbies
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] hobbies in
-                let inProgressCount = hobbies.filter { $0.status == .inProgress }.count
-                self?.myPageView.segmentedControlView.updateCounts(
-                    inProgressCount: inProgressCount,
-                    hobbyCardsCount: 0 // Will be updated when hobby cards are implemented
-                )
-            }
-            .store(in: &cancellables)
-
-        // Hobby cards count
-        viewModel.$hobbyCards
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] cards in
-                guard let hobbies = self?.viewModel.myHobbies else { return }
-                let inProgressCount = hobbies.filter { $0.status == .inProgress }.count
-                self?.myPageView.segmentedControlView.updateCounts(
-                    inProgressCount: inProgressCount,
-                    hobbyCardsCount: cards.count
-                )
-            }
-            .store(in: &cancellables)
+        // Segment counts from API
+        Publishers.CombineLatest(
+            viewModel.$inProgressHobbyCount,
+            viewModel.$hobbyCardCount
+        )
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] inProgressCount, hobbyCardsCount in
+            self?.myPageView.segmentedControlView.updateCounts(
+                inProgressCount: inProgressCount,
+                hobbyCardsCount: hobbyCardsCount
+            )
+        }
+        .store(in: &cancellables)
 
         // Loading state
         viewModel.$isLoading

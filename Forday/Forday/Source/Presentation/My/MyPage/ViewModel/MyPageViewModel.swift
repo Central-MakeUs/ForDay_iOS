@@ -26,6 +26,7 @@ final class MyPageViewModel {
     @Published var activities: [FeedItem] = []
     @Published var hobbyCards: [CompletedHobbyCard] = []
     @Published var scraps: [FeedItem] = []
+    @Published var totalActivityCount: Int = 0    // 진행중 피드 총 개수
     @Published var totalScrapCount: Int = 0       // 스크랩 총 개수
     @Published var selectedHobbyIds: Set<Int> = [] // Empty = all hobbies
     @Published var isLoading: Bool = false
@@ -111,6 +112,7 @@ final class MyPageViewModel {
 
             if let activities = activitiesOpt {
                 self.activities = activities.feedList
+                self.totalActivityCount = activities.totalFeedCount ?? 0
                 self.hasMoreActivities = activities.hasNext
                 self.lastRecordId = activities.lastRecordId
             }
@@ -163,6 +165,7 @@ final class MyPageViewModel {
 
             await MainActor.run {
                 self.activities = result.feedList
+                self.totalActivityCount = result.totalFeedCount ?? 0
                 self.hasMoreActivities = result.hasNext
                 self.lastRecordId = result.lastRecordId
                 self.isLoading = false

@@ -149,8 +149,8 @@ extension ActivityGridViewController {
             }
             .store(in: &cancellables)
 
-        // Activity count (hobbyCardCount from server)
-        viewModel.$hobbyCardCount
+        // Activity count (totalFeedCount from server)
+        viewModel.$totalActivityCount
             .receive(on: DispatchQueue.main)
             .sink { [weak self] count in
                 self?.countLabel.text = "\(count)개"
