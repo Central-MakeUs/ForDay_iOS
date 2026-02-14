@@ -121,8 +121,13 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         }
 
         let hobbyName = homeViewController?.getCurrentHobbyName() ?? "취미"
+        let preselectedActivityId = homeViewController?.getCurrentActivityId()
 
-        let recordVC = ActivityRecordViewController(hobbyId: hobbyId, hobbyName: hobbyName)
+        let recordVC = ActivityRecordViewController(
+            hobbyId: hobbyId,
+            hobbyName: hobbyName,
+            preselectedActivityId: preselectedActivityId
+        )
         recordVC.coordinator = self
         let nav = UINavigationController(rootViewController: recordVC)
         nav.modalPresentationStyle = .fullScreen
@@ -235,8 +240,13 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         }
 
         let hobbyName = homeViewController?.getCurrentHobbyName() ?? "취미"
+        let preselectedActivityId = homeViewController?.getCurrentActivityId()
 
-        let recordVC = ActivityRecordViewController(hobbyId: hobbyId, hobbyName: hobbyName)
+        let recordVC = ActivityRecordViewController(
+            hobbyId: hobbyId,
+            hobbyName: hobbyName,
+            preselectedActivityId: preselectedActivityId
+        )
         recordVC.coordinator = self
         let nav = UINavigationController(rootViewController: recordVC)
         nav.modalPresentationStyle = .fullScreen

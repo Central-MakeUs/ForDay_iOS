@@ -738,6 +738,10 @@ extension HomeViewController {
         return viewModel.homeInfo?.inProgressHobbies.first(where: { $0.currentHobby })?.hobbyName
     }
 
+    func getCurrentActivityId() -> Int? {
+        return viewModel.homeInfo?.activityPreview?.activityId
+    }
+
     func getCurrentNickname() -> String? {
         // greetingMessage에서 닉네임 추출 (예: "유지님, 안녕하세요!" → "유지")
         guard let greetingMessage = viewModel.homeInfo?.greetingMessage else { return nil }

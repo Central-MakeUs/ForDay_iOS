@@ -96,6 +96,8 @@ extension HobbySettingsCell {
             config.imagePadding = 2
             config.baseForegroundColor = .neutral800
             config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)
+            config.background.backgroundColor = .clear
+            config.background.cornerRadius = 0
 
             // Apply label/12 font
             var attributedTitle = AttributedString("보관")
@@ -103,6 +105,13 @@ extension HobbySettingsCell {
             config.attributedTitle = attributedTitle
 
             $0.configuration = config
+            // Highlighted 상태에서도 배경 투명, cornerRadius 0 유지
+            $0.configurationUpdateHandler = { button in
+                var updatedConfig = button.configuration
+                updatedConfig?.background.backgroundColor = .clear
+                updatedConfig?.background.cornerRadius = 0
+                button.configuration = updatedConfig
+            }
             $0.addTarget(self, action: #selector(archiveButtonTapped), for: .touchUpInside)
         }
 

@@ -87,23 +87,24 @@ extension HobbyCardStackViewController {
         if cards.isEmpty {
             // Show empty state
             cardStackView.isHidden = true
-            titleLabel.text = "아직 생성된 취미카드가 없어요."
+            titleLabel.setTextWithTypography("아직 생성된 취미카드가 없어요.", style: .header18)
             titleLabel.isHidden = false
 
             if emptyStateView.superview == nil {
                 view.addSubview(emptyStateView)
                 emptyStateView.snp.makeConstraints {
-                    $0.top.equalTo(titleLabel.snp.bottom).offset(100)
+                    $0.top.equalToSuperview().offset(100)
                     $0.leading.trailing.equalToSuperview()
                     $0.height.equalTo(200)
                 }
             }
 
             emptyStateView.configureForHobbyCards()
+            view.bringSubviewToFront(titleLabel)
         } else {
             // Show cards
             cardStackView.isHidden = false
-            titleLabel.text = "66일이 지속된 취미카드예요!"
+            titleLabel.setTextWithTypography("66일이 지속된 취미카드예요!", style: .header18)
             titleLabel.isHidden = false
             emptyStateView.removeFromSuperview()
 

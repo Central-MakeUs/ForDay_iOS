@@ -42,6 +42,7 @@ class ActivityRecordViewModel {
 
     private let hobbyId: Int
     private let activityDetail: ActivityDetail?
+    private let preselectedActivityId: Int?
 
     // MARK: - Public Properties
 
@@ -60,6 +61,7 @@ class ActivityRecordViewModel {
     init(
         hobbyId: Int,
         activityDetail: ActivityDetail? = nil,
+        preselectedActivityId: Int? = nil,
         fetchActivityListUseCase: FetchActivityDropdownListUseCase = FetchActivityDropdownListUseCase(),
         uploadImageUseCase: UploadImageUseCase = UploadImageUseCase(),
         deleteImageUseCase: DeleteImageUseCase = DeleteImageUseCase(),
@@ -68,6 +70,7 @@ class ActivityRecordViewModel {
     ) {
         self.hobbyId = hobbyId
         self.activityDetail = activityDetail
+        self.preselectedActivityId = preselectedActivityId
         self.fetchActivityListUseCase = fetchActivityListUseCase
         self.uploadImageUseCase = uploadImageUseCase
         self.deleteImageUseCase = deleteImageUseCase
@@ -121,6 +124,11 @@ class ActivityRecordViewModel {
             // If in edit mode, select the existing activity
             if let detail = activityDetail,
                let activity = fetchedActivities.first(where: { $0.activityId == detail.activityId }) {
+                self.selectedActivity = activity
+            }
+            // If preselected activity ID is provided (from Home dropdown), select it
+            else if let preselectedId = preselectedActivityId,
+                    let activity = fetchedActivities.first(where: { $0.activityId == preselectedId }) {
                 self.selectedActivity = activity
             }
 

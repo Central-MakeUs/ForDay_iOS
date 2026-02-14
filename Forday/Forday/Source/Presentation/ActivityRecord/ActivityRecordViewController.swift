@@ -29,8 +29,12 @@ class ActivityRecordViewController: UIViewController {
 
     // Initialization
 
-    init(hobbyId: Int, hobbyName: String, activityDetail: ActivityDetail? = nil) {
-        self.viewModel = ActivityRecordViewModel(hobbyId: hobbyId, activityDetail: activityDetail)
+    init(hobbyId: Int, hobbyName: String, activityDetail: ActivityDetail? = nil, preselectedActivityId: Int? = nil) {
+        self.viewModel = ActivityRecordViewModel(
+            hobbyId: hobbyId,
+            activityDetail: activityDetail,
+            preselectedActivityId: preselectedActivityId
+        )
         self.hobbyName = hobbyName
         super.init(nibName: nil, bundle: nil)
     }
