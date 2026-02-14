@@ -65,17 +65,21 @@ final class ReactionUsersScrollView: UIView {
 
 extension ReactionUsersScrollView {
     private func style() {
+        clipsToBounds = false
+
         scrollView.do {
             $0.showsHorizontalScrollIndicator = false
             $0.showsVerticalScrollIndicator = false
             $0.alwaysBounceHorizontal = true
+            $0.clipsToBounds = false
         }
 
         stackView.do {
             $0.axis = .horizontal
             $0.spacing = 10
-            $0.alignment = .top
+            $0.alignment = .fill
             $0.distribution = .equalSpacing
+            $0.clipsToBounds = false
         }
     }
 

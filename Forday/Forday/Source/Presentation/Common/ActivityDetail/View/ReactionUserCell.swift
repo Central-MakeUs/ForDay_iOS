@@ -43,6 +43,8 @@ final class ReactionUserCell: UIView {
 
 extension ReactionUserCell {
     private func style() {
+        clipsToBounds = false
+
         profileImageView.do {
             $0.contentMode = .scaleAspectFill
             $0.clipsToBounds = true
@@ -67,16 +69,17 @@ extension ReactionUserCell {
         addSubview(nicknameLabel)
         addSubview(newReactionDot)
 
+        // top 기준 레이아웃 (newReactionDot 공간 확보를 위해 top 4pt)
         profileImageView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(8)
+            $0.top.equalToSuperview().offset(4)
             $0.centerX.equalToSuperview()
             $0.width.height.equalTo(28)
         }
 
         nicknameLabel.snp.makeConstraints {
             $0.top.equalTo(profileImageView.snp.bottom).offset(4)
-            $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalToSuperview().offset(-8)
+            $0.centerX.equalToSuperview()
+            $0.bottom.lessThanOrEqualToSuperview()
         }
 
         newReactionDot.snp.makeConstraints {
