@@ -24,7 +24,20 @@ class AIActivitySelectionView: UIView {
     private let contentView = UIView()
 
     private let iconImageView = UIImageView()
-    private let titleLabel = UILabel()
+
+    // Title Area
+    private let titleContainerView = UIView()
+    private let titleFirstLineStackView = UIStackView()
+    private let titleFirstLineLabel = UILabel()
+    private let titleSecondLineStackView = UIStackView()
+    private let titleSecondLineLabel = UILabel()
+    private let infoButton = UIButton()
+
+    // Tooltip
+    private let tooltipContainerView = UIView()
+    private let tooltipBubbleView = UIView()
+    private let tooltipLabel = UILabel()
+    private let tooltipPolygonImageView = UIImageView()
 
     private let activityStackView = UIStackView()
 
@@ -112,7 +125,52 @@ class AIActivitySelectionView: UIView {
 
 extension AIActivitySelectionView {
     private func configure() {
-        titleLabel.setTextWithTypography(result.recommendedText, style: .header18)
+        // recommendedText를 문장 단위로 분리 (마침표 기준)
+        let sentences = splitIntoSentences(result.recommendedText)
+
+        // infoButton을 기존 위치에서 제거
+        infoButton.removeFromSuperview()
+
+        if sentences.count >= 2 {
+            titleFirstLineLabel.setTextWithTypography(sentences[0], style: .header18)
+            titleSecondLineLabel.setTextWithTypography(sentences[1], style: .header18)
+            titleSecondLineStackView.isHidden = false
+            // 2줄인 경우 두 번째 줄 옆에 info 버튼 배치
+            titleSecondLineStackView.addArrangedSubview(infoButton)
+        } else {
+            // 1문장인 경우 첫 번째 줄만 표시
+            titleFirstLineLabel.setTextWithTypography(result.recommendedText, style: .header18)
+            titleSecondLineStackView.isHidden = true
+            // 1줄인 경우 첫 번째 줄 옆에 info 버튼 배치
+            titleFirstLineStackView.addArrangedSubview(infoButton)
+        }
+
+        // infoButton 크기 제약 재설정 (24x24로 터치 영역 확보)
+        infoButton.snp.remakeConstraints {
+            $0.size.equalTo(24)
+        }
+    }
+
+    /// 텍스트를 문장 단위로 분리
+    private func splitIntoSentences(_ text: String) -> [String] {
+        // 마침표, 느낌표, 물음표로 문장 구분
+        var sentences: [String] = []
+        var currentSentence = ""
+
+        for char in text {
+            currentSentence.append(char)
+            if char == "." || char == "!" || char == "?" {
+                sentences.append(currentSentence.trimmingCharacters(in: .whitespaces))
+                currentSentence = ""
+            }
+        }
+
+        // 남은 텍스트가 있으면 추가
+        if !currentSentence.trimmingCharacters(in: .whitespaces).isEmpty {
+            sentences.append(currentSentence.trimmingCharacters(in: .whitespaces))
+        }
+
+        return sentences
     }
 
     private func style() {
@@ -146,10 +204,65 @@ extension AIActivitySelectionView {
             $0.contentMode = .scaleAspectFit
         }
 
-        titleLabel.do {
+        // Title First Line Stack
+        titleFirstLineStackView.do {
+            $0.axis = .horizontal
+            $0.spacing = 4
+            $0.alignment = .center
+        }
+
+        // Title First Line
+        titleFirstLineLabel.do {
             $0.textColor = .neutral900
+            $0.textAlignment = .center
+        }
+
+        // Title Second Line Stack
+        titleSecondLineStackView.do {
+            $0.axis = .horizontal
+            $0.spacing = 4
+            $0.alignment = .center
+        }
+
+        // Title Second Line Label
+        titleSecondLineLabel.do {
+            $0.textColor = .neutral900
+            $0.textAlignment = .center
+        }
+
+        // Info Button (터치 영역 24x24, 이미지 16x16 중앙 배치)
+        infoButton.do {
+            $0.setImage(.Icon.info, for: .normal)
+            $0.contentEdgeInsets = UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4)
+        }
+
+        // Tooltip Container (터치 감지용)
+        tooltipContainerView.do {
+            $0.backgroundColor = .clear
+            $0.isHidden = true
+        }
+
+        // Tooltip Bubble
+        tooltipBubbleView.do {
+            $0.backgroundColor = .neutral900
+            $0.layer.cornerRadius = 21
+        }
+
+        // Tooltip Label
+        tooltipLabel.do {
+            $0.setTextWithTypography(
+                "사용자의 취미취향과 다른 유저의\n데이터 기반 추천을 기반하여\n선별된 포데이 AI 추천 취미활동입니다.",
+                style: .label12
+            )
+            $0.textColor = .neutralWhite
             $0.numberOfLines = 0
             $0.textAlignment = .center
+        }
+
+        // Tooltip Polygon (삼각형)
+        tooltipPolygonImageView.do {
+            $0.image = .Polygon.infoPolygon
+            $0.contentMode = .scaleAspectFit
         }
 
         activityStackView.do {
@@ -239,8 +352,19 @@ extension AIActivitySelectionView {
         scrollView.addSubview(contentView)
 
         contentView.addSubview(iconImageView)
-        contentView.addSubview(titleLabel)
+        contentView.addSubview(titleContainerView)
+        titleContainerView.addSubview(titleFirstLineStackView)
+        titleFirstLineStackView.addArrangedSubview(titleFirstLineLabel)
+        titleContainerView.addSubview(titleSecondLineStackView)
+        titleSecondLineStackView.addArrangedSubview(titleSecondLineLabel)
+        // infoButton은 configure()에서 문장 개수에 따라 동적으로 추가
         contentView.addSubview(activityStackView)
+
+        // Tooltip (contentView 위에 표시)
+        addSubview(tooltipContainerView)
+        tooltipContainerView.addSubview(tooltipBubbleView)
+        tooltipBubbleView.addSubview(tooltipLabel)
+        tooltipContainerView.addSubview(tooltipPolygonImageView)
 
         // Skeleton views
         contentView.addSubview(iconSkeleton)
@@ -297,15 +421,56 @@ extension AIActivitySelectionView {
             $0.size.equalTo(42)
         }
 
-        // Title
-        titleLabel.snp.makeConstraints {
+        // Title Container
+        titleContainerView.snp.makeConstraints {
             $0.top.equalTo(iconImageView.snp.bottom).offset(10)
-            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.leading.trailing.equalToSuperview()
+        }
+
+        // Title First Line Stack
+        titleFirstLineStackView.snp.makeConstraints {
+            $0.top.equalToSuperview()
+            $0.centerX.equalToSuperview()
+            $0.leading.greaterThanOrEqualToSuperview()
+            $0.trailing.lessThanOrEqualToSuperview()
+        }
+
+        // Title Second Line Stack
+        titleSecondLineStackView.snp.makeConstraints {
+            $0.top.equalTo(titleFirstLineStackView.snp.bottom)
+            $0.centerX.equalToSuperview()
+            $0.leading.greaterThanOrEqualToSuperview()
+            $0.trailing.lessThanOrEqualToSuperview()
+            $0.bottom.equalToSuperview()
+        }
+
+        // Tooltip Container (전체 화면을 덮음)
+        tooltipContainerView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+
+        // Tooltip Label (버블 내부 여백)
+        tooltipLabel.snp.makeConstraints {
+            $0.top.bottom.equalToSuperview().inset(8)
+            $0.leading.trailing.equalToSuperview().inset(12)
+        }
+
+        // 초기 위치는 화면 밖에 설정 (실제 위치는 infoButtonTapped에서 계산)
+        tooltipBubbleView.snp.makeConstraints {
+            $0.centerX.equalToSuperview()
+            $0.bottom.equalTo(snp.top)
+        }
+
+        tooltipPolygonImageView.snp.makeConstraints {
+            $0.top.equalTo(tooltipBubbleView.snp.bottom)
+            $0.centerX.equalToSuperview()
+            $0.width.equalTo(10)
+            $0.height.equalTo(4)
         }
 
         // Activity Stack
         activityStackView.snp.makeConstraints {
-            $0.top.equalTo(titleLabel.snp.bottom).offset(24)
+            $0.top.equalTo(titleContainerView.snp.bottom).offset(24)
             $0.leading.trailing.equalToSuperview().inset(20)
             $0.bottom.lessThanOrEqualToSuperview().offset(-20)
         }
@@ -406,6 +571,19 @@ extension AIActivitySelectionView {
             action: #selector(nextButtonTapped),
             for: .touchUpInside
         )
+
+        infoButton.addTarget(
+            self,
+            action: #selector(infoButtonTapped),
+            for: .touchUpInside
+        )
+
+        // Tooltip dismiss (터치 시 숨김)
+        let tooltipTapGesture = UITapGestureRecognizer(
+            target: self,
+            action: #selector(hideTooltip)
+        )
+        tooltipContainerView.addGestureRecognizer(tooltipTapGesture)
     }
 
     private func setupKeyboardDismissal() {
@@ -457,6 +635,38 @@ extension AIActivitySelectionView {
 
     @objc private func backButtonTapped() {
         onBackTapped?()
+    }
+
+    @objc private func infoButtonTapped() {
+        // infoButton의 위치를 self 좌표계로 변환
+        let infoButtonFrame = infoButton.convert(infoButton.bounds, to: self)
+
+        // 삼각형: info 버튼 바로 위
+        tooltipPolygonImageView.snp.remakeConstraints {
+            $0.bottom.equalToSuperview().inset(bounds.height - infoButtonFrame.minY + 1)
+            $0.centerX.equalToSuperview().offset(infoButtonFrame.midX - bounds.width / 2)
+            $0.width.equalTo(10)
+            $0.height.equalTo(4)
+        }
+
+        // 말풍선: 삼각형 바로 위에 붙음, 오른쪽에서 40pt
+        tooltipBubbleView.snp.remakeConstraints {
+            $0.bottom.equalTo(tooltipPolygonImageView.snp.top)
+            $0.trailing.equalToSuperview().offset(-20)
+        }
+
+        // 라벨: 좌우 12, 상하 8 패딩
+        tooltipLabel.snp.remakeConstraints {
+            $0.top.bottom.equalToSuperview().inset(8)
+            $0.leading.trailing.equalToSuperview().inset(12)
+        }
+
+        tooltipContainerView.isHidden = false
+        layoutIfNeeded()
+    }
+
+    @objc private func hideTooltip() {
+        tooltipContainerView.isHidden = true
     }
 
     @objc private func refreshButtonTapped() {
@@ -528,7 +738,7 @@ extension AIActivitySelectionView {
 
         // Hide actual content
         iconImageView.isHidden = true
-        titleLabel.isHidden = true
+        titleContainerView.isHidden = true
         activityStackView.isHidden = true
 
         // Show skeleton views
@@ -565,7 +775,7 @@ extension AIActivitySelectionView {
 
         // Show actual content
         iconImageView.isHidden = false
-        titleLabel.isHidden = false
+        titleContainerView.isHidden = false
         activityStackView.isHidden = false
     }
 

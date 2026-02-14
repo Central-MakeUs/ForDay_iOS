@@ -29,6 +29,9 @@ class HomeViewController: UIViewController {
     private var dropdownBackgroundView: UIView?
     private var activityDropdownView: ActivityDropdownView?
 
+    // Flag to update activity preview to the first item after activity creation
+    private var shouldSelectFirstActivity = false
+
     // Settings Dropdown
     private var settingsDropdownBackgroundView: UIView?
     private var settingsDropdownView: DropdownMenuView<HomeSettingsMenuItem>?
@@ -51,17 +54,29 @@ class HomeViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: false)
+
+        // 활동 생성 후 돌아왔을 때 드롭다운 첫번째 항목 선택
+        let needsFirstActivitySelection = shouldSelectFirstActivity
+        if shouldSelectFirstActivity {
+            shouldSelectFirstActivity = false
+        }
+
         // 이미 선택된 취미가 있으면 유지, 없으면 서버가 결정
-        loadHomeData(hobbyId: viewModel.currentHobbyId)
+        loadHomeData(hobbyId: viewModel.currentHobbyId, selectFirstActivity: needsFirstActivitySelection)
     }
 
-    private func loadHomeData(hobbyId: Int? = nil) {
+    private func loadHomeData(hobbyId: Int? = nil, selectFirstActivity: Bool = false) {
         Task {
             // hobbyId가 전달되면 해당 취미로, 아니면 서버가 결정하도록 함
             // (취미설정에서 보관/꺼내기 후 돌아왔을 때 정확한 상태 반영)
             await viewModel.fetchHomeInfo(hobbyId: hobbyId)
             // fetchHomeInfo 완료 후 업데이트된 currentHobbyId 사용
             await stickerBoardViewModel.loadInitialStickerBoard(hobbyId: viewModel.currentHobbyId)
+
+            // 활동 생성 후 돌아왔을 때 드롭다운 첫번째 항목 선택
+            if selectFirstActivity {
+                await self.selectFirstActivityAsync()
+            }
         }
     }
 }
@@ -225,6 +240,14 @@ extension HomeViewController {
             .sink { [weak self] hobbyId in
                 print("🔄 활동 기록 생성됨 - 홈 새로고침 (hobbyId: \(hobbyId))")
                 self?.loadHomeData(hobbyId: hobbyId)
+            }
+            .store(in: &cancellables)
+
+        // 활동 생성됨 - 홈으로 돌아왔을 때 드롭다운의 첫번째 항목을 선택해야 함
+        AppEventBus.shared.activityCreated
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.shouldSelectFirstActivity = true
             }
             .store(in: &cancellables)
 
@@ -519,6 +542,23 @@ extension HomeViewController {
         }
     }
 
+    /// 활동 생성 후 홈으로 돌아왔을 때 드롭다운의 첫번째 항목(가장 최근 추가된 항목)을 선택 (async 버전)
+    private func selectFirstActivityAsync() async {
+        do {
+            let activities = try await viewModel.fetchActivityList()
+
+            await MainActor.run {
+                guard let firstActivity = activities.first else { return }
+                self.selectActivity(firstActivity)
+                print("✅ 첫번째 활동 자동 선택: \(firstActivity.content)")
+            }
+        } catch {
+            await MainActor.run {
+                print("❌ 활동 목록 로드 실패 (첫번째 활동 선택): \(error)")
+            }
+        }
+    }
+
     private func presentActivityDropdown(activities: [Activity]) {
         // 투명 배경 생성
         let backgroundView = UIView()
@@ -639,6 +679,8 @@ extension HomeViewController {
         inputVC.onActivityCreated = { [weak self] in
             // Dismiss modal first, then present ActivityListViewController
             self?.dismiss(animated: true) {
+                // Notify Home to update dropdown selection when returning
+                AppEventBus.shared.activityCreated.send(hobbyId)
                 self?.presentActivityList()
             }
         }
@@ -708,7 +750,12 @@ extension HomeViewController {
         let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: hobbyName)
         inputVC.aiCallRemaining = viewModel.homeInfo?.aiCallRemaining ?? true
         inputVC.onActivityCreated = { [weak self] in
-            self?.dismiss(animated: true)
+            // Dismiss modal first, then present ActivityListViewController
+            self?.dismiss(animated: true) {
+                // Notify Home to update dropdown selection when returning
+                AppEventBus.shared.activityCreated.send(hobbyId)
+                self?.presentActivityList()
+            }
         }
 
         let nav = UINavigationController(rootViewController: inputVC)

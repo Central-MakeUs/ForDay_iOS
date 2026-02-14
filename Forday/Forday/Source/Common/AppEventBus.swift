@@ -40,6 +40,10 @@ final class AppEventBus {
 
     // MARK: - Activity Events
 
+    /// Published when a new activity is created
+    /// Payload: hobbyId that the activity belongs to
+    let activityCreated = PassthroughSubject<Int, Never>()
+
     /// Published when an activity is updated
     /// Payload: hobbyId that the activity belongs to
     let activityUpdated = PassthroughSubject<Int, Never>()
