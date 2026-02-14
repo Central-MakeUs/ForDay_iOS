@@ -124,8 +124,12 @@ extension ActivityRecordViewController {
             for: .touchUpInside
         )
 
-        // 사진 추가 (UIMenu 설정)
-        setupPhotoAddButtonMenu()
+        // 사진 추가 버튼
+        recordView.photoAddButton.addTarget(
+            self,
+            action: #selector(photoAddButtonTapped),
+            for: .touchUpInside
+        )
 
         // 사진 삭제
         recordView.photoDeleteButton.addTarget(
@@ -182,8 +186,6 @@ extension ActivityRecordViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] image in
                 self?.recordView.updatePhotoImage(image)
-                // 이미지가 있으면 메뉴 비활성화, 없으면 활성화
-                self?.recordView.photoAddButton.showsMenuAsPrimaryAction = (image == nil)
             }
             .store(in: &cancellables)
 
@@ -218,24 +220,21 @@ extension ActivityRecordViewController {
         }
     }
 
-    private func setupPhotoAddButtonMenu() {
-        let albumAction = UIAction(
-            title: "앨범에서 선택",
-            image: UIImage(systemName: "photo.on.rectangle")
-        ) { [weak self] _ in
-            self?.presentPhotoPicker()
+    private func showPhotoAddBottomSheet() {
+        let bottomSheet = PhotoAddBottomSheetViewController()
+        bottomSheet.modalPresentationStyle = .overFullScreen
+        bottomSheet.modalTransitionStyle = .crossDissolve
+
+        bottomSheet.onOptionSelected = { [weak self] option in
+            switch option {
+            case .album:
+                self?.presentPhotoPicker()
+            case .camera:
+                self?.checkCameraPermissionAndPresent()
+            }
         }
 
-        let cameraAction = UIAction(
-            title: "카메라로 촬영",
-            image: UIImage(systemName: "camera")
-        ) { [weak self] _ in
-            self?.checkCameraPermissionAndPresent()
-        }
-
-        let menu = UIMenu(children: [albumAction, cameraAction])
-        recordView.photoAddButton.menu = menu
-        recordView.photoAddButton.showsMenuAsPrimaryAction = true
+        present(bottomSheet, animated: false)
     }
 
     private func checkCameraPermissionAndPresent() {
@@ -336,6 +335,12 @@ extension ActivityRecordViewController {
 
     @objc private func photoDeleteButtonTapped() {
         deletePhoto()
+    }
+
+    @objc private func photoAddButtonTapped() {
+        // 이미지가 이미 있으면 아무 동작 안 함
+        guard viewModel.selectedImage == nil else { return }
+        showPhotoAddBottomSheet()
     }
 
     @objc private func privacyButtonTapped() {
