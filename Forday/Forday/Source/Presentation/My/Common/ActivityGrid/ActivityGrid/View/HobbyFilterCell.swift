@@ -47,6 +47,8 @@ final class HobbyFilterCell: UICollectionViewCell {
         if let thumbnailImageUrl = hobby.thumbnailImageUrl,
            !thumbnailImageUrl.isEmpty {
             // Has thumbnail - load from URL (fill the circle)
+            iconContainerView.backgroundColor = .bg003
+            iconImageView.backgroundColor = .clear
             iconImageView.setImage(with: thumbnailImageUrl)
             iconImageView.contentMode = .scaleAspectFill
             iconImageView.snp.remakeConstraints {
@@ -54,7 +56,8 @@ final class HobbyFilterCell: UICollectionViewCell {
             }
         } else {
             // No thumbnail - show hobby-specific icon (small centered)
-            iconImageView.backgroundColor = .bg003
+            iconContainerView.backgroundColor = .neutralWhite
+            iconImageView.backgroundColor = .clear
             if let imageAsset = HobbyImageAsset(hobbyName: hobby.hobbyName) {
                 iconImageView.image = imageAsset.icon
                 iconImageView.contentMode = .scaleAspectFit
