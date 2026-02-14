@@ -106,14 +106,14 @@ extension ActivityListViewController {
         }
 
         inputVC.onActivityCreated = { [weak self] in
-            // Dismiss the input modal first
-            self?.dismiss(animated: true) {
-                // Then dismiss ActivityListViewController if it was presented modally
-                if self?.isPresentedModally == true {
-                    self?.dismiss(animated: true)
-                } else {
-                    self?.navigationController?.popToRootViewController(animated: true)
-                }
+            guard let self = self else { return }
+            // Dismiss the input modal and refresh the list
+            self.dismiss(animated: true) {
+                // Refresh activity list
+                self.loadActivities()
+
+                // Notify Home to update dropdown selection
+                AppEventBus.shared.activityCreated.send(self.hobbyId)
             }
         }
 
