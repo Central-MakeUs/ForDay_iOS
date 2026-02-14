@@ -20,8 +20,6 @@ final class ProfileImageBottomSheetView: UIView {
     let selectFromAlbumButton = UIButton(type: .system)
     let setDefaultImageButton = UIButton(type: .system)
 
-    let confirmButton = UIButton(type: .system)
-
     // MARK: - Initialization
 
     override init(frame: CGRect) {
@@ -80,15 +78,6 @@ extension ProfileImageBottomSheetView {
             $0.contentHorizontalAlignment = .left
             $0.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         }
-
-        confirmButton.do {
-            $0.backgroundColor = .action001
-            $0.layer.cornerRadius = 12
-
-            $0.setTitle("설정완료", for: .normal)
-            $0.setTitleColor(.neutralWhite, for: .normal)
-            $0.titleLabel?.font = TypographyStyle.header16.font
-        }
     }
 
     private func layout() {
@@ -97,7 +86,6 @@ extension ProfileImageBottomSheetView {
         containerView.addSubview(titleLabel)
         containerView.addSubview(selectFromAlbumButton)
         containerView.addSubview(setDefaultImageButton)
-        containerView.addSubview(confirmButton)
 
         containerView.snp.makeConstraints {
             $0.edges.equalToSuperview()
@@ -127,14 +115,7 @@ extension ProfileImageBottomSheetView {
             $0.leading.equalToSuperview().offset(20)
             $0.trailing.equalToSuperview().offset(-20)
             $0.height.equalTo(52)
-        }
-
-        confirmButton.snp.makeConstraints {
-            $0.top.equalTo(setDefaultImageButton.snp.bottom).offset(20)
-            $0.leading.equalToSuperview().offset(16)
-            $0.trailing.equalToSuperview().offset(-16)
-            $0.height.equalTo(56)
-            $0.bottom.equalTo(safeAreaLayoutGuide).offset(-16)
+            $0.bottom.equalTo(safeAreaLayoutGuide).offset(-20)
         }
     }
 }

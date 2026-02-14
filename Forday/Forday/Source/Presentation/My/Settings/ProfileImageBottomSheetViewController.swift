@@ -21,9 +21,6 @@ final class ProfileImageBottomSheetViewController: UIViewController {
     }
 
     var onOptionSelected: ((ProfileImageOption) -> Void)?
-    var onConfirm: (() -> Void)?
-
-    private var selectedOption: ProfileImageOption?
 
     // MARK: - Lifecycle
 
@@ -34,7 +31,6 @@ final class ProfileImageBottomSheetViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupActions()
-        updateButtonStates()
     }
 }
 
@@ -53,28 +49,6 @@ extension ProfileImageBottomSheetViewController {
             action: #selector(setDefaultImageTapped),
             for: .touchUpInside
         )
-
-        bottomSheetView.confirmButton.addTarget(
-            self,
-            action: #selector(confirmTapped),
-            for: .touchUpInside
-        )
-    }
-
-    private func updateButtonStates() {
-        // Reset all button borders
-        bottomSheetView.selectFromAlbumButton.layer.borderColor = UIColor.stroke001.cgColor
-        bottomSheetView.setDefaultImageButton.layer.borderColor = UIColor.stroke001.cgColor
-
-        // Highlight selected option
-        switch selectedOption {
-        case .selectFromAlbum:
-            bottomSheetView.selectFromAlbumButton.layer.borderColor = UIColor.action001.cgColor
-        case .setDefaultImage:
-            bottomSheetView.setDefaultImageButton.layer.borderColor = UIColor.action001.cgColor
-        case .none:
-            break
-        }
     }
 }
 
@@ -82,20 +56,14 @@ extension ProfileImageBottomSheetViewController {
 
 extension ProfileImageBottomSheetViewController {
     @objc private func selectFromAlbumTapped() {
-        selectedOption = .selectFromAlbum
-        updateButtonStates()
-        onOptionSelected?(.selectFromAlbum)
+        dismiss(animated: true) { [weak self] in
+            self?.onOptionSelected?(.selectFromAlbum)
+        }
     }
 
     @objc private func setDefaultImageTapped() {
-        selectedOption = .setDefaultImage
-        updateButtonStates()
-        onOptionSelected?(.setDefaultImage)
-    }
-
-    @objc private func confirmTapped() {
         dismiss(animated: true) { [weak self] in
-            self?.onConfirm?()
+            self?.onOptionSelected?(.setDefaultImage)
         }
     }
 }

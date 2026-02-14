@@ -23,8 +23,6 @@ final class ProfileSettingsViewController: UIViewController {
 
     weak var coordinator: MainTabBarCoordinator?
 
-    private var pendingImageOption: ProfileImageOption?
-
     // MARK: - Initialization
 
     init(viewModel: ProfileSettingsViewModel = ProfileSettingsViewModel()) {
@@ -240,11 +238,7 @@ extension ProfileSettingsViewController {
         let bottomSheetVC = ProfileImageBottomSheetViewController()
 
         bottomSheetVC.onOptionSelected = { [weak self] option in
-            self?.pendingImageOption = option
-        }
-
-        bottomSheetVC.onConfirm = { [weak self] in
-            guard let self = self, let option = self.pendingImageOption else { return }
+            guard let self = self else { return }
 
             switch option {
             case .selectFromAlbum:
@@ -252,12 +246,10 @@ extension ProfileSettingsViewController {
             case .setDefaultImage:
                 self.resetToDefaultImage()
             }
-
-            self.pendingImageOption = nil
         }
 
         if let sheet = bottomSheetVC.sheetPresentationController {
-            sheet.detents = [.medium()]
+            sheet.detents = [.custom { _ in 240 }]
             sheet.prefersGrabberVisible = false
             sheet.preferredCornerRadius = 20
         }
