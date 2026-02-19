@@ -19,13 +19,15 @@ final class FetchStoriesUseCase {
         hobbyId: Int? = nil,
         lastRecordId: Int? = nil,
         size: Int = 20,
-        keyword: String? = nil
+        keyword: String? = nil,
+        filterType: StoryFilterType = .all
     ) async throws -> StoriesResult? {
         return try await repository.fetchStories(
             hobbyId: hobbyId,
             lastRecordId: lastRecordId,
             size: size,
-            keyword: keyword
+            keyword: keyword,
+            filterType: filterType
         )
     }
 }
