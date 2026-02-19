@@ -8,9 +8,7 @@
 import Foundation
 
 struct StoriesResult {
-    let hobbyInfoId: Int
-    let hobbyId: Int
-    let hobbyName: String
+    let tabs: [StoriesTab]
     let stories: [Story]
     let lastRecordId: Int?
     let hasNext: Bool

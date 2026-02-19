@@ -14,12 +14,16 @@ extension DTO {
     }
 
     struct StoriesData: Codable {
-        let hobbyInfoId: Int
-        let hobbyId: Int
-        let hobbyName: String
+        let tabInfo: [StoriesTabInfo]?
         let lastRecordId: Int?
         let recordList: [StoryInfo]
         let hasNext: Bool
+    }
+
+    struct StoriesTabInfo: Codable {
+        let hobbyId: Int
+        let hobbyName: String
+        let currentHobby: Bool
     }
 
     struct StoryInfo: Codable {
@@ -34,7 +38,7 @@ extension DTO {
 
     struct StoryUserInfo: Codable {
         let userId: String
-        let nickname: String
+        let nickname: String?
         let profileImageUrl: String?
     }
 }
@@ -49,12 +53,20 @@ extension DTO.StoriesResponse {
 extension DTO.StoriesData {
     func toDomain() -> StoriesResult {
         return StoriesResult(
-            hobbyInfoId: hobbyInfoId,
-            hobbyId: hobbyId,
-            hobbyName: hobbyName,
+            tabs: tabInfo?.map { $0.toDomain() } ?? [],
             stories: recordList.map { $0.toDomain() },
             lastRecordId: lastRecordId,
             hasNext: hasNext
+        )
+    }
+}
+
+extension DTO.StoriesTabInfo {
+    func toDomain() -> StoriesTab {
+        return StoriesTab(
+            hobbyId: hobbyId,
+            hobbyName: hobbyName,
+            currentHobby: currentHobby
         )
     }
 }
@@ -77,7 +89,7 @@ extension DTO.StoryUserInfo {
     func toDomain() -> StoryUserInfo {
         return StoryUserInfo(
             userId: userId,
-            nickname: nickname,
+            nickname: nickname ?? "익명",
             profileImageUrl: profileImageUrl
         )
     }

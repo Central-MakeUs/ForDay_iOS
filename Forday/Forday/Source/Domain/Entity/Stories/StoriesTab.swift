@@ -10,5 +10,5 @@ import Foundation
 struct StoriesTab {
     let hobbyId: Int
     let hobbyName: String
-    let hobbyStatus: String  // "IN_PROGRESS", "COMPLETED", etc.
+    let currentHobby: Bool
 }

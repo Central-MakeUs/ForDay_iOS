@@ -15,28 +15,22 @@ final class StoriesRepository: StoriesRepositoryInterface {
         self.storiesService = storiesService
     }
 
-    // MARK: - Fetch Stories Tabs
-
-    func fetchStoriesTabs() async throws -> [StoriesTab] {
-        let response = try await storiesService.fetchStoriesTabs()
-        return response.toDomain()
-    }
-
     // MARK: - Fetch Stories
 
     func fetchStories(
         hobbyId: Int?,
         lastRecordId: Int?,
         size: Int,
-        keyword: String?
+        keyword: String?,
+        filterType: StoryFilterType
     ) async throws -> StoriesResult? {
         let response = try await storiesService.fetchStories(
             hobbyId: hobbyId,
             lastRecordId: lastRecordId,
             size: size,
-            keyword: keyword
+            keyword: keyword,
+            filterType: filterType
         )
         return response.toDomain()
     }
 }
-
