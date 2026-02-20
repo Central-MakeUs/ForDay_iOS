@@ -14,8 +14,9 @@ enum UsersAPI {
     case feeds                  /// 사용자 피드 목록 조회
     case hobbyCards             /// 사용자 취미 카드 리스트 조회
     case scraps                 /// 사용자 스크랩 목록 조회
-    
-    
+    case blockUser(userId: String)  /// 사용자 차단
+
+
     var endpoint: String {
         switch self {
         case .nicknameAvailability:
@@ -34,6 +35,8 @@ enum UsersAPI {
             return "/users/hobby-cards"
         case .scraps:
             return "/users/scraps"
+        case .blockUser(let userId):
+            return "/users/\(userId)/block"
         }
     }
 }
