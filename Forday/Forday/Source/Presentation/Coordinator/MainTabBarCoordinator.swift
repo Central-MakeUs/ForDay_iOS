@@ -329,6 +329,10 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         tabBarController.selectedIndex = 0
     }
 
+    func switchToStoriesTab() {
+        tabBarController.selectedIndex = 2
+    }
+
     func getCurrentNickname() -> String? {
         return homeViewController?.getCurrentNickname()
     }
