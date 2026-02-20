@@ -157,6 +157,16 @@ extension StoriesViewController {
                 self?.handleError(error)
             }
             .store(in: &cancellables)
+
+        // Image sizes updated - 이미지 크기 프리페치 완료 시 레이아웃 갱신
+        viewModel.$imageSizesUpdated
+            .dropFirst()  // 초기값 무시
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.storiesView.pinterestLayout.invalidateLayout()
+                self?.storiesView.collectionView.reloadData()
+            }
+            .store(in: &cancellables)
     }
 }
 
@@ -212,29 +222,32 @@ extension StoriesViewController: UICollectionViewDelegate {
 
 extension StoriesViewController: StoriesPinterestLayoutDelegate {
     func collectionView(_ collectionView: UICollectionView, heightForItemAt indexPath: IndexPath) -> CGFloat {
-        // Cell width is fixed at 156
-        let cellWidth: CGFloat = 156
+        // 셀 너비 (Pinterest 레이아웃에서 2열 기준)
+        let insets = collectionView.contentInset
+        let availableWidth = collectionView.bounds.width - (insets.left + insets.right)
+        let cellWidth = availableWidth / 2 - 8  // 2열, padding 고려
 
-        // Thumbnail height: min 117, max 208 based on design
-        // For simplicity, use aspect ratio or fixed height
-        // If has image, calculate based on image aspect ratio (estimated)
-        // If gradient mode, use minimum height for thumbnail area
         let story = viewModel.stories[indexPath.item]
 
-        // Thumbnail area height
+        // 썸네일 영역 높이 계산
         let thumbnailHeight: CGFloat
-        if story.thumbnailUrl != nil && !story.thumbnailUrl!.isEmpty {
-            // Image mode: Use proportional height (156 width, aspect ratio ~1:1.33)
-            thumbnailHeight = cellWidth * 1.33
+
+        if let imageSize = viewModel.getImageSize(for: story), imageSize.width > 0 {
+            // 캐시된 이미지 크기 기반으로 비율 계산
+            let aspectRatio = imageSize.height / imageSize.width
+            thumbnailHeight = cellWidth * aspectRatio
+        } else if story.thumbnailUrl != nil && !story.thumbnailUrl!.isEmpty {
+            // 이미지 URL은 있지만 크기가 아직 캐시되지 않은 경우 기본 비율 사용
+            thumbnailHeight = cellWidth * 1.0  // 1:1 기본 비율
         } else {
-            // Gradient mode: Use minimum height
+            // 그라데이션 모드: 최소 높이 사용
             thumbnailHeight = 117
         }
 
-        // Clamp thumbnail height
-        let clampedThumbnailHeight = max(117, min(208, thumbnailHeight))
+        // 썸네일 높이 클램프 (min 117, max 280으로 범위 확대)
+        let clampedThumbnailHeight = max(117, min(280, thumbnailHeight))
 
-        // Content area: title (max 2 lines ~44pt) + user info (24pt) + spacing (8+4)
+        // 콘텐츠 영역: 타이틀 (최대 2줄 ~44pt) + 사용자 정보 (24pt) + 간격 (8+4)
         let contentHeight: CGFloat = 8 + 44 + 4 + 24
 
         return clampedThumbnailHeight + contentHeight

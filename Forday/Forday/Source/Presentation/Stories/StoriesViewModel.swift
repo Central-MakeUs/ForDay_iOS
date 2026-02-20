@@ -19,12 +19,14 @@ final class StoriesViewModel {
     @Published private(set) var selectedTabIndex: Int = 0
     @Published private(set) var selectedFilterType: StoryFilterType = .all
     @Published private(set) var hasNext = false
+    @Published private(set) var imageSizesUpdated = false  // 이미지 크기 프리페치 완료 시 토글
 
     // MARK: - Private Properties
 
     private let fetchStoriesUseCase: FetchStoriesUseCase
     private let addReactionUseCase: AddReactionUseCase
     private let deleteReactionUseCase: DeleteReactionUseCase
+    private let imageSizeCache = ImageSizeCache.shared
 
     private var lastRecordId: Int?
     private var currentHobbyId: Int?
@@ -82,6 +84,9 @@ final class StoriesViewModel {
                 self.stories = result.stories
                 self.lastRecordId = result.lastRecordId
                 self.hasNext = result.hasNext
+
+                // 이미지 크기 프리페치
+                prefetchImageSizes(for: result.stories)
             }
         } catch let appError as AppError {
             self.error = appError
@@ -144,6 +149,9 @@ final class StoriesViewModel {
                 }
                 self.lastRecordId = result.lastRecordId
                 self.hasNext = result.hasNext
+
+                // 이미지 크기 프리페치
+                prefetchImageSizes(for: result.stories)
             }
         } catch let appError as AppError {
             self.error = appError
@@ -211,5 +219,23 @@ final class StoriesViewModel {
     var currentHobbyName: String? {
         guard selectedTabIndex < tabs.count else { return nil }
         return tabs[selectedTabIndex].hobbyName
+    }
+
+    /// 스토리 이미지 크기 반환 (캐시된 값)
+    func getImageSize(for story: Story) -> CGSize? {
+        guard let url = story.thumbnailUrl, !url.isEmpty else { return nil }
+        return imageSizeCache.getSize(for: url)
+    }
+
+    // MARK: - Private Methods
+
+    /// 스토리 목록의 이미지 크기 프리페치
+    private func prefetchImageSizes(for stories: [Story]) {
+        let urls = stories.compactMap { $0.thumbnailUrl }.filter { !$0.isEmpty }
+        guard !urls.isEmpty else { return }
+
+        imageSizeCache.prefetchSizes(for: urls) { [weak self] in
+            self?.imageSizesUpdated.toggle()  // 레이아웃 갱신 트리거
+        }
     }
 }
