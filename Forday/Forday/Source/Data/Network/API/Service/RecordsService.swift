@@ -141,4 +141,19 @@ final class RecordsService {
     func deleteScrap(recordId: Int) async throws -> DTO.ScrapResponse {
         return try await provider.request(.deleteScrap(recordId: recordId))
     }
+
+    // MARK: - 활동 기록 신고
+
+    /// 활동 기록을 신고합니다.
+    ///
+    /// - Parameters:
+    ///   - recordId: 신고할 활동 기록 ID
+    ///   - reason: 신고 사유
+    /// - Returns: 신고 결과
+    /// - Throws:
+    ///   - `ACTIVITY_RECORD_NOT_FOUND` (404): 존재하지 않는 활동 기록
+    func reportRecord(recordId: Int, reason: ReportReasonType) async throws -> DTO.ReportRecordResponse {
+        let request = DTO.ReportRecordRequest(reason: reason.rawValue)
+        return try await provider.request(.reportRecord(recordId: recordId, request: request))
+    }
 }

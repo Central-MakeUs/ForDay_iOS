@@ -81,4 +81,12 @@ final class UsersService {
     func fetchScraps(lastRecordId: Int?, feedSize: Int = 24) async throws -> DTO.UsersScrapsResponse {
         return try await provider.request(.scraps(lastRecordId: lastRecordId, feedSize: feedSize))
     }
+
+    /// Users - 사용자 차단
+    ///
+    /// - Parameter userId: 차단할 사용자 ID
+    /// - Returns: 차단 결과
+    func blockUser(userId: String) async throws -> DTO.BlockUserResponse {
+        return try await provider.request(.blockUser(userId: userId))
+    }
 }
