@@ -251,9 +251,10 @@ extension ActivityDetailViewController {
     private func showDropdown() {
         guard dropdownView == nil else { return }
 
-        // 이미지 유무에 따라 드롭다운 옵션 구성
+        // 소유자 여부와 이미지 유무에 따라 드롭다운 옵션 구성
+        let isOwner = viewModel.activityDetail?.recordOwner ?? false
         let hasImage = detailView.hasImage
-        let dropdown = ActivityDetailDropdownView(showCoverImageOption: hasImage)
+        let dropdown = ActivityDetailDropdownView(isOwner: isOwner, showCoverImageOption: hasImage)
         dropdown.onOptionSelected = { [weak self] option in
             self?.handleDropdownOption(option)
             self?.dismissDropdown()
@@ -277,6 +278,8 @@ extension ActivityDetailViewController {
             editActivity()
         case .delete:
             showDeleteConfirmation()
+        case .report:
+            showReportScreen()
         }
     }
 
@@ -414,6 +417,26 @@ extension ActivityDetailViewController {
         }
     }
 
+    private func showReportScreen() {
+        guard let detail = viewModel.activityDetail,
+              let userInfo = detail.userInfo else { return }
+
+        print("🚨 신고하기")
+
+        let reportVC = ReportViewController(
+            recordId: detail.activityRecordId,
+            authorUserId: userInfo.userId,
+            authorNickname: userInfo.nickname
+        )
+        reportVC.modalPresentationStyle = .fullScreen
+        reportVC.onReportCompleted = { [weak self] _ in
+            // 신고 완료 후 Stories 탭으로 이동
+            self?.coordinator?.switchToStoriesTab()
+            self?.navigationController?.popToRootViewController(animated: false)
+        }
+
+        present(reportVC, animated: true)
+    }
 }
 
 #if DEBUG

@@ -13,12 +13,14 @@ enum ActivityDetailDropdownOption: CaseIterable {
     case setCoverImage
     case edit
     case delete
+    case report
 
     var title: String {
         switch self {
         case .setCoverImage: return "대표사진 설정"
         case .edit: return "수정하기"
         case .delete: return "삭제하기"
+        case .report: return "신고하기"
         }
     }
 
@@ -30,7 +32,24 @@ enum ActivityDetailDropdownOption: CaseIterable {
             return .Icon.edit
         case .delete:
             return .Icon.trash
+        case .report:
+            return .Icon.sorry
         }
+    }
+
+    /// 소유자 전용 옵션
+    static var ownerOptions: [ActivityDetailDropdownOption] {
+        return [.setCoverImage, .edit, .delete]
+    }
+
+    /// 소유자 전용 옵션 (이미지 없는 경우)
+    static var ownerOptionsWithoutCover: [ActivityDetailDropdownOption] {
+        return [.edit, .delete]
+    }
+
+    /// 비소유자 옵션
+    static var nonOwnerOptions: [ActivityDetailDropdownOption] {
+        return [.report]
     }
 }
 
@@ -45,15 +64,23 @@ final class ActivityDetailDropdownView: UIView {
 
     // MARK: - Initialization
 
-    init(showCoverImageOption: Bool = true) {
+    /// 드롭다운 뷰 초기화
+    /// - Parameters:
+    ///   - isOwner: 게시글 소유자 여부
+    ///   - showCoverImageOption: 대표사진 설정 옵션 표시 여부 (소유자일 때만 의미 있음)
+    init(isOwner: Bool, showCoverImageOption: Bool = true) {
         super.init(frame: .zero)
 
-        // 이미지 유무에 따라 옵션 구성
-        if showCoverImageOption {
-            options = ActivityDetailDropdownOption.allCases
+        if isOwner {
+            // 소유자: 수정, 삭제, 대표사진 설정 (이미지 있는 경우)
+            if showCoverImageOption {
+                options = ActivityDetailDropdownOption.ownerOptions
+            } else {
+                options = ActivityDetailDropdownOption.ownerOptionsWithoutCover
+            }
         } else {
-            // 이미지 없으면 대표사진 설정 제외
-            options = ActivityDetailDropdownOption.allCases.filter { $0 != .setCoverImage }
+            // 비소유자: 신고하기만
+            options = ActivityDetailDropdownOption.nonOwnerOptions
         }
 
         style()
@@ -63,7 +90,7 @@ final class ActivityDetailDropdownView: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        options = ActivityDetailDropdownOption.allCases
+        options = ActivityDetailDropdownOption.ownerOptions
         style()
         layout()
         setupTableView()
@@ -210,8 +237,8 @@ final class ActivityDetailDropdownCell: UITableViewCell {
 
         // 삭제하기는 빨간색
         if option == .delete {
-            titleLabel.textColor = .systemRed
-            iconImageView.tintColor = .systemRed
+            titleLabel.textColor = .secondary003
+            iconImageView.tintColor = .secondary003
         } else {
             titleLabel.textColor = .neutral800
             iconImageView.tintColor = .neutral800
