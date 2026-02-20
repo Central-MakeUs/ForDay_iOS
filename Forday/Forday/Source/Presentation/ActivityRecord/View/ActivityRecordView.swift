@@ -79,13 +79,13 @@ extension ActivityRecordView {
         activityDropdownButton.do {
             var config = UIButton.Configuration.plain()
             config.title = "미라클 모닝 야침 독서"
-            config.image = UIImage(systemName: "chevron.down")
+            config.image = .Icon.chevronDown
             config.imagePlacement = .trailing
             config.imagePadding = 8
             config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
-            config.background.backgroundColor = .systemGray6
+            config.background.backgroundColor = .neutral50
             config.background.cornerRadius = 12
-            config.baseForegroundColor = .label
+            config.baseForegroundColor = .neutral900
 
             $0.configuration = config
             $0.contentHorizontalAlignment = .leading
@@ -135,9 +135,9 @@ extension ActivityRecordView {
         }
 
         photoAddButton.do {
-            $0.setImage(UIImage(systemName: "camera.fill"), for: .normal)
-            $0.tintColor = .systemGray
-            $0.backgroundColor = .white
+            $0.setImage(.Icon.camera, for: .normal)
+            $0.tintColor = .neutral400
+            $0.backgroundColor = .neutralWhite
             $0.layer.cornerRadius = 8
             $0.clipsToBounds = true
             $0.imageView?.contentMode = .scaleAspectFill
@@ -177,11 +177,11 @@ extension ActivityRecordView {
         privacyButton.do {
             var config = UIButton.Configuration.plain()
             config.title = "전체공개"
-            config.image = UIImage(systemName: "chevron.down")
+            config.image = .Icon.chevronDown
             config.imagePlacement = .trailing
             config.imagePadding = 8
-            config.baseForegroundColor = .label
-            
+            config.baseForegroundColor = .neutral900
+
             $0.configuration = config
             $0.contentHorizontalAlignment = .trailing
         }
@@ -336,7 +336,7 @@ extension ActivityRecordView {
         submitButton.isEnabled = isEnabled
 
         var config = submitButton.configuration
-        config?.baseBackgroundColor = isEnabled ? .action001 : .systemGray4
+        config?.baseBackgroundColor = isEnabled ? .action001 : .neutral300
         submitButton.configuration = config
     }
 
@@ -365,8 +365,8 @@ extension ActivityRecordView {
             photoAddButton.tintColor = nil
             showPhotoDeleteButton(true)
         } else {
-            photoAddButton.setImage(UIImage(systemName: "camera.fill"), for: .normal)
-            photoAddButton.tintColor = .systemGray
+            photoAddButton.setImage(.Icon.camera, for: .normal)
+            photoAddButton.tintColor = .neutral400
             showPhotoDeleteButton(false)
         }
     }

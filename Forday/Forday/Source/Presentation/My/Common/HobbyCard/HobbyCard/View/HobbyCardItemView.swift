@@ -33,8 +33,8 @@ final class HobbyCardItemView: UIView {
 
     func configure(with card: CompletedHobbyCard) {
         // TODO: Load image from URL when image loading is implemented
-        imageView.image = UIImage(systemName: "photo.fill")
-        imageView.tintColor = .systemGray3
+        imageView.image = .Icon.image
+        imageView.tintColor = .neutral400
 
         textLabel.text = card.content
     }
@@ -44,7 +44,7 @@ final class HobbyCardItemView: UIView {
 
 extension HobbyCardItemView {
     private func style() {
-        backgroundColor = .white
+        backgroundColor = .neutralWhite
         layer.cornerRadius = 16
         clipsToBounds = true
         layer.shadowColor = UIColor.black.cgColor

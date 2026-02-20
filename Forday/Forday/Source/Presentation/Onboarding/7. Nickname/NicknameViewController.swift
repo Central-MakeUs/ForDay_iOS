@@ -43,12 +43,12 @@ class NicknameViewController: BaseOnboardingViewController {
 
         // 커스텀 뒤로가기 버튼 (로그인 화면으로 이동)
         let backButton = UIBarButtonItem(
-            image: UIImage(systemName: "chevron.left"),
+            image: .Icon.chevronLeft,
             style: .plain,
             target: self,
             action: #selector(backToLogin)
         )
-        backButton.tintColor = .label
+        backButton.tintColor = .neutral900
         navigationItem.leftBarButtonItem = backButton
 
         // Swipe back gesture 비활성화

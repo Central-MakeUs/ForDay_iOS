@@ -77,15 +77,15 @@ class HobbyActivityInputViewController: UIViewController {
 extension HobbyActivityInputViewController {
     private func setupNavigationBar() {
         title = "취미활동 입력"
-        
+
         // X 버튼
         let closeButton = UIBarButtonItem(
-            image: UIImage(systemName: "xmark"),
+            image: .Icon.xmark,
             style: .plain,
             target: self,
             action: #selector(closeButtonTapped)
         )
-        closeButton.tintColor = .label
+        closeButton.tintColor = .neutral900
         navigationItem.leftBarButtonItem = closeButton
     }
     

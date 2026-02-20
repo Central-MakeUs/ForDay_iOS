@@ -90,21 +90,21 @@ extension ActivityRecordViewController {
         // 뒤로 가기 버튼 (수정 모드) 또는 X 버튼 (생성 모드)
         if viewModel.isEditMode {
             let backButton = UIBarButtonItem(
-                image: UIImage(systemName: "chevron.left"),
+                image: .Icon.chevronLeft,
                 style: .plain,
                 target: self,
                 action: #selector(closeButtonTapped)
             )
-            backButton.tintColor = .label
+            backButton.tintColor = .neutral900
             navigationItem.leftBarButtonItem = backButton
         } else {
             let closeButton = UIBarButtonItem(
-                image: UIImage(systemName: "xmark"),
+                image: .Icon.xmark,
                 style: .plain,
                 target: self,
                 action: #selector(closeButtonTapped)
             )
-            closeButton.tintColor = .label
+            closeButton.tintColor = .neutral900
             navigationItem.leftBarButtonItem = closeButton
         }
     }

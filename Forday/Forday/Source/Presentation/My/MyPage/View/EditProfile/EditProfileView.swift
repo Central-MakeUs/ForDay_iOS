@@ -55,16 +55,16 @@ extension EditProfileView {
         profileImageView.do {
             $0.contentMode = .scaleAspectFill
             $0.clipsToBounds = true
-            $0.backgroundColor = .systemGray5
+            $0.backgroundColor = .neutral100
             $0.layer.cornerRadius = 50
             $0.isUserInteractionEnabled = true
         }
 
         cameraIconView.do {
-            $0.image = UIImage(systemName: "camera.fill")
-            $0.tintColor = .white
+            $0.image = .Icon.camera
+            $0.tintColor = .neutralWhite
             $0.contentMode = .scaleAspectFit
-            $0.backgroundColor = .label
+            $0.backgroundColor = .neutral900
             $0.layer.cornerRadius = 16
             $0.clipsToBounds = true
         }
@@ -72,20 +72,20 @@ extension EditProfileView {
         // Nickname Label
         nicknameLabel.do {
             $0.setTextWithTypography("닉네임", style: .label12)
-            $0.textColor = .secondaryLabel
+            $0.textColor = .neutral600
         }
 
         // Input Container
         inputContainerView.do {
-            $0.backgroundColor = .systemGray6
+            $0.backgroundColor = .neutral50
             $0.layer.cornerRadius = 12
         }
 
         // Nickname TextField
         nicknameTextField.do {
             $0.placeholder = "닉네임을 입력해 주세요."
-            $0.font = .systemFont(ofSize: 16, weight: .medium)
-            $0.textColor = .label
+            $0.font = TypographyStyle.body16.font
+            $0.textColor = .neutral900
             $0.borderStyle = .none
             $0.clearButtonMode = .whileEditing
             $0.autocorrectionType = .no
@@ -97,8 +97,8 @@ extension EditProfileView {
         duplicateCheckButton.do {
             var config = UIButton.Configuration.filled()
             config.title = "중복확인"
-            config.baseBackgroundColor = .label
-            config.baseForegroundColor = .systemBackground
+            config.baseBackgroundColor = .neutral900
+            config.baseForegroundColor = .neutralWhite
             config.cornerStyle = .medium
             config.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10)
 
@@ -108,8 +108,8 @@ extension EditProfileView {
 
         // Validation Label
         validationLabel.do {
-            $0.font = .systemFont(ofSize: 13, weight: .regular)
-            $0.textColor = .systemRed
+            $0.font = TypographyStyle.label14.font
+            $0.textColor = .secondary003
             $0.numberOfLines = 0
             $0.isHidden = true
         }
@@ -202,7 +202,7 @@ extension EditProfileView {
 
     func showValidationMessage(_ message: String?, isError: Bool = true) {
         validationLabel.text = message
-        validationLabel.textColor = isError ? .systemRed : .systemGreen
+        validationLabel.textColor = isError ? .secondary003 : .action001
         validationLabel.isHidden = message == nil
     }
 }
