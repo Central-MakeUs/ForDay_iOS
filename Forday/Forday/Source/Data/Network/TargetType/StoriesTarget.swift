@@ -25,7 +25,7 @@ extension StoriesTarget: BaseTargetType {
     var method: Moya.Method {
         switch self {
         case .fetchStories:
-            return .post
+            return .get
         }
     }
 
