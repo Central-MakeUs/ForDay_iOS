@@ -18,6 +18,7 @@ enum UsersTarget {
     case hobbiesInProgress      /// 사용자 취미 진행 상단탭 조회
     case hobbyCards(lastHobbyCardId: Int?, size: Int)    /// 사용자 취미 카드 리스트 조회
     case scraps(lastRecordId: Int?, feedSize: Int)       /// 사용자 스크랩 목록 조회
+    case blockUser(userId: String)                       /// 사용자 차단
 }
 
 extension UsersTarget: BaseTargetType {
@@ -40,6 +41,8 @@ extension UsersTarget: BaseTargetType {
             return UsersAPI.hobbyCards.endpoint
         case .scraps:
             return UsersAPI.scraps.endpoint
+        case .blockUser(let userId):
+            return UsersAPI.blockUser(userId: userId).endpoint
         }
     }
     
@@ -61,9 +64,11 @@ extension UsersTarget: BaseTargetType {
             return .get
         case .scraps:
             return .get
+        case .blockUser:
+            return .post
         }
     }
-    
+
     var task: Moya.Task {
         switch self {
         case .nicknameAvailability(let nickname):
@@ -116,8 +121,9 @@ extension UsersTarget: BaseTargetType {
             }
 
             return .requestParameters(parameters: parameters, encoding: URLEncoding.default)
+
+        case .blockUser:
+            return .requestPlain
         }
     }
-    
-    
 }
