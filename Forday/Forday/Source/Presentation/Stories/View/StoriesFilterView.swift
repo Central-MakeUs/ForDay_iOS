@@ -9,12 +9,6 @@ import UIKit
 import SnapKit
 import Then
 
-enum StoriesFilter: String, CaseIterable {
-    case all = "전체"
-    case funded = "자금 활용"
-    case friend = "친구"
-}
-
 final class StoriesFilterView: UIView {
 
     // MARK: - UI Components
@@ -24,8 +18,8 @@ final class StoriesFilterView: UIView {
 
     // MARK: - Properties
 
-    private(set) var selectedFilter: StoriesFilter = .all
-    var onFilterSelected: ((StoriesFilter) -> Void)?
+    private(set) var selectedFilter: StoryFilterType = .all
+    var onFilterSelected: ((StoryFilterType) -> Void)?
 
     // MARK: - Initialization
 
@@ -42,13 +36,13 @@ final class StoriesFilterView: UIView {
 
     // MARK: - Configuration
 
-    func selectFilter(_ filter: StoriesFilter) {
+    func selectFilter(_ filter: StoryFilterType) {
         selectedFilter = filter
         updateButtonStates()
     }
 
     private func setupButtons() {
-        StoriesFilter.allCases.forEach { filter in
+        StoryFilterType.allCases.forEach { filter in
             let button = createFilterButton(for: filter)
             filterButtons.append(button)
             stackView.addArrangedSubview(button)
@@ -58,10 +52,10 @@ final class StoriesFilterView: UIView {
         updateButtonStates()
     }
 
-    private func createFilterButton(for filter: StoriesFilter) -> UIButton {
+    private func createFilterButton(for filter: StoryFilterType) -> UIButton {
         let button = UIButton(type: .system)
-        button.setTitle(filter.rawValue, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
+        button.setTitle(filter.displayName, for: .normal)
+        button.titleLabel?.font = TypographyStyle.body14.font
         button.layer.cornerRadius = 16
         button.clipsToBounds = true
         button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
@@ -73,20 +67,21 @@ final class StoriesFilterView: UIView {
         return button
     }
 
-    private func handleFilterTapped(_ filter: StoriesFilter) {
+    private func handleFilterTapped(_ filter: StoryFilterType) {
+        guard filter != selectedFilter else { return }
         selectedFilter = filter
         updateButtonStates()
         onFilterSelected?(filter)
     }
 
     private func updateButtonStates() {
-        StoriesFilter.allCases.enumerated().forEach { index, filter in
+        StoryFilterType.allCases.enumerated().forEach { index, filter in
             let button = filterButtons[index]
             let isSelected = filter == selectedFilter
 
             if isSelected {
                 button.backgroundColor = .neutral900
-                button.setTitleColor(.white, for: .normal)
+                button.setTitleColor(.neutralWhite, for: .normal)
             } else {
                 button.backgroundColor = .neutral50
                 button.setTitleColor(.neutral600, for: .normal)
@@ -99,7 +94,7 @@ final class StoriesFilterView: UIView {
 
 extension StoriesFilterView {
     private func style() {
-        backgroundColor = .systemBackground
+        backgroundColor = .neutralWhite
 
         stackView.do {
             $0.axis = .horizontal

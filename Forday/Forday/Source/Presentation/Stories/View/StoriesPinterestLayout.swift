@@ -44,32 +44,32 @@ final class StoriesPinterestLayout: UICollectionViewLayout {
             xOffset.append(CGFloat(column) * columnWidth)
         }
 
-        var column = 0
         var yOffset: [CGFloat] = Array(repeating: 0, count: numberOfColumns)
 
         for item in 0..<collectionView.numberOfItems(inSection: 0) {
             let indexPath = IndexPath(item: item, section: 0)
 
+            // Find the column with the shortest height (waterfall effect)
+            let shortestColumn = yOffset.enumerated().min(by: { $0.element < $1.element })?.offset ?? 0
+
             let itemHeight = delegate?.collectionView(collectionView, heightForItemAt: indexPath) ?? 180
-            let height = cellPadding * 2 + itemHeight
+            let height = cellPadding + itemHeight
 
             let frame = CGRect(
-                x: xOffset[column],
-                y: yOffset[column],
+                x: xOffset[shortestColumn],
+                y: yOffset[shortestColumn],
                 width: columnWidth,
                 height: height
             )
 
-            let insetFrame = frame.insetBy(dx: cellPadding, dy: cellPadding)
+            let insetFrame = frame.insetBy(dx: cellPadding / 2, dy: cellPadding / 2)
 
             let attributes = UICollectionViewLayoutAttributes(forCellWith: indexPath)
             attributes.frame = insetFrame
             cache.append(attributes)
 
             contentHeight = max(contentHeight, frame.maxY)
-            yOffset[column] = yOffset[column] + height
-
-            column = column < (numberOfColumns - 1) ? (column + 1) : 0
+            yOffset[shortestColumn] = yOffset[shortestColumn] + height
         }
     }
 
