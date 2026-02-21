@@ -13,6 +13,12 @@ final class StoriesView: UIView {
 
     // MARK: - UI Components
 
+    // Header
+    private let headerView = UIView()
+    private let titleLabel = UILabel()
+    let searchButton = UIButton()
+    let notificationButton = UIButton()
+
     let tabSegmentControl = StoriesTabSegmentControl()
     let filterView = StoriesFilterView()
     let collectionView: UICollectionView
@@ -73,12 +79,37 @@ extension StoriesView {
     private func style() {
         backgroundColor = .neutralWhite
 
+        // Header
+        headerView.do {
+            $0.backgroundColor = .neutralWhite
+        }
+
+        titleLabel.do {
+            $0.setTextWithTypography("소식", style: .header22)
+            $0.textColor = .neutral900
+        }
+
+        searchButton.do {
+            // TODO: 검색 아이콘 에셋 추가 후 활성화
+            // $0.setImage(.Icon.search, for: .normal)
+            $0.tintColor = .neutral500
+            $0.isHidden = true
+        }
+
+        notificationButton.do {
+            $0.setImage(.Icon.notificationOff, for: .normal)
+            $0.tintColor = .neutral500
+            $0.isHidden = true // TODO: 알림 기능 연결 시 활성화
+        }
+
         tabSegmentControl.do {
             $0.backgroundColor = .neutralWhite
         }
 
+        // TODO: 필터 API 완성 후 활성화
         filterView.do {
             $0.backgroundColor = .neutralWhite
+            $0.isHidden = true
         }
 
         collectionView.do {
@@ -95,25 +126,56 @@ extension StoriesView {
     }
 
     private func layout() {
+        // Header
+        addSubview(headerView)
+        headerView.addSubview(titleLabel)
+        headerView.addSubview(searchButton)
+        headerView.addSubview(notificationButton)
+
         addSubview(tabSegmentControl)
         addSubview(filterView)
         addSubview(collectionView)
         addSubview(emptyStateView)
 
-        tabSegmentControl.snp.makeConstraints {
+        headerView.snp.makeConstraints {
             $0.top.equalTo(safeAreaLayoutGuide)
+            $0.leading.trailing.equalToSuperview()
+            $0.height.equalTo(54)
+        }
+
+        titleLabel.snp.makeConstraints {
+            $0.leading.equalToSuperview().offset(20)
+            $0.bottom.equalToSuperview().offset(-12)
+        }
+
+        searchButton.snp.makeConstraints {
+            $0.trailing.equalToSuperview().offset(-20)
+            $0.centerY.equalTo(titleLabel)
+            $0.width.height.equalTo(24)
+        }
+
+        // TODO: 알림 기능 연결 시 활성화 후 searchButton을 notificationButton 왼쪽으로 이동
+        notificationButton.snp.makeConstraints {
+            $0.trailing.equalTo(searchButton.snp.leading).offset(-12)
+            $0.centerY.equalTo(titleLabel)
+            $0.width.height.equalTo(24)
+        }
+
+        tabSegmentControl.snp.makeConstraints {
+            $0.top.equalTo(headerView.snp.bottom)
             $0.leading.trailing.equalToSuperview()
             $0.height.equalTo(44)
         }
 
+        // TODO: 필터 API 완성 후 활성화 (height: 48)
         filterView.snp.makeConstraints {
             $0.top.equalTo(tabSegmentControl.snp.bottom)
             $0.leading.trailing.equalToSuperview()
-            $0.height.equalTo(48)
+            $0.height.equalTo(0)
         }
 
         collectionView.snp.makeConstraints {
-            $0.top.equalTo(filterView.snp.bottom)
+            $0.top.equalTo(tabSegmentControl.snp.bottom)
             $0.leading.trailing.bottom.equalToSuperview()
         }
 
