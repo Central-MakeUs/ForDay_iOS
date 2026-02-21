@@ -83,18 +83,18 @@ extension ProfileHeaderView {
         profileImageView.snp.makeConstraints {
             $0.leading.equalToSuperview().offset(20)
             $0.centerY.equalToSuperview()
-            $0.width.height.equalTo(60)
+            $0.width.height.equalTo(60).priority(.high)
         }
 
         nicknameLabel.snp.makeConstraints {
             $0.leading.equalTo(profileImageView.snp.trailing).offset(16)
-            $0.trailing.equalToSuperview().offset(-20)
+            $0.trailing.lessThanOrEqualToSuperview().offset(-20)
             $0.bottom.equalTo(profileImageView.snp.centerY).offset(-2)
         }
 
         stickerCountLabel.snp.makeConstraints {
             $0.leading.equalTo(nicknameLabel)
-            $0.trailing.equalToSuperview().offset(-20)
+            $0.trailing.lessThanOrEqualToSuperview().offset(-20)
             $0.top.equalTo(profileImageView.snp.centerY).offset(2)
         }
     }

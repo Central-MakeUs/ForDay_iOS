@@ -137,19 +137,19 @@ extension ProfileSegmentedControlView {
         activitiesButton.snp.makeConstraints {
             $0.leading.equalToSuperview().offset(20)
             $0.top.bottom.equalToSuperview()
-            $0.width.equalTo(hobbyCardsButton)
+            $0.width.equalTo(hobbyCardsButton).priority(.high)
         }
 
         hobbyCardsButton.snp.makeConstraints {
             $0.leading.equalTo(activitiesButton.snp.trailing).offset(20)
             $0.top.bottom.equalToSuperview()
-            $0.width.equalTo(scrapsButton)
+            $0.width.equalTo(scrapsButton).priority(.high)
         }
 
         scrapsButton.snp.makeConstraints {
             $0.leading.equalTo(hobbyCardsButton.snp.trailing).offset(20)
             $0.top.bottom.equalToSuperview()
-            $0.trailing.lessThanOrEqualToSuperview().offset(-20)
+            $0.trailing.lessThanOrEqualToSuperview().offset(-20).priority(.high)
         }
 
         underlineView.snp.makeConstraints {
