@@ -89,12 +89,13 @@ extension StoriesViewController {
             }
         }
 
+        // TODO: 필터 API 완성 후 활성화
         // Filter selection
-        storiesView.filterView.onFilterSelected = { [weak self] filterType in
-            Task {
-                await self?.viewModel.selectFilter(filterType)
-            }
-        }
+//        storiesView.filterView.onFilterSelected = { [weak self] filterType in
+//            Task {
+//                await self?.viewModel.selectFilter(filterType)
+//            }
+//        }
     }
 
     private func setupBindings() {
@@ -123,13 +124,14 @@ extension StoriesViewController {
             }
             .store(in: &cancellables)
 
+        // TODO: 필터 API 완성 후 활성화
         // Selected filter
-        viewModel.$selectedFilterType
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] filterType in
-                self?.storiesView.filterView.selectFilter(filterType)
-            }
-            .store(in: &cancellables)
+//        viewModel.$selectedFilterType
+//            .receive(on: DispatchQueue.main)
+//            .sink { [weak self] filterType in
+//                self?.storiesView.filterView.selectFilter(filterType)
+//            }
+//            .store(in: &cancellables)
 
         // Selected tab index
         viewModel.$selectedTabIndex

@@ -111,14 +111,15 @@ final class StoriesViewModel {
         await loadStories(reset: true)
     }
 
+    // TODO: 필터 API 완성 후 활성화
     /// 필터 선택
-    @MainActor
-    func selectFilter(_ filterType: StoryFilterType) async {
-        guard filterType != selectedFilterType else { return }
-
-        selectedFilterType = filterType
-        await loadStories(reset: true)
-    }
+//    @MainActor
+//    func selectFilter(_ filterType: StoryFilterType) async {
+//        guard filterType != selectedFilterType else { return }
+//
+//        selectedFilterType = filterType
+//        await loadStories(reset: true)
+//    }
 
     /// 스토리 로드
     @MainActor
