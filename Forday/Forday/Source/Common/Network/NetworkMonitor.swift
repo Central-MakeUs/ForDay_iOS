@@ -6,28 +6,32 @@
 //
 
 import Foundation
-import Alamofire
+import Network
 
 /// 네트워크 상태 모니터링 및 서버 헬스체크
 final class NetworkMonitor: NetworkMonitoring {
 
     // MARK: - Properties
 
-    private let reachabilityManager: NetworkReachabilityManager?
+    private let pathMonitor: NWPathMonitor
+    private let monitorQueue: DispatchQueue
     private let authService: AuthService
+
+    private var currentPath: NWPath?
 
     /// 네트워크 연결 상태
     var isNetworkReachable: Bool {
-        return reachabilityManager?.isReachable ?? false
+        return currentPath?.status == .satisfied
     }
 
     // MARK: - Initialization
 
     init(
-        reachabilityManager: NetworkReachabilityManager? = NetworkReachabilityManager(),
+        pathMonitor: NWPathMonitor = NWPathMonitor(),
         authService: AuthService = AuthService()
     ) {
-        self.reachabilityManager = reachabilityManager
+        self.pathMonitor = pathMonitor
+        self.monitorQueue = DispatchQueue(label: "com.forday.networkMonitor")
         self.authService = authService
     }
 
@@ -35,14 +39,16 @@ final class NetworkMonitor: NetworkMonitoring {
 
     /// 네트워크 모니터링 시작
     func startMonitoring() {
-        reachabilityManager?.startListening { [weak self] status in
-            self?.handleNetworkStatusChange(status)
+        pathMonitor.pathUpdateHandler = { [weak self] path in
+            self?.currentPath = path
+            self?.handleNetworkStatusChange(path)
         }
+        pathMonitor.start(queue: monitorQueue)
     }
 
     /// 네트워크 모니터링 중지
     func stopMonitoring() {
-        reachabilityManager?.stopListening()
+        pathMonitor.cancel()
     }
 
     /// 서버 상태 확인 (Health Check)
@@ -73,15 +79,23 @@ final class NetworkMonitor: NetworkMonitoring {
 
     // MARK: - Private Methods
 
-    private func handleNetworkStatusChange(_ status: NetworkReachabilityManager.NetworkReachabilityStatus) {
-        switch status {
-        case .notReachable:
+    private func handleNetworkStatusChange(_ path: NWPath) {
+        switch path.status {
+        case .satisfied:
+            if path.usesInterfaceType(.cellular) {
+                print("🟡 [NetworkMonitor] 셀룰러 연결")
+            } else if path.usesInterfaceType(.wifi) {
+                print("🟢 [NetworkMonitor] WiFi 연결")
+            } else if path.usesInterfaceType(.wiredEthernet) {
+                print("🟢 [NetworkMonitor] 유선 연결")
+            } else {
+                print("🟢 [NetworkMonitor] 네트워크 연결됨")
+            }
+        case .unsatisfied:
             print("🔴 [NetworkMonitor] 네트워크 연결 없음")
-        case .reachable(.cellular):
-            print("🟡 [NetworkMonitor] 셀룰러 연결")
-        case .reachable(.ethernetOrWiFi):
-            print("🟢 [NetworkMonitor] WiFi 연결")
-        case .unknown:
+        case .requiresConnection:
+            print("⚪ [NetworkMonitor] 연결 대기 중")
+        @unknown default:
             print("⚪ [NetworkMonitor] 네트워크 상태 알 수 없음")
         }
     }
