@@ -129,6 +129,11 @@ final class ToastView: UIView {
             }
         }
     }
+    
+    /// 성공 토스트 표시 (아이콘 없음, 하단 표시)
+    static func showSuccess(message: String, duration: TimeInterval = 3.0) {
+        show(message: message, icon: .none, position: .bottom, duration: duration)
+    }
 
     /// 에러 토스트 표시 (아이콘 없음, 하단 표시)
     static func showError(message: String, duration: TimeInterval = 3.0) {
