@@ -242,8 +242,15 @@ extension StoriesViewController: StoriesPinterestLayoutDelegate {
             // 이미지 URL은 있지만 크기가 아직 캐시되지 않은 경우 기본 비율 사용
             thumbnailHeight = cellWidth * 1.0  // 1:1 기본 비율
         } else {
-            // 그라데이션 모드: 최소 높이 사용
-            thumbnailHeight = 117
+            // 그라데이션 모드: memo 유무에 따라 높이 결정
+            let hasMemo = story.memo != nil && !story.memo!.isEmpty
+            if hasMemo {
+                // memo 있음: 정방형 (1:1)
+                thumbnailHeight = cellWidth
+            } else {
+                // memo 없음: 4:3 비율 (156:117)
+                thumbnailHeight = cellWidth * 0.75
+            }
         }
 
         // 썸네일 높이 클램프 (min 117, max 280으로 범위 확대)

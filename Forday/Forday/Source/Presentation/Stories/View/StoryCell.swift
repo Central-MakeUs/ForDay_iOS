@@ -82,6 +82,10 @@ final class StoryCell: UICollectionViewCell {
 
         // Reset great button state
         greatButton.layer.borderColor = UIColor.stroke001.cgColor
+
+        // Reset memo visibility
+        quoteIconImageView.isHidden = false
+        memoLabel.isHidden = false
     }
 
     override func layoutSubviews() {
@@ -143,6 +147,11 @@ final class StoryCell: UICollectionViewCell {
         pendingGradient = gradient
 
         gradientContainerView.layer.sublayers?.removeAll(where: { $0 is CAGradientLayer })
+
+        // memo가 없거나 비어있으면 인용부호와 메모 라벨 숨김
+        let hasMemo = memo != nil && !memo!.isEmpty
+        quoteIconImageView.isHidden = !hasMemo
+        memoLabel.isHidden = !hasMemo
         memoLabel.text = memo ?? ""
 
         DispatchQueue.main.async { [weak self] in
