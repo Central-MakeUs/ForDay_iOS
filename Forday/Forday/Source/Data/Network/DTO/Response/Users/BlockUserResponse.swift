@@ -15,6 +15,7 @@ extension DTO {
     }
 
     struct BlockUserData: Codable {
-        let message: String?
+        let message: String
+        let nickname: String
     }
 }

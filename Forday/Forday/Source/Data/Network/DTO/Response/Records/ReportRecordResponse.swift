@@ -15,6 +15,9 @@ extension DTO {
     }
 
     struct ReportRecordData: Codable {
-        let message: String?
+        let recordId: Int
+        let recordWriterId: String
+        let recordWriterNickname: String
+        let message: String
     }
 }

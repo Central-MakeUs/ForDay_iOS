@@ -108,8 +108,8 @@ extension ReportViewController {
 
                 // Block user if requested
                 if shouldBlock {
-                    let usersService = UsersService()
-                    _ = try await usersService.blockUser(userId: authorUserId)
+                    let friendsService = FriendsService()
+                    _ = try await friendsService.blockUser(userId: authorUserId)
                 }
 
                 await MainActor.run {

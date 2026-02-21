@@ -68,7 +68,7 @@ extension ReportReasonCell {
         }
 
         checkImageView.do {
-            $0.image = .Icon.checkCircle
+            $0.image = .Icon.check
             $0.tintColor = .action001
             $0.contentMode = .scaleAspectFit
             $0.isHidden = true
