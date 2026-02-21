@@ -6,6 +6,7 @@
 //
 
 enum AuthAPI {
+    case healthCheck        /// 서버 상태 확인
     case authValidate       /// 토큰 유효성 검사
     case refreshToken       /// 토큰 재발급
     case logout             /// 로그아웃
@@ -17,6 +18,7 @@ enum AuthAPI {
 
     var endpoint: String {
         switch self {
+        case .healthCheck: return "/health_check"
         case .authValidate: return "/auth/validate"
         case .refreshToken: return "/auth/refresh"
         case .logout: return "/auth/logout"
