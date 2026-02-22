@@ -34,6 +34,7 @@ extension DTO {
         let memo: String?
         let userInfo: StoryUserInfo
         let pressedAweSome: Bool
+        let hobbyName: String?
     }
 
     struct StoryUserInfo: Codable {
@@ -64,7 +65,7 @@ extension DTO.StoriesData {
 extension DTO.StoriesTabInfo {
     func toDomain() -> StoriesTab {
         return StoriesTab(
-            hobbyId: hobbyId,
+            hobbyId: hobbyId,  // Int → Int? 자동 변환
             hobbyName: hobbyName,
             currentHobby: currentHobby
         )
@@ -80,7 +81,8 @@ extension DTO.StoryInfo {
             title: title,
             memo: memo,
             userInfo: userInfo.toDomain(),
-            pressedAwesome: pressedAweSome
+            pressedAwesome: pressedAweSome,
+            hobbyName: hobbyName
         )
     }
 }

@@ -66,18 +66,19 @@ final class StoriesViewModel {
             )
 
             if let result = result {
-                // 탭 정보 설정
-                if !result.tabs.isEmpty {
-                    self.tabs = result.tabs
+                // 탭 정보 설정 (전체 탭 + 취미 탭들)
+                var allTabs = [StoriesTab.allTab]  // 전체 탭을 맨 앞에 추가
+                allTabs.append(contentsOf: result.tabs)
+                self.tabs = allTabs
 
-                    // currentHobby가 true인 탭 찾기
-                    if let currentIndex = result.tabs.firstIndex(where: { $0.currentHobby }) {
-                        self.selectedTabIndex = currentIndex
-                        self.currentHobbyId = result.tabs[currentIndex].hobbyId
-                    } else if let firstTab = result.tabs.first {
-                        self.selectedTabIndex = 0
-                        self.currentHobbyId = firstTab.hobbyId
-                    }
+                // currentHobby가 true인 탭 찾기 (전체 탭 추가로 인해 index +1)
+                if let currentIndex = result.tabs.firstIndex(where: { $0.currentHobby }) {
+                    self.selectedTabIndex = currentIndex + 1  // 전체 탭이 0번이므로 +1
+                    self.currentHobbyId = result.tabs[currentIndex].hobbyId
+                } else {
+                    // 기본값: 전체 탭 선택
+                    self.selectedTabIndex = 0
+                    self.currentHobbyId = nil
                 }
 
                 // 스토리 설정
@@ -104,7 +105,7 @@ final class StoriesViewModel {
         guard index < tabs.count, index != selectedTabIndex else { return }
 
         selectedTabIndex = index
-        currentHobbyId = tabs[index].hobbyId
+        currentHobbyId = tabs[index].hobbyId  // 전체 탭이면 nil
 
         // 필터 초기화 및 스토리 다시 로드
         selectedFilterType = .all
@@ -204,7 +205,8 @@ final class StoriesViewModel {
                 title: story.title,
                 memo: story.memo,
                 userInfo: story.userInfo,
-                pressedAwesome: !isCurrentlyPressed
+                pressedAwesome: !isCurrentlyPressed,
+                hobbyName: story.hobbyName
             )
             updatedStories[index] = updatedStory
             self.stories = updatedStories

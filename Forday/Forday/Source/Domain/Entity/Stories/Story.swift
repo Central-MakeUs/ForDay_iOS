@@ -15,6 +15,7 @@ struct Story {
     let memo: String?
     let userInfo: StoryUserInfo
     let pressedAwesome: Bool
+    let hobbyName: String?
 }
 
 struct StoryUserInfo {
