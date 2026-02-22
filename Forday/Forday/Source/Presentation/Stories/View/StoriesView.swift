@@ -114,6 +114,11 @@ final class StoriesView: UIView {
         // Show skeleton
         skeletonContainerView.isHidden = false
 
+        // 탭 전환 시 segment control이 스켈레톤 위에 보이도록
+        if !includeTabs {
+            bringSubviewToFront(tabSegmentControl)
+        }
+
         // Start animations
         startSkeletonAnimations()
     }
