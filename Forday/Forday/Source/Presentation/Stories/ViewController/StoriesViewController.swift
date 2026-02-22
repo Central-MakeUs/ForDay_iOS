@@ -141,12 +141,22 @@ extension StoriesViewController {
             }
             .store(in: &cancellables)
 
-        // Loading
+        // Loading - 스켈레톤 표시 (pull-to-refresh 제외)
         viewModel.$isLoading
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isLoading in
-                if !isLoading {
-                    self?.storiesView.endRefreshing()
+                guard let self = self else { return }
+
+                if isLoading {
+                    // pull-to-refresh가 아닌 경우에만 스켈레톤 표시
+                    if !self.storiesView.isRefreshing {
+                        // 탭이 이미 로드됐으면 탭 전환 (탭 유지), 아니면 초기 로딩 (탭도 스켈레톤)
+                        let isInitialLoad = self.viewModel.tabs.isEmpty
+                        self.storiesView.showSkeleton(includeTabs: isInitialLoad)
+                    }
+                } else {
+                    self.storiesView.hideSkeleton()
+                    self.storiesView.endRefreshing()
                 }
             }
             .store(in: &cancellables)

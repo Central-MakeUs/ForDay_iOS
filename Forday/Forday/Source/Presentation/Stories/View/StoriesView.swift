@@ -31,6 +31,20 @@ final class StoriesView: UIView {
     // Empty state view
     private let emptyStateView = EmptyStateView()
 
+    // Skeleton Views
+    private let skeletonContainerView = UIView()
+    private let tabSkeleton1 = SkeletonView()
+    private let tabSkeleton2 = SkeletonView()
+    private let tabSkeleton3 = SkeletonView()
+    // Grid skeletons (2 columns, varying heights)
+    private let gridSkeleton1 = SkeletonView()
+    private let gridSkeleton2 = SkeletonView()
+    private let gridSkeleton3 = SkeletonView()
+    private let gridSkeleton4 = SkeletonView()
+    private let gridSkeleton5 = SkeletonView()
+    private let gridSkeleton6 = SkeletonView()
+    private var isSkeletonVisible = false
+
     // MARK: - Initialization
 
     override init(frame: CGRect) {
@@ -54,6 +68,10 @@ final class StoriesView: UIView {
         refreshControl.endRefreshing()
     }
 
+    var isRefreshing: Bool {
+        return refreshControl.isRefreshing
+    }
+
     func showEmptyState(message: String = "아직 등록된 소식이 없어요") {
         emptyStateView.configure(icon: .Icon.emptyBox, message: message, actionTitle: nil)
         emptyStateView.isHidden = false
@@ -70,6 +88,74 @@ final class StoriesView: UIView {
         tabSegmentControl.snp.updateConstraints {
             $0.height.equalTo(showTabs ? 44 : 0)
         }
+    }
+
+    // MARK: - Skeleton
+
+    /// 스켈레톤 표시
+    /// - Parameter includeTabs: true면 탭도 스켈레톤으로 표시 (초기 로딩), false면 탭 유지 (탭 전환)
+    func showSkeleton(includeTabs: Bool = true) {
+        guard !isSkeletonVisible else { return }
+        isSkeletonVisible = true
+
+        // Hide actual content
+        if includeTabs {
+            tabSegmentControl.isHidden = true
+        }
+        filterView.isHidden = true
+        collectionView.isHidden = true
+        emptyStateView.isHidden = true
+
+        // Show/hide tab skeletons based on includeTabs
+        tabSkeleton1.isHidden = !includeTabs
+        tabSkeleton2.isHidden = !includeTabs
+        tabSkeleton3.isHidden = !includeTabs
+
+        // Show skeleton
+        skeletonContainerView.isHidden = false
+
+        // Start animations
+        startSkeletonAnimations()
+    }
+
+    func hideSkeleton() {
+        guard isSkeletonVisible else { return }
+        isSkeletonVisible = false
+
+        // Stop animations
+        stopSkeletonAnimations()
+
+        // Hide skeleton
+        skeletonContainerView.isHidden = true
+
+        // Show actual content
+        collectionView.isHidden = false
+        // tabSegmentControl visibility is controlled by updateTabVisibility
+        // filterView is controlled by its own logic
+    }
+
+    private func startSkeletonAnimations() {
+        tabSkeleton1.startAnimating()
+        tabSkeleton2.startAnimating()
+        tabSkeleton3.startAnimating()
+        gridSkeleton1.startAnimating()
+        gridSkeleton2.startAnimating()
+        gridSkeleton3.startAnimating()
+        gridSkeleton4.startAnimating()
+        gridSkeleton5.startAnimating()
+        gridSkeleton6.startAnimating()
+    }
+
+    private func stopSkeletonAnimations() {
+        tabSkeleton1.stopAnimating()
+        tabSkeleton2.stopAnimating()
+        tabSkeleton3.stopAnimating()
+        gridSkeleton1.stopAnimating()
+        gridSkeleton2.stopAnimating()
+        gridSkeleton3.stopAnimating()
+        gridSkeleton4.stopAnimating()
+        gridSkeleton5.stopAnimating()
+        gridSkeleton6.stopAnimating()
     }
 }
 
@@ -122,6 +208,21 @@ extension StoriesView {
 
         emptyStateView.do {
             $0.isHidden = true
+        }
+
+        // Skeleton styles
+        skeletonContainerView.do {
+            $0.backgroundColor = .neutralWhite
+            $0.isHidden = true
+        }
+
+        [tabSkeleton1, tabSkeleton2, tabSkeleton3].forEach {
+            $0.layer.cornerRadius = 4
+        }
+
+        [gridSkeleton1, gridSkeleton2, gridSkeleton3,
+         gridSkeleton4, gridSkeleton5, gridSkeleton6].forEach {
+            $0.layer.cornerRadius = 8
         }
     }
 
@@ -182,6 +283,95 @@ extension StoriesView {
         emptyStateView.snp.makeConstraints {
             $0.center.equalTo(collectionView)
             $0.leading.trailing.equalToSuperview().inset(40)
+        }
+
+        // Skeleton layout
+        addSubview(skeletonContainerView)
+        skeletonContainerView.addSubview(tabSkeleton1)
+        skeletonContainerView.addSubview(tabSkeleton2)
+        skeletonContainerView.addSubview(tabSkeleton3)
+        skeletonContainerView.addSubview(gridSkeleton1)
+        skeletonContainerView.addSubview(gridSkeleton2)
+        skeletonContainerView.addSubview(gridSkeleton3)
+        skeletonContainerView.addSubview(gridSkeleton4)
+        skeletonContainerView.addSubview(gridSkeleton5)
+        skeletonContainerView.addSubview(gridSkeleton6)
+
+        skeletonContainerView.snp.makeConstraints {
+            $0.top.equalTo(headerView.snp.bottom)
+            $0.leading.trailing.bottom.equalToSuperview()
+        }
+
+        // Tab skeletons
+        tabSkeleton1.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(10)
+            $0.leading.equalToSuperview().offset(20)
+            $0.width.equalTo(60)
+            $0.height.equalTo(24)
+        }
+
+        tabSkeleton2.snp.makeConstraints {
+            $0.centerY.equalTo(tabSkeleton1)
+            $0.leading.equalTo(tabSkeleton1.snp.trailing).offset(16)
+            $0.width.equalTo(70)
+            $0.height.equalTo(24)
+        }
+
+        tabSkeleton3.snp.makeConstraints {
+            $0.centerY.equalTo(tabSkeleton1)
+            $0.leading.equalTo(tabSkeleton2.snp.trailing).offset(16)
+            $0.width.equalTo(50)
+            $0.height.equalTo(24)
+        }
+
+        // Grid skeletons (Pinterest style - 2 columns with varying heights)
+        let gridTop: CGFloat = 56  // tab height + padding
+        let gridSpacing: CGFloat = 8
+        let gridPadding: CGFloat = 20
+        let cellWidth = (UIScreen.main.bounds.width - gridPadding * 2 - gridSpacing) / 2
+
+        // Left column
+        gridSkeleton1.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(gridTop)
+            $0.leading.equalToSuperview().offset(gridPadding)
+            $0.width.equalTo(cellWidth)
+            $0.height.equalTo(cellWidth * 1.2)  // Taller cell
+        }
+
+        gridSkeleton3.snp.makeConstraints {
+            $0.top.equalTo(gridSkeleton1.snp.bottom).offset(gridSpacing)
+            $0.leading.equalTo(gridSkeleton1)
+            $0.width.equalTo(cellWidth)
+            $0.height.equalTo(cellWidth * 0.9)
+        }
+
+        gridSkeleton5.snp.makeConstraints {
+            $0.top.equalTo(gridSkeleton3.snp.bottom).offset(gridSpacing)
+            $0.leading.equalTo(gridSkeleton1)
+            $0.width.equalTo(cellWidth)
+            $0.height.equalTo(cellWidth * 1.1)
+        }
+
+        // Right column
+        gridSkeleton2.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(gridTop)
+            $0.trailing.equalToSuperview().offset(-gridPadding)
+            $0.width.equalTo(cellWidth)
+            $0.height.equalTo(cellWidth * 0.85)  // Shorter cell
+        }
+
+        gridSkeleton4.snp.makeConstraints {
+            $0.top.equalTo(gridSkeleton2.snp.bottom).offset(gridSpacing)
+            $0.trailing.equalTo(gridSkeleton2)
+            $0.width.equalTo(cellWidth)
+            $0.height.equalTo(cellWidth * 1.3)
+        }
+
+        gridSkeleton6.snp.makeConstraints {
+            $0.top.equalTo(gridSkeleton4.snp.bottom).offset(gridSpacing)
+            $0.trailing.equalTo(gridSkeleton2)
+            $0.width.equalTo(cellWidth)
+            $0.height.equalTo(cellWidth * 0.95)
         }
     }
 }
