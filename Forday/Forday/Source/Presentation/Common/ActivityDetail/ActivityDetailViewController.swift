@@ -301,12 +301,12 @@ extension ActivityDetailViewController {
             } catch let appError as AppError {
                 await MainActor.run {
                     print("❌ 대표사진 설정 실패: \(appError)")
-                    handleError(appError)
+                    handleAppError(appError)
                 }
             } catch {
                 await MainActor.run {
                     print("❌ 대표사진 설정 실패: \(error)")
-                    handleError(.unknown(error))
+                    handleAppError(.unknown(error))
                 }
             }
         }
@@ -362,25 +362,15 @@ extension ActivityDetailViewController {
             } catch let appError as AppError {
                 await MainActor.run {
                     print("❌ 활동 기록 삭제 실패: \(appError)")
-                    handleError(appError)
+                    handleAppError(appError)
                 }
             } catch {
                 await MainActor.run {
                     print("❌ 활동 기록 삭제 실패: \(error)")
-                    handleError(.unknown(error))
+                    handleAppError(.unknown(error))
                 }
             }
         }
-    }
-
-    private func handleError(_ error: AppError) {
-        let alert = UIAlertController(
-            title: "오류",
-            message: error.userMessage,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
     }
 
     private func showSuccessAlert(title: String, message: String) {

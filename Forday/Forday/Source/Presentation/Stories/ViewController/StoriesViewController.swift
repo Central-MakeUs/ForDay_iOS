@@ -113,13 +113,17 @@ extension StoriesViewController {
         viewModel.$stories
             .receive(on: DispatchQueue.main)
             .sink { [weak self] stories in
-                self?.storiesView.pinterestLayout.invalidateLayout()
-                self?.storiesView.collectionView.reloadData()
+                guard let self = self else { return }
+                self.storiesView.pinterestLayout.invalidateLayout()
+                self.storiesView.collectionView.reloadData()
 
-                if stories.isEmpty {
-                    self?.storiesView.showEmptyState()
-                } else {
-                    self?.storiesView.hideEmptyState()
+                // 로딩 중일 때는 empty state 표시하지 않음
+                if !self.viewModel.isLoading {
+                    if stories.isEmpty {
+                        self.storiesView.showEmptyState()
+                    } else {
+                        self.storiesView.hideEmptyState()
+                    }
                 }
             }
             .store(in: &cancellables)
@@ -141,23 +145,30 @@ extension StoriesViewController {
             }
             .store(in: &cancellables)
 
-        // Loading - 스켈레톤 표시 (초기 로드 시에만)
+        // Loading - 스켈레톤 표시
         viewModel.$isLoading
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isLoading in
                 guard let self = self else { return }
 
                 if isLoading {
-                    // 초기 로드 시에만 스켈레톤 표시 (탭 전환, pull-to-refresh 제외)
-                    let isInitialLoad = self.viewModel.tabs.isEmpty
-                    if isInitialLoad && !self.storiesView.isRefreshing {
-                        self.storiesView.showSkeleton(includeTabs: true)
+                    // pull-to-refresh가 아닌 경우에만 스켈레톤 표시
+                    if !self.storiesView.isRefreshing {
+                        // 초기 로드: 탭 + 셀 스켈레톤 / 탭 전환: 셀만 스켈레톤
+                        let isInitialLoad = self.viewModel.tabs.isEmpty
+                        self.storiesView.showSkeleton(includeTabs: isInitialLoad)
                     }
                 } else {
                     self.storiesView.hideSkeleton()
                     self.storiesView.endRefreshing()
                     // 스켈레톤 해제 후 탭 가시성 복원
                     self.storiesView.updateTabVisibility(showTabs: self.viewModel.tabs.count > 1)
+                    // 로딩 완료 후 empty state 체크
+                    if self.viewModel.stories.isEmpty {
+                        self.storiesView.showEmptyState()
+                    } else {
+                        self.storiesView.hideEmptyState()
+                    }
                 }
             }
             .store(in: &cancellables)
@@ -167,7 +178,7 @@ extension StoriesViewController {
             .compactMap { $0 }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] error in
-                self?.handleError(error)
+                self?.handleAppError(error)
             }
             .store(in: &cancellables)
 
@@ -190,10 +201,6 @@ extension StoriesViewController {
         Task {
             await viewModel.loadStories(reset: true)
         }
-    }
-
-    private func handleError(_ error: AppError) {
-        ToastView.showError(message: error.userMessage)
     }
 }
 

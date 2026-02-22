@@ -207,7 +207,7 @@ extension MyPageViewController {
             .compactMap { $0 }
             .sink { [weak self] error in
                 print("❌ Error: \(error)")
-                self?.handleError(error)
+                self?.handleAppError(error)
             }
             .store(in: &cancellables)
     }
@@ -454,33 +454,6 @@ extension MyPageViewController {
             print("❌ Logout failed: \(error)")
             showError(error.localizedDescription)
         }
-    }
-
-    private func handleError(_ error: AppError) {
-        let title: String
-        let message = error.userMessage
-        var actions: [UIAlertAction] = []
-
-        switch error {
-        case .network:
-            title = "네트워크 오류"
-            actions.append(UIAlertAction(title: "다시 시도", style: .default) { [weak self] _ in
-                self?.loadMyPageData()
-            })
-            actions.append(UIAlertAction(title: "취소", style: .cancel))
-
-        case .server:
-            title = "오류"
-            actions.append(UIAlertAction(title: "확인", style: .default))
-
-        case .decoding, .unknown:
-            title = "오류"
-            actions.append(UIAlertAction(title: "확인", style: .default))
-        }
-
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        actions.forEach { alert.addAction($0) }
-        present(alert, animated: true)
     }
 
     private func showError(_ message: String) {

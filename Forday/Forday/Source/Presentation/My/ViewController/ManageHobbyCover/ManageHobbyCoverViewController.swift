@@ -117,7 +117,7 @@ class ManageHobbyCoverViewController: UIViewController {
             .compactMap { $0 }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] error in
-                self?.handleError(error)
+                self?.handleAppError(error)
             }
             .store(in: &cancellables)
     }
@@ -141,11 +141,11 @@ class ManageHobbyCoverViewController: UIViewController {
                 }
             } catch let appError as AppError {
                 await MainActor.run {
-                    self.handleError(appError)
+                    self.handleAppError(appError)
                 }
             } catch {
                 await MainActor.run {
-                    self.handleError(.unknown(error))
+                    self.handleAppError(.unknown(error))
                 }
             }
         }
@@ -183,18 +183,6 @@ class ManageHobbyCoverViewController: UIViewController {
     private func handleActivitySelection(for hobby: MyPageHobby) {
         // Enter selection mode
         viewModel.enterSelectionMode(forHobbyId: hobby.hobbyId)
-    }
-
-    // MARK: - Error Handling
-
-    private func handleError(_ error: AppError) {
-        let alert = UIAlertController(
-            title: "오류",
-            message: error.userMessage,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
     }
 }
 
@@ -356,12 +344,12 @@ extension ManageHobbyCoverViewController: PHPickerViewControllerDelegate {
                 } catch let appError as AppError {
                     await MainActor.run {
                         self.pendingGalleryHobbyId = nil
-                        self.handleError(appError)
+                        self.handleAppError(appError)
                     }
                 } catch {
                     await MainActor.run {
                         self.pendingGalleryHobbyId = nil
-                        self.handleError(.unknown(error))
+                        self.handleAppError(.unknown(error))
                     }
                 }
             }

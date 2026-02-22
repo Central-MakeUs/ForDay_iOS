@@ -117,7 +117,7 @@ class EditProfileViewController: UIViewController {
             .compactMap { $0 }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] error in
-                self?.handleError(error)
+                self?.handleAppError(error)
             }
             .store(in: &cancellables)
     }
@@ -149,11 +149,11 @@ class EditProfileViewController: UIViewController {
                 }
             } catch let appError as AppError {
                 await MainActor.run {
-                    self.handleError(appError)
+                    self.handleAppError(appError)
                 }
             } catch {
                 await MainActor.run {
-                    self.handleError(.unknown(error))
+                    self.handleAppError(.unknown(error))
                 }
             }
         }
@@ -169,18 +169,6 @@ class EditProfileViewController: UIViewController {
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = self
         present(picker, animated: true)
-    }
-
-    // MARK: - Error Handling
-
-    private func handleError(_ error: AppError) {
-        let alert = UIAlertController(
-            title: "오류",
-            message: error.userMessage,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
     }
 }
 
