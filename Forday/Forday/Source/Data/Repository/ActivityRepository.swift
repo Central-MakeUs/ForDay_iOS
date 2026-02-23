@@ -25,7 +25,12 @@ final class ActivityRepository: ActivityRepositoryInterface {
         let response = try await activityService.fetchAIRecommendations(hobbyId: hobbyId)
         return response.toDomain()
     }
-    
+
+    func fetchAIActivityItems(hobbyId: Int, type: String = "ALL") async throws -> AIActivityItemsResult {
+        let response = try await activityService.fetchAIActivityItems(hobbyId: hobbyId, type: type)
+        return response.toDomain()
+    }
+
     func fetchActivityList(hobbyId: Int) async throws -> [Activity] {
         let response = try await activityService.fetchActivityList(hobbyId: hobbyId)
         return response.toDomain()

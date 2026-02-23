@@ -14,6 +14,7 @@ enum HobbiesAPI {
     case fetchHomeStickerInfo           /// 홈 스티커판 조회
     case fetchOthersActivities          /// [Version1] 다른 포비들의 활동 조회 (AI 기반)
     case fetchAIRecommendations         /// AI 취미 활동 추천
+    case fetchAIActivityItems           /// AI 추천 활동 리스트 조회
 
     case fetchActivityList(Int)         /// 활동 리스트 조회
     case fetchActivityDropdownList(Int) /// (드롭다운용) 특정 취미의 활동 목록 조회 상위 5개
@@ -48,7 +49,10 @@ enum HobbiesAPI {
 
         case .fetchAIRecommendations:
             return "/hobbies/activities/ai/recommend"
-            
+
+        case .fetchAIActivityItems:
+            return "/activities/ai-recommend/items"
+
         case .fetchActivityList(let hobbyId):
             return "/hobbies/\(hobbyId)/activities/list"
             

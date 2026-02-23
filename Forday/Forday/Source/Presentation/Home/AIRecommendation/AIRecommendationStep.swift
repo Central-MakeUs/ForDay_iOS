@@ -13,4 +13,5 @@ enum AIRecommendationStep {
     case intro
     case loading
     case selection
+    case activityList
 }

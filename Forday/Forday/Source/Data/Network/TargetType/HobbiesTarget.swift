@@ -16,6 +16,7 @@ enum HobbiesTarget {
     case fetchStickerBoard(hobbyId: Int?, page: Int?, size: Int?)
     case fetchOthersActivities(hobbyId: Int)
     case fetchAIRecommendations(hobbyId: Int)
+    case fetchAIActivityItems(hobbyId: Int, type: String)
     case fetchActivityList(hobbyId: Int)
     case fetchActivityDropdownList(hobbyId: Int, size: Int?)
     case createActivities(hobbyId: Int, request: DTO.CreateActivitiesRequest)
@@ -51,7 +52,10 @@ extension HobbiesTarget: BaseTargetType {
             
         case .fetchAIRecommendations:
             return HobbiesAPI.fetchAIRecommendations.endpoint
-            
+
+        case .fetchAIActivityItems:
+            return HobbiesAPI.fetchAIActivityItems.endpoint
+
         case .fetchActivityList(let hobbyId):
             return HobbiesAPI.fetchActivityList(hobbyId).endpoint
             
@@ -103,6 +107,8 @@ extension HobbiesTarget: BaseTargetType {
         case .fetchOthersActivities:
             return .get
         case .fetchAIRecommendations:
+            return .get
+        case .fetchAIActivityItems:
             return .get
         case .fetchActivityList:
             return .get
@@ -169,7 +175,10 @@ extension HobbiesTarget: BaseTargetType {
             
         case .fetchAIRecommendations(let hobbyId):
             return .requestParameters(parameters: ["hobbyId": hobbyId], encoding: URLEncoding.queryString)
-            
+
+        case .fetchAIActivityItems(let hobbyId, let type):
+            return .requestParameters(parameters: ["hobbyId": hobbyId, "type": type], encoding: URLEncoding.queryString)
+
         case .fetchActivityList:
             return .requestPlain
         

@@ -52,7 +52,13 @@ final class ActivityService {
     func fetchAIRecommendations(hobbyId: Int) async throws -> DTO.AIRecommendationResponse {
         return try await provider.request(.fetchAIRecommendations(hobbyId: hobbyId))
     }
-    
+
+    // MARK: - AI 추천 활동 리스트 조회
+
+    func fetchAIActivityItems(hobbyId: Int, type: String = "ALL") async throws -> DTO.AIActivityItemsResponse {
+        return try await provider.request(.fetchAIActivityItems(hobbyId: hobbyId, type: type))
+    }
+
     // MARK: - 활동 목록 조회
 
     func fetchActivityList(hobbyId: Int) async throws -> DTO.ActivityListResponse {
