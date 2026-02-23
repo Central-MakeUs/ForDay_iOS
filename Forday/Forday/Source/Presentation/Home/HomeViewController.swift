@@ -620,7 +620,8 @@ extension HomeViewController {
                 greetingMessage: homeInfo.greetingMessage,
                 userSummaryText: homeInfo.userSummaryText,
                 recommendMessage: homeInfo.recommendMessage,
-                aiCallRemaining: homeInfo.aiCallRemaining
+                aiCallRemaining: homeInfo.aiCallRemaining,
+                aiCallRemainingCount: homeInfo.aiCallRemainingCount
             )
 
             viewModel.homeInfo = updatedHomeInfo
@@ -691,14 +692,18 @@ extension HomeViewController {
     }
 
     private func showAIRecommendationModal() {
-        // AI 호출 횟수 초과 시 토스트 표시
-        if viewModel.homeInfo?.aiCallRemaining == false {
-            ToastView.showError(message: "AI 호출 횟수를 초과하였습니다")
-            return
-        }
+        let aiCallRemainingCount = viewModel.homeInfo?.aiCallRemainingCount ?? 0
 
-        let containerVC = AIRecommendationContainerViewController(viewModel: viewModel)
+        let containerVC = AIRecommendationContainerViewController(
+            viewModel: viewModel,
+            aiCallRemainingCount: aiCallRemainingCount
+        )
         containerVC.modalPresentationStyle = .pageSheet
+
+        // 활동리스트로 이동 콜백
+        containerVC.onNavigateToActivityList = { [weak self] in
+            self?.presentActivityList()
+        }
 
         if let sheet = containerVC.sheetPresentationController {
             sheet.detents = [.medium()]
