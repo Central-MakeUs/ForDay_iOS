@@ -28,12 +28,14 @@ class AIRecommendationContainerViewController: UIViewController {
     private let isFullscreen: Bool
     private let hobbyId: Int?
     private let hobbyName: String?
+    private let aiCallRemainingCount: Int?
 
     // ViewModel (Home에서 사용 시)
     private let viewModel: HomeViewModel?
 
     // UseCase
     private let fetchAIRecommendationsUseCase: FetchAIRecommendationsUseCase
+    private let fetchAIActivityItemsUseCase: FetchAIActivityItemsUseCase
     private let fetchUserProfileUseCase: FetchUserProfileUseCase
 
     // 캐시된 닉네임 (API 호출 후 저장)
@@ -41,26 +43,32 @@ class AIRecommendationContainerViewController: UIViewController {
 
     // AI 추천 결과 (직접 hobbyId 전달 시 사용)
     @Published private var aiRecommendationResult: AIRecommendationResult?
+    @Published private var aiActivityItemsResult: AIActivityItemsResult?
 
     // Views
     private let introView = AIRecommendationIntroView()
     private let loadingView = AIRecommendationLoadingView()
     private var selectionView: AIActivitySelectionView?
+    private var activityListView: AIActivityListView?
 
     // Callbacks
     /// 선택 모드: 선택된 활동 content를 반환 (저장하지 않음)
     var onActivitySelected: ((String) -> Void)?
+    /// 활동 저장 후 ActivityList로 이동 요청
+    var onNavigateToActivityList: (() -> Void)?
 
     // MARK: - Initialization
 
     /// Home에서 사용 (Intro → Loading → Selection, 모달)
-    init(viewModel: HomeViewModel) {
+    init(viewModel: HomeViewModel, aiCallRemainingCount: Int) {
         self.viewModel = viewModel
         self.hobbyId = nil
         self.hobbyName = nil
         self.skipIntro = false
         self.isFullscreen = false
+        self.aiCallRemainingCount = aiCallRemainingCount
         self.fetchAIRecommendationsUseCase = FetchAIRecommendationsUseCase()
+        self.fetchAIActivityItemsUseCase = FetchAIActivityItemsUseCase()
         self.fetchUserProfileUseCase = FetchUserProfileUseCase()
         super.init(nibName: nil, bundle: nil)
     }
@@ -72,7 +80,9 @@ class AIRecommendationContainerViewController: UIViewController {
         self.hobbyName = hobbyName
         self.skipIntro = true
         self.isFullscreen = true
+        self.aiCallRemainingCount = nil
         self.fetchAIRecommendationsUseCase = FetchAIRecommendationsUseCase()
+        self.fetchAIActivityItemsUseCase = FetchAIActivityItemsUseCase()
         self.fetchUserProfileUseCase = FetchUserProfileUseCase()
         super.init(nibName: nil, bundle: nil)
         modalPresentationStyle = .fullScreen
@@ -92,6 +102,9 @@ class AIRecommendationContainerViewController: UIViewController {
             navigationController?.setNavigationBarHidden(true, animated: false)
         }
 
+        // 이전 AI 추천 결과 초기화 (새로운 세션 시작)
+        viewModel?.clearAIRecommendationResult()
+
         setupActions()
         bind()
 
@@ -107,9 +120,14 @@ class AIRecommendationContainerViewController: UIViewController {
 
 extension AIRecommendationContainerViewController {
     private func setupActions() {
-        // Intro View
+        // Intro View - AI 추천받기 버튼
         introView.onAIRecommendTapped = { [weak self] in
             self?.startAIRecommendation()
+        }
+
+        // Intro View - 추천 받은 활동리스트 버튼
+        introView.onActivityListTapped = { [weak self] in
+            self?.showActivityList()
         }
     }
 
@@ -133,6 +151,15 @@ extension AIRecommendationContainerViewController {
                 }
                 .store(in: &cancellables)
         }
+
+        // AI Activity Items 바인딩
+        $aiActivityItemsResult
+            .receive(on: DispatchQueue.main)
+            .compactMap { $0 }
+            .sink { [weak self] result in
+                self?.activityListView?.configure(with: result)
+            }
+            .store(in: &cancellables)
     }
 }
 
@@ -142,6 +169,12 @@ extension AIRecommendationContainerViewController {
 
     private func showIntro() {
         currentStep = .intro
+
+        // Configure intro view with aiCallRemainingCount
+        if let count = aiCallRemainingCount {
+            introView.configure(aiCallRemainingCount: count)
+        }
+
         transitionToView(introView)
     }
 
@@ -172,6 +205,51 @@ extension AIRecommendationContainerViewController {
             Task {
                 await fetchNicknameAndAIRecommendations(hobbyName: resolvedHobbyName)
             }
+        }
+    }
+
+    private func showActivityList() {
+        currentStep = .activityList
+
+        // hobbyId 결정
+        let resolvedHobbyId: Int?
+        if let hobbyId = hobbyId {
+            resolvedHobbyId = hobbyId
+        } else {
+            resolvedHobbyId = viewModel?.currentHobbyId
+        }
+
+        guard let hobbyId = resolvedHobbyId else {
+            showError(NSError(domain: "AIRecommendation", code: -1, userInfo: [NSLocalizedDescriptionKey: "취미 정보를 찾을 수 없습니다."]))
+            return
+        }
+
+        // Create activity list view
+        let listView = AIActivityListView(hobbyId: hobbyId)
+
+        // 저장 완료 시 바텀시트 닫지 않음 (토스트가 뷰 내에서 표시됨)
+        listView.onActivitySaved = {
+            print("✅ AI 추천 활동 저장 완료 (리스트)")
+        }
+
+        // 토스트 "이동하기" 버튼 클릭 시 ActivityList로 이동
+        let navigateCallback = onNavigateToActivityList
+        listView.onNavigateToActivityList = { [weak self] in
+            self?.dismiss(animated: true) {
+                navigateCallback?()
+            }
+        }
+
+        listView.onError = { [weak self] errorMessage in
+            self?.showError(NSError(domain: "AIRecommendation", code: -1, userInfo: [NSLocalizedDescriptionKey: errorMessage]))
+        }
+
+        self.activityListView = listView
+        transitionToView(listView)
+
+        // Fetch AI activity items
+        Task {
+            await fetchAIActivityItems(hobbyId: hobbyId)
         }
     }
 
@@ -228,6 +306,20 @@ extension AIRecommendationContainerViewController {
         }
     }
 
+    private func fetchAIActivityItems(hobbyId: Int) async {
+        do {
+            let result = try await fetchAIActivityItemsUseCase.execute(hobbyId: hobbyId, type: "ALL")
+            await MainActor.run {
+                self.aiActivityItemsResult = result
+            }
+        } catch {
+            await MainActor.run {
+                self.showError(error)
+                self.showIntro()
+            }
+        }
+    }
+
 
     private func showSelection(with result: AIRecommendationResult) {
         // If selectionView exists, update it (refresh case)
@@ -267,9 +359,17 @@ extension AIRecommendationContainerViewController {
             // 저장 모드 (Home에서 사용)
             selectionView = AIActivitySelectionView(result: result, hobbyId: hobbyId, showNavigation: isFullscreen)
 
-            selectionView.onActivitySaved = { [weak self] in
+            // 저장 완료 시 바텀시트 닫지 않음 (토스트가 뷰 내에서 표시됨)
+            selectionView.onActivitySaved = {
                 print("✅ AI 추천 활동 저장 완료")
-                self?.dismiss(animated: true)
+            }
+
+            // 토스트 "이동하기" 버튼 클릭 시 ActivityList로 이동
+            let navigateCallback = onNavigateToActivityList
+            selectionView.onNavigateToActivityList = { [weak self] in
+                self?.dismiss(animated: true) {
+                    navigateCallback?()
+                }
             }
         }
 
@@ -359,6 +459,16 @@ extension AIRecommendationContainerViewController {
                 sheet.preferredCornerRadius = 20
                 sheet.prefersGrabberVisible = true
                 sheet.largestUndimmedDetentIdentifier = .large
+            }
+
+        case .activityList:
+            isModalInPresentation = false
+            if let sheet = sheetPresentationController {
+                sheet.detents = [
+                    .custom(identifier: .init("activityList")) { _ in 670 }
+                ]
+                sheet.preferredCornerRadius = 20
+                sheet.prefersGrabberVisible = true
             }
         }
     }

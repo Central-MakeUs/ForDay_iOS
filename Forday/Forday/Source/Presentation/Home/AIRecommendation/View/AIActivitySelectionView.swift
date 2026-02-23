@@ -76,6 +76,8 @@ class AIActivitySelectionView: UIView {
     var onRefreshTapped: (() -> Void)?
     var onBackTapped: (() -> Void)?
     var onError: ((String) -> Void)?
+    /// 활동 저장 후 ActivityList로 이동
+    var onNavigateToActivityList: (() -> Void)?
 
     // MARK: - Initialization
 
@@ -133,13 +135,16 @@ extension AIActivitySelectionView {
 
         if sentences.count >= 2 {
             titleFirstLineLabel.setTextWithTypography(sentences[0], style: .header18)
+            titleFirstLineLabel.textAlignment = .center
             titleSecondLineLabel.setTextWithTypography(sentences[1], style: .header18)
+            titleSecondLineLabel.textAlignment = .center
             titleSecondLineStackView.isHidden = false
             // 2줄인 경우 두 번째 줄 옆에 info 버튼 배치
             titleSecondLineStackView.addArrangedSubview(infoButton)
         } else {
             // 1문장인 경우 첫 번째 줄만 표시
             titleFirstLineLabel.setTextWithTypography(result.recommendedText, style: .header18)
+            titleFirstLineLabel.textAlignment = .center
             titleSecondLineStackView.isHidden = true
             // 1줄인 경우 첫 번째 줄 옆에 info 버튼 배치
             titleFirstLineStackView.addArrangedSubview(infoButton)
@@ -322,7 +327,7 @@ extension AIActivitySelectionView {
         // Next Button
         nextButton.do {
             var config = UIButton.Configuration.filled()
-            config.title = "다음"
+            config.title = "활동 담기"
             config.baseBackgroundColor = .systemGray4
             config.baseForegroundColor = .white
             config.background.cornerRadius = 12
@@ -711,6 +716,19 @@ extension AIActivitySelectionView {
                 await MainActor.run {
                     // 홈 화면 업데이트를 위한 이벤트 발생
                     AppEventBus.shared.activityRecordCreated.send(hobbyId)
+
+                    // 토스트 표시 (버튼 위에, 이동하기 액션 포함)
+                    ToastView.show(
+                        message: "AI 취미활동을 담았어요.",
+                        icon: .none,
+                        position: .aboveButton(bottomInset: 90),
+                        actionTitle: "이동하기",
+                        duration: 3.0
+                    ) { [weak self] in
+                        self?.onNavigateToActivityList?()
+                    }
+
+                    // 저장 완료 콜백 (바텀시트 닫지 않음)
                     onActivitySaved?()
                 }
             } catch {

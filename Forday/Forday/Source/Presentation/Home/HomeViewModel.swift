@@ -120,6 +120,11 @@ class HomeViewModel {
         return activities
     }
 
+    /// AI 추천 결과 초기화 (새로운 AI 추천 세션 시작 시 호출)
+    func clearAIRecommendationResult() {
+        aiRecommendationResult = nil
+    }
+
     // MARK: - Toast Message Rotation
 
     func startToastMessageRotation() {
