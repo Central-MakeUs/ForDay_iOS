@@ -36,7 +36,6 @@ class PurposeSelectionViewController: BaseOnboardingViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setNavigationTitle("취미 목적")
-        hideNextButton()
         setupCollectionView()
         setupActions()
         bind()
@@ -50,26 +49,20 @@ class PurposeSelectionViewController: BaseOnboardingViewController {
 
     // Actions
 
-    private func autoAdvance() {
+    override func nextButtonTapped() {
         guard let selectedPurpose = viewModel.selectedPurpose else { return }
         guard !isTransitioning else { return }
-
-        // 이전 자동 진행 작업 취소
-        autoAdvanceWorkItem?.cancel()
-
-        // Coordinator에게 데이터 전달
-        viewModel.onPurposeSelected?(selectedPurpose.title)
-
-        // 화면 전환 시작
         startTransition()
+        viewModel.onPurposeSelected?(selectedPurpose.title)
+        coordinator?.next(from: .purpose)
+    }
 
-        // 다음 화면으로 (약간의 딜레이 후)
-        let workItem = DispatchWorkItem { [weak self] in
-            self?.coordinator?.next(from: .purpose)
+    override func backButtonTapped() {
+        // 커스텀 목적도 coordinator에게 전달
+        if let customText = viewModel.customPurposeText {
+            viewModel.onPurposeSelected?(customText)
         }
-        autoAdvanceWorkItem = workItem
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: workItem)
+        navigationController?.popViewController(animated: true)
     }
 }
 
@@ -111,12 +104,19 @@ extension PurposeSelectionViewController {
             }
             .store(in: &cancellables)
 
-        // 선택된 목적 변경 시 CollectionView 업데이트 및 자동 진행
+        // 선택된 목적 변경 시 CollectionView 업데이트
         viewModel.$selectedPurpose
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.purposeView.collectionView.reloadData()
-                self?.autoAdvance()
+            }
+            .store(in: &cancellables)
+
+        // 다음 버튼 활성화 상태 바인딩
+        viewModel.$isNextButtonEnabled
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isEnabled in
+                self?.setNextButtonEnabled(isEnabled)
             }
             .store(in: &cancellables)
     }
@@ -136,14 +136,8 @@ extension PurposeSelectionViewController {
             self.purposeView.updateCustomInputButton(purposeName: purposeText)
             self.purposeView.selectedHobbyCard.setSelected(true)
             self.purposeView.collectionView.reloadData()
-
-            // 화면 전환 시작
-            self.startTransition()
-
-            // 약간의 딜레이 후 다음 화면으로 (autoAdvance와 동일한 타이밍)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
-                self?.coordinator?.next(from: .purpose)
-            }
+            // 입력한 목적을 HobbyCard에 실시간 표시
+            self.updateHobbyCardInfo(purpose: purposeText)
         }
         popup.modalPresentationStyle = .overFullScreen
         popup.modalTransitionStyle = .crossDissolve

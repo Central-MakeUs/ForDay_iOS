@@ -143,11 +143,11 @@ extension PurposeSelectionView {
         customInputButtonView.addSubview(customInputTitleLabel)
         customInputButtonView.addSubview(customInputCheckView)
 
-        // ScrollView
+        // ScrollView (다음 버튼 영역 확보)
         scrollView.snp.makeConstraints {
             $0.top.equalTo(safeAreaLayoutGuide)
             $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(safeAreaLayoutGuide)
+            $0.bottom.equalTo(safeAreaLayoutGuide).offset(-80)
         }
 
         // ContentView

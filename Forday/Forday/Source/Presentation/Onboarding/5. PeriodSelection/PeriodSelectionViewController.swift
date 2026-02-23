@@ -45,7 +45,10 @@ class PeriodSelectionViewController: BaseOnboardingViewController {
         shouldSkipProgressBar = isEditMode
         super.viewDidLoad()
         setNavigationTitle("취미 정보")
-        hideNextButton()
+        // Edit Mode에서는 다음 버튼 숨김 (변경하기 버튼 사용)
+        if isEditMode {
+            hideNextButton()
+        }
         setupCollectionView()
         setupEditMode()
         bind()
@@ -89,34 +92,18 @@ class PeriodSelectionViewController: BaseOnboardingViewController {
 
     // MARK: - Actions
 
-    private func autoAdvance() {
-        // Skip auto-advance in edit mode
-        guard !isEditMode else { return }
-        print("Selected period: \(viewModel.selectedPeriod?.title ?? "None")")
-
-        guard let onboardingCoordinator = coordinator as? OnboardingCoordinator else {
-            return
-        }
+    override func nextButtonTapped() {
+        guard viewModel.selectedPeriod != nil else { return }
+        guard let onboardingCoordinator = coordinator as? OnboardingCoordinator else { return }
         guard !isTransitioning else { return }
 
-        // 이전 자동 진행 작업 취소
-        autoAdvanceWorkItem?.cancel()
-
-        // 화면 전환 시작
         startTransition()
 
         let onboardingData = onboardingCoordinator.getOnboardingData()
-        let viewModel = self.viewModel  // viewModel을 직접 캡처 (weak self 불필요)
 
-        // 약간의 딜레이 후 취미 생성
-        let workItem = DispatchWorkItem {
-            Task { @MainActor in
-                await viewModel.createHobby(with: onboardingData)
-            }
+        Task { @MainActor in
+            await viewModel.createHobby(with: onboardingData)
         }
-        autoAdvanceWorkItem = workItem
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: workItem)
     }
 
     private func handleChangeButtonTapped() {
@@ -202,13 +189,12 @@ extension PeriodSelectionViewController {
             }
             .store(in: &cancellables)
 
-        // 실제 선택이 발생했을 때만 자동 진행 (초기값 무시)
-        viewModel.$selectedPeriod
-            .dropFirst()  // 초기값(nil) 무시
-            .compactMap { $0 }  // nil이 아닐 때만
+        // 다음 버튼 활성화 상태 바인딩 (온보딩 모드에서만)
+        viewModel.$isNextButtonEnabled
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.autoAdvance()
+            .sink { [weak self] isEnabled in
+                guard let self, !self.isEditMode else { return }
+                self.setNextButtonEnabled(isEnabled)
             }
             .store(in: &cancellables)
 

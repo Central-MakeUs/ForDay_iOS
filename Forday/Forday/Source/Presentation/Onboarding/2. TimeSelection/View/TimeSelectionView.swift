@@ -179,11 +179,11 @@ extension TimeSelectionView {
             $0.center.equalToSuperview()
         }
 
-        // ContentView
+        // ContentView (다음 버튼 영역 확보)
         contentView.snp.makeConstraints {
             $0.top.equalTo(safeAreaLayoutGuide)
             $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(safeAreaLayoutGuide)
+            $0.bottom.equalTo(safeAreaLayoutGuide).offset(-80)
             $0.width.equalToSuperview()
         }
 
@@ -240,11 +240,12 @@ extension TimeSelectionView {
         contentView.snp.remakeConstraints {
             if isEditMode {
                 $0.top.equalTo(editNavigationView.snp.bottom)
+                $0.bottom.equalTo(buttonContainerView.snp.top)
             } else {
                 $0.top.equalTo(safeAreaLayoutGuide)
+                $0.bottom.equalTo(safeAreaLayoutGuide).offset(-80)
             }
             $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(isEditMode ? buttonContainerView.snp.top : safeAreaLayoutGuide)
             $0.width.equalToSuperview()
         }
     }
