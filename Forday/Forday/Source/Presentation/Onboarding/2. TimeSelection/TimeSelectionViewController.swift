@@ -150,12 +150,20 @@ extension TimeSelectionViewController {
         timeView.timeSlider.onValueChanged = { [weak self] time in
             self?.viewModel.selectTime(time)
             self?.timeView.selectedHobbyCard.setSelected(true)
-            self?.autoAdvance()
+            // 선택한 시간을 HobbyCard에 실시간 표시
+            self?.timeView.selectedHobbyCard.updateInfo(time: time)
         }
     }
 
     private func bind() {
-        // 슬라이더는 항상 활성화되어 있으므로 바인딩 불필요
+        // 다음 버튼 활성화 상태 바인딩 (온보딩 모드에서만)
+        viewModel.$isNextButtonEnabled
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isEnabled in
+                guard let self, !self.isEditMode else { return }
+                self.setNextButtonEnabled(isEnabled)
+            }
+            .store(in: &cancellables)
     }
 }
 

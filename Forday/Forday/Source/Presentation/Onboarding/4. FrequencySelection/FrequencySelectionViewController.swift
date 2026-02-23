@@ -205,6 +205,17 @@ extension FrequencySelectionViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         viewModel.selectFrequency(at: indexPath.item)
         frequencyView.selectedHobbyCard.setSelected(true)
+
+        // 선택한 빈도를 HobbyCard에 실시간 표시
+        let frequency = viewModel.frequencies[indexPath.item]
+        updateHobbyCardInfo(frequency: "주 \(frequency.count)회")
+    }
+
+    private func updateHobbyCardInfo(frequency: String) {
+        let onboardingData = coordinator?.getOnboardingData()
+        let time = onboardingData?.timeMinutes ?? 0 > 0 ? "\(onboardingData!.timeMinutes)분" : nil
+        let purpose = onboardingData?.purpose.isEmpty == false ? onboardingData?.purpose : nil
+        frequencyView.selectedHobbyCard.updateInfo(time: time, frequency: frequency, purpose: purpose)
     }
 }
 

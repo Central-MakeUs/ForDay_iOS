@@ -253,6 +253,19 @@ extension PeriodSelectionViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         viewModel.selectPeriod(at: indexPath.item)
         periodView.selectedHobbyCard.setSelected(true)
+
+        // 선택한 기간을 HobbyCard에 실시간 표시
+        let period = viewModel.periods[indexPath.item]
+        let periodText = period.type == .fixed ? "66일" : "자율모드"
+        updateHobbyCardInfo(period: periodText)
+    }
+
+    private func updateHobbyCardInfo(period: String) {
+        let onboardingData = coordinator?.getOnboardingData()
+        let time = onboardingData?.timeMinutes ?? 0 > 0 ? "\(onboardingData!.timeMinutes)분" : nil
+        let frequency = onboardingData?.executionCount ?? 0 > 0 ? "주 \(onboardingData!.executionCount)회" : nil
+        let purpose = onboardingData?.purpose.isEmpty == false ? onboardingData?.purpose : nil
+        periodView.selectedHobbyCard.updateInfo(time: time, frequency: frequency, purpose: purpose, period: period)
     }
 }
 

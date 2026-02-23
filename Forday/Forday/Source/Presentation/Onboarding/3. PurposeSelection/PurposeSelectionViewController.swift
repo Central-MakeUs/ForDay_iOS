@@ -175,6 +175,16 @@ extension PurposeSelectionViewController: UICollectionViewDelegate {
         viewModel.selectPurpose(at: indexPath.item)
         purposeView.selectedHobbyCard.setSelected(true)
         purposeView.resetCustomInputButton()
+
+        // 선택한 목적을 HobbyCard에 실시간 표시
+        let purpose = viewModel.purposes[indexPath.item]
+        updateHobbyCardInfo(purpose: purpose.title)
+    }
+
+    private func updateHobbyCardInfo(purpose: String) {
+        let onboardingData = coordinator?.getOnboardingData()
+        let time = onboardingData?.timeMinutes ?? 0 > 0 ? "\(onboardingData!.timeMinutes)분" : nil
+        purposeView.selectedHobbyCard.updateInfo(time: time, purpose: purpose)
     }
 }
 
