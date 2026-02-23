@@ -12,6 +12,8 @@ import Then
 enum ToastPosition {
     case top
     case bottom
+    /// 버튼 위에 표시 (하단에서 지정된 간격만큼 위)
+    case aboveButton(bottomInset: CGFloat)
 }
 
 enum ToastIcon {
@@ -108,6 +110,9 @@ final class ToastView: UIView {
             case .bottom:
                 // safe area bottom + tab bar height(49) + floating button(56) + spacing(16) + extra(16)
                 $0.bottom.equalTo(window.safeAreaLayoutGuide.snp.bottom).offset(-137)
+            case .aboveButton(let bottomInset):
+                // 지정된 간격만큼 하단에서 띄움
+                $0.bottom.equalTo(window.safeAreaLayoutGuide.snp.bottom).offset(-bottomInset)
             }
             $0.leading.equalToSuperview().offset(20)
             $0.trailing.equalToSuperview().offset(-20)
