@@ -50,10 +50,20 @@ class PurposeSelectionViewController: BaseOnboardingViewController {
     // Actions
 
     override func nextButtonTapped() {
-        guard let selectedPurpose = viewModel.selectedPurpose else { return }
         guard !isTransitioning else { return }
+
+        // 선택된 목적 또는 커스텀 입력 텍스트 확인
+        let purposeText: String
+        if let selectedPurpose = viewModel.selectedPurpose {
+            purposeText = selectedPurpose.title
+        } else if let customText = viewModel.customPurposeText, !customText.isEmpty {
+            purposeText = customText
+        } else {
+            return
+        }
+
         startTransition()
-        viewModel.onPurposeSelected?(selectedPurpose.title)
+        viewModel.onPurposeSelected?(purposeText)
         coordinator?.next(from: .purpose)
     }
 
