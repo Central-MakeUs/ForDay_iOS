@@ -20,6 +20,7 @@ extension DTO {
             let userSummaryText: String
             let recommendMessage: String
             let aiCallRemaining: Bool
+            let aiCallRemainingCount: Int
 
             struct InProgressHobby: Codable {
                 let hobbyId: Int
@@ -62,7 +63,8 @@ extension DTO.HomeInfoResponse {
             greetingMessage: data.greetingMessage,
             userSummaryText: data.userSummaryText,
             recommendMessage: data.recommendMessage,
-            aiCallRemaining: data.aiCallRemaining
+            aiCallRemaining: data.aiCallRemaining,
+            aiCallRemainingCount: data.aiCallRemainingCount
         )
     }
 }
