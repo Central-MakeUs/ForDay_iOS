@@ -17,7 +17,21 @@ final class NetworkMonitor: NetworkMonitoring {
     private let monitorQueue: DispatchQueue
     private let authService: AuthService
 
-    private var currentPath: NWPath?
+    private var _currentPath: NWPath?
+    private let pathLock = NSLock()
+
+    private var currentPath: NWPath? {
+        get {
+            pathLock.lock()
+            defer { pathLock.unlock() }
+            return _currentPath
+        }
+        set {
+            pathLock.lock()
+            defer { pathLock.unlock() }
+            _currentPath = newValue
+        }
+    }
 
     /// 네트워크 연결 상태
     var isNetworkReachable: Bool {
