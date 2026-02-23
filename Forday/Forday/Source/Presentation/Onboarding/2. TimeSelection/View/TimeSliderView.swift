@@ -220,12 +220,21 @@ extension TimeSliderView {
     private func setupGesture() {
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
         thumbView.addGestureRecognizer(panGesture)
+
+        // Thumb 위를 탭해도 선택이 되도록 탭 제스처 추가
+        let thumbTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleThumbTap))
+        thumbView.addGestureRecognizer(thumbTapGesture)
     }
 }
 
 // Gesture Handling
 
 extension TimeSliderView {
+    @objc private func handleThumbTap(_ gesture: UITapGestureRecognizer) {
+        // Thumb 위를 탭하면 현재 선택된 값으로 callback 호출
+        onValueChanged?(formattedTime(minutes: timeOptions[selectedIndex]))
+    }
+
     @objc private func handleLabelTap(_ gesture: UITapGestureRecognizer) {
         guard let tappedLabel = gesture.view as? UILabel,
               let index = timeLabels.firstIndex(of: tappedLabel) else { return }
