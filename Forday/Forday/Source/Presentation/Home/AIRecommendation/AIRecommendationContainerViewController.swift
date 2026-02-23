@@ -295,6 +295,63 @@ extension AIRecommendationContainerViewController {
                 }
             }
         } catch {
+            // AI_CALL_LIMIT_EXCEEDED 에러 체크
+            if isAICallLimitExceeded(error) {
+                await handleAICallLimitExceeded()
+            } else {
+                await MainActor.run {
+                    self.showError(error)
+                    if self.skipIntro {
+                        self.dismiss(animated: true)
+                    } else {
+                        self.showIntro()
+                    }
+                }
+            }
+        }
+    }
+
+    /// AI 호출 횟수 초과 에러인지 확인
+    private func isAICallLimitExceeded(_ error: Error) -> Bool {
+        if let appError = error as? AppError,
+           case .server(let serverError) = appError,
+           serverError.errorClassName == "AI_CALL_LIMIT_EXCEEDED" {
+            return true
+        }
+        return false
+    }
+
+    /// AI 호출 횟수 초과 시 최신 추천 목록 가져오기
+    private func handleAICallLimitExceeded() async {
+        guard let hobbyId = hobbyId ?? viewModel?.currentHobbyId else {
+            await MainActor.run {
+                self.showError(NSError(domain: "AIRecommendation", code: -1, userInfo: [NSLocalizedDescriptionKey: "취미 정보를 찾을 수 없습니다."]))
+                if self.skipIntro {
+                    self.dismiss(animated: true)
+                } else {
+                    self.showIntro()
+                }
+            }
+            return
+        }
+
+        do {
+            // 최신 3개 AI 추천 활동 조회
+            let latestResult = try await fetchAIActivityItemsUseCase.execute(hobbyId: hobbyId, type: "LATEST")
+            let convertedResult = latestResult.toAIRecommendationResult()
+
+            await MainActor.run {
+                if self.viewModel != nil {
+                    // Home에서 사용 시 - ViewModel 통해 업데이트
+                    // Note: ViewModel에서는 aiRecommendationResult를 직접 설정할 수 없으므로
+                    // showSelection 직접 호출
+                    self.showSelection(with: convertedResult)
+                } else {
+                    // 직접 hobbyId 전달 시
+                    self.aiRecommendationResult = convertedResult
+                }
+            }
+        } catch {
             await MainActor.run {
                 self.showError(error)
                 if self.skipIntro {
