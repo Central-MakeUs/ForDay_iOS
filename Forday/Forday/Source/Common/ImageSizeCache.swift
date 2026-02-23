@@ -51,12 +51,16 @@ final class ImageSizeCache {
     func prefetchSize(for url: String, completion: ((CGSize?) -> Void)? = nil) {
         // 이미 캐시된 경우
         if let cachedSize = getSize(for: url) {
-            completion?(cachedSize)
+            DispatchQueue.main.async {
+                completion?(cachedSize)
+            }
             return
         }
 
         guard let imageURL = URL(string: url) else {
-            completion?(nil)
+            DispatchQueue.main.async {
+                completion?(nil)
+            }
             return
         }
 
