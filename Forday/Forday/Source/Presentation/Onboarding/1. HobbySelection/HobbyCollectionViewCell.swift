@@ -10,25 +10,20 @@ import UIKit
 import SnapKit
 import Then
 
-private class CellGradientView: UIView {
-    override class var layerClass: AnyClass { CAGradientLayer.self }
-    var gradientLayer: CAGradientLayer { layer as! CAGradientLayer }
-}
-
 class HobbyCollectionViewCell: UICollectionViewCell {
 
     static let identifier = "HobbyCollectionViewCell"
 
     // MARK: - UI Components
 
-    private let backgroundImageView = UIImageView()
-    private let gradientView = CellGradientView()
+    private let iconImageView = UIImageView()
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
     private let checkmarkImageView = UIImageView()
 
     // Skeleton views
     private let skeletonContainerView = UIView()
+    private let iconSkeleton = SkeletonView()
     private let titleSkeleton = SkeletonView()
     private let subtitleSkeleton = SkeletonView()
     private let checkmarkSkeleton = SkeletonView()
@@ -52,14 +47,14 @@ class HobbyCollectionViewCell: UICollectionViewCell {
     // MARK: - Configuration
 
     func configure(with hobby: HobbyCard, isSelected: Bool) {
-        backgroundImageView.image = hobby.imageAsset.image
+        iconImageView.image = hobby.imageAsset.hobbySelectionIcon
         titleLabel.setTextWithTypography(hobby.name, style: .body16)
         subtitleLabel.setTextWithTypography(hobby.description, style: .label12)
-        subtitleLabel.textColor = .neutral50
+        subtitleLabel.textColor = .neutral700
 
         // Selected state
         if isSelected {
-            contentView.layer.borderWidth = 2
+            contentView.layer.borderWidth = 1
             contentView.layer.borderColor = UIColor.action001.cgColor
             checkmarkImageView.image = .Onoff.checkboxTrue
         } else {
@@ -75,41 +70,29 @@ class HobbyCollectionViewCell: UICollectionViewCell {
 extension HobbyCollectionViewCell {
     private func style() {
         contentView.do {
+            $0.backgroundColor = .clear
             $0.layer.cornerRadius = 16
             $0.clipsToBounds = true
             $0.layer.borderWidth = 1
             $0.layer.borderColor = UIColor.stroke001.cgColor
         }
 
-        backgroundImageView.do {
-            $0.contentMode = .scaleAspectFill
-            $0.backgroundColor = .neutral100
-        }
-
-        gradientView.gradientLayer.do {
-            $0.colors = [
-                UIColor.clear.cgColor,
-                UIColor.clear.cgColor,
-                UIColor.black.withAlphaComponent(0.36).cgColor,
-                UIColor.black.withAlphaComponent(0.6).cgColor
-            ]
-            $0.locations = [0.0, 0.50, 0.78, 1.0]
-            $0.startPoint = CGPoint(x: 0.5, y: 0)
-            $0.endPoint = CGPoint(x: 0.5, y: 1)
+        iconImageView.do {
+            $0.contentMode = .scaleAspectFit
         }
 
         titleLabel.do {
-            $0.textColor = .white
+            $0.textColor = .neutral900
             $0.numberOfLines = 1
         }
 
         subtitleLabel.do {
-            $0.textColor = .neutral50
+            $0.textColor = .neutral700
             $0.numberOfLines = 2
         }
 
         checkmarkImageView.do {
-            $0.image = .Onoff.checkboxFalse
+            $0.image = .Onoff.radioFalse
             $0.contentMode = .scaleAspectFit
         }
 
@@ -117,6 +100,10 @@ extension HobbyCollectionViewCell {
         skeletonContainerView.do {
             $0.backgroundColor = .neutral100
             $0.isHidden = true
+        }
+
+        iconSkeleton.do {
+            $0.layer.cornerRadius = 8
         }
 
         titleSkeleton.do {
@@ -133,41 +120,42 @@ extension HobbyCollectionViewCell {
     }
 
     private func layout() {
-        contentView.addSubview(backgroundImageView)
-        contentView.addSubview(gradientView)
+        contentView.addSubview(iconImageView)
         contentView.addSubview(titleLabel)
         contentView.addSubview(subtitleLabel)
         contentView.addSubview(checkmarkImageView)
 
         // Skeleton container
         contentView.addSubview(skeletonContainerView)
+        skeletonContainerView.addSubview(iconSkeleton)
         skeletonContainerView.addSubview(titleSkeleton)
         skeletonContainerView.addSubview(subtitleSkeleton)
         skeletonContainerView.addSubview(checkmarkSkeleton)
 
-        backgroundImageView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
-        }
-
-        gradientView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
+        // 아이콘: 상단 중앙, 60x60
+        iconImageView.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(31)
+            $0.centerX.equalToSuperview()
+            $0.size.equalTo(60)
         }
 
         checkmarkImageView.snp.makeConstraints {
             $0.top.equalToSuperview().offset(9)
             $0.trailing.equalToSuperview().offset(-11)
-            $0.size.equalTo(22)
+            $0.size.equalTo(20)
         }
 
+        // 타이틀: 하단 좌측
         titleLabel.snp.makeConstraints {
             $0.leading.equalToSuperview().offset(9)
-            $0.trailing.equalToSuperview().offset(-11)
+            $0.trailing.equalToSuperview().offset(-9)
             $0.bottom.equalTo(subtitleLabel.snp.top).offset(-4)
         }
 
+        // 서브타이틀: 타이틀 아래
         subtitleLabel.snp.makeConstraints {
             $0.leading.equalToSuperview().offset(9)
-            $0.trailing.equalToSuperview().offset(-11)
+            $0.trailing.equalToSuperview().offset(-9)
             $0.bottom.equalToSuperview().offset(-12)
         }
 
@@ -176,10 +164,16 @@ extension HobbyCollectionViewCell {
             $0.edges.equalToSuperview()
         }
 
+        iconSkeleton.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(31)
+            $0.centerX.equalToSuperview()
+            $0.size.equalTo(60)
+        }
+
         checkmarkSkeleton.snp.makeConstraints {
             $0.top.equalToSuperview().offset(9)
             $0.trailing.equalToSuperview().offset(-11)
-            $0.size.equalTo(22)
+            $0.size.equalTo(20)
         }
 
         titleSkeleton.snp.makeConstraints {
@@ -206,14 +200,14 @@ extension HobbyCollectionViewCell {
         isSkeletonMode = true
 
         // Hide actual content
-        backgroundImageView.isHidden = true
-        gradientView.isHidden = true
+        iconImageView.isHidden = true
         titleLabel.isHidden = true
         subtitleLabel.isHidden = true
         checkmarkImageView.isHidden = true
 
         // Show skeleton
         skeletonContainerView.isHidden = false
+        iconSkeleton.startAnimating()
         titleSkeleton.startAnimating()
         subtitleSkeleton.startAnimating()
         checkmarkSkeleton.startAnimating()
@@ -224,6 +218,7 @@ extension HobbyCollectionViewCell {
         isSkeletonMode = false
 
         // Stop animations
+        iconSkeleton.stopAnimating()
         titleSkeleton.stopAnimating()
         subtitleSkeleton.stopAnimating()
         checkmarkSkeleton.stopAnimating()
@@ -232,8 +227,7 @@ extension HobbyCollectionViewCell {
         skeletonContainerView.isHidden = true
 
         // Show actual content
-        backgroundImageView.isHidden = false
-        gradientView.isHidden = false
+        iconImageView.isHidden = false
         titleLabel.isHidden = false
         subtitleLabel.isHidden = false
         checkmarkImageView.isHidden = false
