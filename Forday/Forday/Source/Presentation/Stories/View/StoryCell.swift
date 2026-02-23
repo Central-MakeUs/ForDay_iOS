@@ -81,7 +81,7 @@ final class StoryCell: UICollectionViewCell {
         gradientContainerView.layer.sublayers?.removeAll(where: { $0 is CAGradientLayer })
 
         // Reset great button state
-        greatButton.layer.borderColor = UIColor.stroke001.cgColor
+        updateGreatButtonState(isPressed: false)
 
         // Reset memo visibility
         quoteIconImageView.isHidden = false
@@ -169,11 +169,9 @@ final class StoryCell: UICollectionViewCell {
     }
 
     private func updateGreatButtonState(isPressed: Bool) {
-        if isPressed {
-            greatButton.layer.borderColor = UIColor.action001.cgColor
-        } else {
-            greatButton.layer.borderColor = UIColor.stroke001.cgColor
-        }
+        guard var config = greatButton.configuration else { return }
+        config.background.strokeColor = isPressed ? .action001 : .stroke001
+        greatButton.configuration = config
     }
 
     // MARK: - Actions
@@ -267,11 +265,14 @@ extension StoryCell {
         }
 
         greatButton.do {
-            $0.setImage(.Reaction.great, for: .normal)
-            $0.backgroundColor = .neutralWhite
-            $0.layer.cornerRadius = 12
-            $0.layer.borderWidth = 1
-            $0.layer.borderColor = UIColor.stroke001.cgColor
+            var config = UIButton.Configuration.plain()
+            config.image = .Reaction.great.resized(to: CGSize(width: 16, height: 16))
+            config.contentInsets = .zero
+            config.background.backgroundColor = .neutralWhite
+            config.background.cornerRadius = 12
+            config.background.strokeWidth = 1
+            config.background.strokeColor = .stroke001
+            $0.configuration = config
         }
     }
 
