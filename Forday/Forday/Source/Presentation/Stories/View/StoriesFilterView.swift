@@ -54,11 +54,19 @@ final class StoriesFilterView: UIView {
 
     private func createFilterButton(for filter: StoryFilterType) -> UIButton {
         let button = UIButton(type: .system)
-        button.setTitle(filter.displayName, for: .normal)
-        button.titleLabel?.font = TypographyStyle.body14.font
-        button.layer.cornerRadius = 16
-        button.clipsToBounds = true
-        button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
+
+        var config = UIButton.Configuration.filled()
+        config.title = filter.displayName
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+        config.background.cornerRadius = 16
+        config.baseForegroundColor = .neutral600
+        config.baseBackgroundColor = .neutral50
+
+        var titleAttr = AttributedString(filter.displayName)
+        titleAttr.font = TypographyStyle.body14.font
+        config.attributedTitle = titleAttr
+
+        button.configuration = config
 
         button.addAction(UIAction { [weak self] _ in
             self?.handleFilterTapped(filter)
@@ -79,13 +87,10 @@ final class StoriesFilterView: UIView {
             let button = filterButtons[index]
             let isSelected = filter == selectedFilter
 
-            if isSelected {
-                button.backgroundColor = .neutral900
-                button.setTitleColor(.neutralWhite, for: .normal)
-            } else {
-                button.backgroundColor = .neutral50
-                button.setTitleColor(.neutral600, for: .normal)
-            }
+            guard var config = button.configuration else { return }
+            config.baseBackgroundColor = isSelected ? .neutral900 : .neutral50
+            config.baseForegroundColor = isSelected ? .neutralWhite : .neutral600
+            button.configuration = config
         }
     }
 }

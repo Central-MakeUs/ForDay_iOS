@@ -232,8 +232,10 @@ extension AIActivitySelectionView {
 
         // Info Button (터치 영역 24x24, 이미지 16x16 중앙 배치)
         infoButton.do {
-            $0.setImage(.Icon.info, for: .normal)
-            $0.contentEdgeInsets = UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4)
+            var config = UIButton.Configuration.plain()
+            config.image = .Icon.info.resized(to: CGSize(width: 16, height: 16))
+            config.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4)
+            $0.configuration = config
         }
 
         // Tooltip Container (터치 감지용)

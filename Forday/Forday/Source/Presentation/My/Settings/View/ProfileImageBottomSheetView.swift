@@ -54,29 +54,37 @@ extension ProfileImageBottomSheetView {
         }
 
         selectFromAlbumButton.do {
-            $0.backgroundColor = .neutralWhite
-            $0.layer.borderWidth = 1
-            $0.layer.borderColor = UIColor.stroke001.cgColor
-            $0.layer.cornerRadius = 12
+            var config = UIButton.Configuration.filled()
+            config.baseBackgroundColor = .neutralWhite
+            config.baseForegroundColor = .neutral800
+            config.background.cornerRadius = 12
+            config.background.strokeWidth = 1
+            config.background.strokeColor = .stroke001
+            config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
 
-            $0.setTitle("앨범에서 사진 선택", for: .normal)
-            $0.setTitleColor(.neutral800, for: .normal)
-            $0.titleLabel?.font = TypographyStyle.body14.font
+            var titleAttr = AttributedString("앨범에서 사진 선택")
+            titleAttr.font = TypographyStyle.body14.font
+            config.attributedTitle = titleAttr
+
+            $0.configuration = config
             $0.contentHorizontalAlignment = .left
-            $0.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         }
 
         setDefaultImageButton.do {
-            $0.backgroundColor = .neutralWhite
-            $0.layer.borderWidth = 1
-            $0.layer.borderColor = UIColor.stroke001.cgColor
-            $0.layer.cornerRadius = 12
+            var config = UIButton.Configuration.filled()
+            config.baseBackgroundColor = .neutralWhite
+            config.baseForegroundColor = .neutral800
+            config.background.cornerRadius = 12
+            config.background.strokeWidth = 1
+            config.background.strokeColor = .stroke001
+            config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
 
-            $0.setTitle("기본 이미지로 설정", for: .normal)
-            $0.setTitleColor(.neutral800, for: .normal)
-            $0.titleLabel?.font = TypographyStyle.body14.font
+            var titleAttr = AttributedString("기본 이미지로 설정")
+            titleAttr.font = TypographyStyle.body14.font
+            config.attributedTitle = titleAttr
+
+            $0.configuration = config
             $0.contentHorizontalAlignment = .left
-            $0.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         }
     }
 
