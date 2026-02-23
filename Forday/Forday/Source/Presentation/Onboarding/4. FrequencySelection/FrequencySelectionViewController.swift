@@ -45,7 +45,10 @@ class FrequencySelectionViewController: BaseOnboardingViewController {
         shouldSkipProgressBar = isEditMode
         super.viewDidLoad()
         setNavigationTitle("취미 정보")
-        hideNextButton()
+        // Edit Mode에서는 다음 버튼 숨김 (변경하기 버튼 사용)
+        if isEditMode {
+            hideNextButton()
+        }
         setupCollectionView()
         setupEditMode()
         bind()
@@ -89,28 +92,12 @@ class FrequencySelectionViewController: BaseOnboardingViewController {
 
     // MARK: - Actions
 
-    private func autoAdvance() {
-        // Skip auto-advance in edit mode
-        guard !isEditMode else { return }
+    override func nextButtonTapped() {
         guard let selectedFrequency = viewModel.selectedFrequency else { return }
         guard !isTransitioning else { return }
-
-        // 이전 자동 진행 작업 취소
-        autoAdvanceWorkItem?.cancel()
-
-        // Coordinator에게 데이터 전달
-        viewModel.onFrequencySelected?(selectedFrequency.count)
-
-        // 화면 전환 시작
         startTransition()
-
-        // 다음 화면으로 (약간의 딜레이 후)
-        let workItem = DispatchWorkItem { [weak self] in
-            self?.coordinator?.next(from: .frequency)
-        }
-        autoAdvanceWorkItem = workItem
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: workItem)
+        viewModel.onFrequencySelected?(selectedFrequency.count)
+        coordinator?.next(from: .frequency)
     }
 
     private func handleChangeButtonTapped() {
@@ -170,12 +157,20 @@ extension FrequencySelectionViewController {
     }
 
     private func bind() {
-        // 선택된 횟수 변경 시 CollectionView 업데이트 및 자동 진행
+        // 선택된 횟수 변경 시 CollectionView 업데이트
         viewModel.$selectedFrequency
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.frequencyView.collectionView.reloadData()
-                self?.autoAdvance()
+            }
+            .store(in: &cancellables)
+
+        // 다음 버튼 활성화 상태 바인딩 (온보딩 모드에서만)
+        viewModel.$isNextButtonEnabled
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isEnabled in
+                guard let self, !self.isEditMode else { return }
+                self.setNextButtonEnabled(isEnabled)
             }
             .store(in: &cancellables)
     }
@@ -210,6 +205,17 @@ extension FrequencySelectionViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         viewModel.selectFrequency(at: indexPath.item)
         frequencyView.selectedHobbyCard.setSelected(true)
+
+        // 선택한 빈도를 HobbyCard에 실시간 표시
+        let frequency = viewModel.frequencies[indexPath.item]
+        updateHobbyCardInfo(frequency: "주 \(frequency.count)회")
+    }
+
+    private func updateHobbyCardInfo(frequency: String) {
+        let onboardingData = coordinator?.getOnboardingData()
+        let time = onboardingData?.timeMinutes ?? 0 > 0 ? "\(onboardingData!.timeMinutes)분" : nil
+        let purpose = onboardingData?.purpose.isEmpty == false ? onboardingData?.purpose : nil
+        frequencyView.selectedHobbyCard.updateInfo(time: time, frequency: frequency, purpose: purpose)
     }
 }
 

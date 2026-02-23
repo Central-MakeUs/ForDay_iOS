@@ -44,7 +44,7 @@ class SelectedHobbyCardView: UIView {
         updateCheckmarkColor(isSelected: false)
     }
 
-    func updateInfo(time: String? = nil, frequency: String? = nil, purpose: String? = nil) {
+    func updateInfo(time: String? = nil, frequency: String? = nil, purpose: String? = nil, period: String? = nil) {
         // 기존 infoStackView의 arrangedSubviews 제거
         infoStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
 
@@ -60,6 +60,10 @@ class SelectedHobbyCardView: UIView {
 
         if let frequency = frequency, !frequency.isEmpty {
             infoItems.append(frequency)
+        }
+
+        if let period = period, !period.isEmpty {
+            infoItems.append(period)
         }
 
         // 정보가 있으면 infoStackView 표시

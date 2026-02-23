@@ -144,4 +144,31 @@ enum HobbyImageAsset: String, Codable {
                 .Hobbyicon.default
         }
     }
+
+    var hobbySelectionIcon: UIImage {
+        switch self {
+        case .drawing:
+                .HobbySelectionIcon.drawing
+        case .gym:
+                .HobbySelectionIcon.gym
+        case .reading:
+                .HobbySelectionIcon.reading
+        case .music:
+                .HobbySelectionIcon.listeningmusic
+        case .running:
+                .HobbySelectionIcon.running
+        case .cooking:
+                .HobbySelectionIcon.cooking
+        case .cafe:
+                .HobbySelectionIcon.cafe
+        case .movie:
+                .HobbySelectionIcon.watchingmovie
+        case .photo:
+                .HobbySelectionIcon.pictures
+        case .writing:
+                .HobbySelectionIcon.writing
+        case .default:
+                .HobbySelectionIcon.cafe
+        }
+    }
 }

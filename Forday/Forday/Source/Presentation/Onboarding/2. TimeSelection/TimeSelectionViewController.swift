@@ -45,7 +45,10 @@ class TimeSelectionViewController: BaseOnboardingViewController {
         shouldSkipProgressBar = isEditMode
         super.viewDidLoad()
         setNavigationTitle("취미 시간")
-        hideNextButton()
+        // Edit Mode에서는 다음 버튼 숨김 (변경하기 버튼 사용)
+        if isEditMode {
+            hideNextButton()
+        }
         setupHobbyCard()
         setupSlider()
         setupEditMode()
@@ -101,25 +104,12 @@ class TimeSelectionViewController: BaseOnboardingViewController {
 
     // MARK: - Actions
 
-    private func autoAdvance() {
-        // Skip auto-advance in edit mode
-        guard !isEditMode else { return }
+    override func nextButtonTapped() {
         guard viewModel.selectedTime != nil else { return }
         guard !isTransitioning else { return }
-
-        // 이전 자동 진행 작업 취소
-        autoAdvanceWorkItem?.cancel()
-
-        // 화면 전환 시작
+        guard coordinator != nil else { return }
         startTransition()
-
-        // 다음 화면으로 (약간의 딜레이 후)
-        let workItem = DispatchWorkItem { [weak self] in
-            self?.coordinator?.next(from: .time)
-        }
-        autoAdvanceWorkItem = workItem
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: workItem)
+        coordinator?.next(from: .time)
     }
 
     private func handleChangeButtonTapped() {
@@ -161,12 +151,20 @@ extension TimeSelectionViewController {
         timeView.timeSlider.onValueChanged = { [weak self] time in
             self?.viewModel.selectTime(time)
             self?.timeView.selectedHobbyCard.setSelected(true)
-            self?.autoAdvance()
+            // 선택한 시간을 HobbyCard에 실시간 표시
+            self?.timeView.selectedHobbyCard.updateInfo(time: time)
         }
     }
 
     private func bind() {
-        // 슬라이더는 항상 활성화되어 있으므로 바인딩 불필요
+        // 다음 버튼 활성화 상태 바인딩 (온보딩 모드에서만)
+        viewModel.$isNextButtonEnabled
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isEnabled in
+                guard let self, !self.isEditMode else { return }
+                self.setNextButtonEnabled(isEnabled)
+            }
+            .store(in: &cancellables)
     }
 }
 

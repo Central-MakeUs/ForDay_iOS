@@ -44,13 +44,13 @@ class PurposeOptionCell: UICollectionViewCell {
             containerView.backgroundColor = .neutralWhite
             containerView.layer.borderColor = UIColor.action001.cgColor
             containerView.layer.borderWidth = 2
-            radioImageView.image = .Icon.checkCircle
+            radioImageView.image = .Onoff.checkboxTrue
             radioImageView.tintColor = .action001
         } else {
             containerView.backgroundColor = .neutralWhite
             containerView.layer.borderColor = UIColor.stroke001.cgColor
             containerView.layer.borderWidth = 1
-            radioImageView.image = UIImage(systemName: "circle")
+            radioImageView.image = .Onoff.checkboxFalse
             radioImageView.tintColor = .neutral400
         }
     }
