@@ -18,7 +18,8 @@ final class StoriesPinterestLayout: UICollectionViewLayout {
     weak var delegate: StoriesPinterestLayoutDelegate?
 
     private let numberOfColumns = 2
-    private let cellPadding: CGFloat = 8
+    private let horizontalPadding: CGFloat = 8
+    private let verticalPadding: CGFloat = 20
 
     private var cache: [UICollectionViewLayoutAttributes] = []
 
@@ -53,7 +54,7 @@ final class StoriesPinterestLayout: UICollectionViewLayout {
             let shortestColumn = yOffset.enumerated().min(by: { $0.element < $1.element })?.offset ?? 0
 
             let itemHeight = delegate?.collectionView(collectionView, heightForItemAt: indexPath) ?? 180
-            let height = cellPadding + itemHeight
+            let height = verticalPadding + itemHeight
 
             let frame = CGRect(
                 x: xOffset[shortestColumn],
@@ -62,7 +63,7 @@ final class StoriesPinterestLayout: UICollectionViewLayout {
                 height: height
             )
 
-            let insetFrame = frame.insetBy(dx: cellPadding / 2, dy: cellPadding / 2)
+            let insetFrame = frame.insetBy(dx: horizontalPadding / 2, dy: verticalPadding / 2)
 
             let attributes = UICollectionViewLayoutAttributes(forCellWith: indexPath)
             attributes.frame = insetFrame
