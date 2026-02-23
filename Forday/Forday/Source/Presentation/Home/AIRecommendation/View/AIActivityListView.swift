@@ -314,7 +314,8 @@ extension AIActivityListView {
             } catch {
                 await MainActor.run {
                     setSaveButtonEnabled(true)
-                    onError?(error.localizedDescription)
+                    let message = (error as? AppError)?.userMessage ?? error.localizedDescription
+                    onError?(message)
                 }
             }
         }
@@ -380,6 +381,9 @@ extension AIActivityListView {
         itemViews.forEach { $0.removeFromSuperview() }
         itemViews.removeAll()
         selectedItemView = nil
+
+        // Reset save button state
+        setSaveButtonEnabled(false)
 
         // Configure UI
         titleLabel.setTextWithTypography(result.message, style: .header18)

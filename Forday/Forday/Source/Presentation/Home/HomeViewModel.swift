@@ -121,6 +121,7 @@ class HomeViewModel {
     }
 
     /// AI 추천 결과 초기화 (새로운 AI 추천 세션 시작 시 호출)
+    @MainActor
     func clearAIRecommendationResult() {
         aiRecommendationResult = nil
     }

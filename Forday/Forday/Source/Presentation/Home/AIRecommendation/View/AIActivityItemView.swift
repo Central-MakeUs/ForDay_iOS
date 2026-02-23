@@ -188,7 +188,7 @@ extension AIActivityItemView: UITextFieldDelegate {
     func textFieldDidEndEditing(_ textField: UITextField) {
         textField.isUserInteractionEnabled = false
 
-        // Update item content
+        // Update item content or restore original
         if let newContent = textField.text, !newContent.isEmpty {
             item = AIActivityItem(
                 itemId: item.itemId,
@@ -196,6 +196,9 @@ extension AIActivityItemView: UITextFieldDelegate {
                 description: item.description
             )
             onContentEdited?(newContent)
+        } else {
+            // 빈 텍스트인 경우 원본 복원
+            textField.text = item.content
         }
     }
 }
@@ -215,6 +218,7 @@ extension AIActivityItemView {
     }
 
     func getContent() -> String {
-        return contentTextField.text ?? item.content
+        let text = contentTextField.text ?? ""
+        return text.isEmpty ? item.content : text
     }
 }

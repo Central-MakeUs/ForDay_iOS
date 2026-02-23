@@ -86,7 +86,8 @@ extension AIRecommendationIntroView {
         // 추천 받은 활동리스트 버튼
         activityListButton.do {
             var config = UIButton.Configuration.plain()
-            config.baseForegroundColor = .neutral700
+            config.baseForegroundColor = .neutral800
+            config.baseBackgroundColor = .bg003
 
             $0.configuration = config
             $0.setTitleWithTypography("추천 받은 활동리스트", style: .body14)
