@@ -266,8 +266,8 @@ extension StoriesViewController: StoriesPinterestLayoutDelegate {
                 // memo 있음: 정방형 (1:1)
                 thumbnailHeight = cellWidth
             } else {
-                // memo 없음: 4:3 비율 (156:117)
-                thumbnailHeight = cellWidth * 0.75
+                // memo 없음: 더 컴팩트한 비율 (156:102 ≈ 1.53:1)
+                thumbnailHeight = cellWidth * 0.65
             }
         }
 
