@@ -181,6 +181,13 @@ extension PeriodSelectionViewController {
     }
 
     private func bind() {
+        // 취미 생성 성공 시 처리
+        viewModel.onHobbyCreated = { [weak self] hobbyId in
+            guard let self else { return }
+            self.resetTransition()
+            self.coordinator?.next(from: .period)
+        }
+
         // 선택된 기간 변경 시 CollectionView 업데이트
         viewModel.$selectedPeriod
             .receive(on: DispatchQueue.main)

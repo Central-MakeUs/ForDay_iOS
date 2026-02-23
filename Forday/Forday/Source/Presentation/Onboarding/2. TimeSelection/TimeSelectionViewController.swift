@@ -107,6 +107,7 @@ class TimeSelectionViewController: BaseOnboardingViewController {
     override func nextButtonTapped() {
         guard viewModel.selectedTime != nil else { return }
         guard !isTransitioning else { return }
+        guard coordinator != nil else { return }
         startTransition()
         coordinator?.next(from: .time)
     }
