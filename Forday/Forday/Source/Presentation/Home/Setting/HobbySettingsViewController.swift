@@ -62,12 +62,12 @@ class HobbySettingsViewController: UIViewController {
 
         // Add chevron-left dismiss button
         let backButton = UIBarButtonItem(
-            image: UIImage(systemName: "chevron.left"),
+            image: .Icon.chevronLeft,
             style: .plain,
             target: self,
             action: #selector(dismissViewController)
         )
-        backButton.tintColor = .label
+        backButton.tintColor = .neutral900
         navigationItem.leftBarButtonItem = backButton
     }
 

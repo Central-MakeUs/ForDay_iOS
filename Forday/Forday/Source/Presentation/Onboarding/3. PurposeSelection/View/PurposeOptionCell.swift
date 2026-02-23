@@ -41,17 +41,17 @@ class PurposeOptionCell: UICollectionViewCell {
 
         // 선택 상태에 따른 스타일 변경 (라디오 버튼 스타일)
         if isSelected {
-            containerView.backgroundColor = .systemBackground
-            containerView.layer.borderColor = UIColor.systemOrange.cgColor
+            containerView.backgroundColor = .neutralWhite
+            containerView.layer.borderColor = UIColor.action001.cgColor
             containerView.layer.borderWidth = 2
-            radioImageView.image = UIImage(systemName: "checkmark.circle.fill")
-            radioImageView.tintColor = .systemOrange
+            radioImageView.image = .Icon.checkCircle
+            radioImageView.tintColor = .action001
         } else {
-            containerView.backgroundColor = .systemBackground
-            containerView.layer.borderColor = UIColor.systemGray5.cgColor
+            containerView.backgroundColor = .neutralWhite
+            containerView.layer.borderColor = UIColor.stroke001.cgColor
             containerView.layer.borderWidth = 1
             radioImageView.image = UIImage(systemName: "circle")
-            radioImageView.tintColor = .systemGray4
+            radioImageView.tintColor = .neutral400
         }
     }
 }
@@ -61,27 +61,27 @@ class PurposeOptionCell: UICollectionViewCell {
 extension PurposeOptionCell {
     private func style() {
         containerView.do {
-            $0.backgroundColor = .systemBackground
+            $0.backgroundColor = .neutralWhite
             $0.layer.cornerRadius = 12
             $0.layer.borderWidth = 1
-            $0.layer.borderColor = UIColor.systemGray5.cgColor
+            $0.layer.borderColor = UIColor.stroke001.cgColor
         }
-        
+
         radioImageView.do {
             $0.contentMode = .scaleAspectFit
-            $0.tintColor = .systemGray4
+            $0.tintColor = .neutral400
             $0.image = UIImage(systemName: "circle")
         }
-        
+
         titleLabel.do {
-            $0.font = .systemFont(ofSize: 18, weight: .bold)
-            $0.textColor = .label
+            $0.font = TypographyStyle.header18.font
+            $0.textColor = .neutral900
             $0.numberOfLines = 0
         }
-        
+
         subtitleLabel.do {
-            $0.font = .systemFont(ofSize: 13, weight: .regular)
-            $0.textColor = .secondaryLabel
+            $0.font = TypographyStyle.body14.font
+            $0.textColor = .neutral600
             $0.numberOfLines = 0
         }
     }

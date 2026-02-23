@@ -63,7 +63,7 @@ extension UsersTarget: BaseTargetType {
             return .get
         }
     }
-    
+
     var task: Moya.Task {
         switch self {
         case .nicknameAvailability(let nickname):
@@ -118,6 +118,4 @@ extension UsersTarget: BaseTargetType {
             return .requestParameters(parameters: parameters, encoding: URLEncoding.default)
         }
     }
-    
-    
 }

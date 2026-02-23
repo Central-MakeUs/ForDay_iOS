@@ -70,9 +70,16 @@ final class StoriesTabSegmentControl: UIView {
 
     private func createTabButton(for tab: StoriesTab, at index: Int) -> UIButton {
         let button = UIButton(type: .system)
-        button.setTitle(tab.hobbyName, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+
+        var config = UIButton.Configuration.plain()
+        config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+        config.baseForegroundColor = .neutral400
+
+        var titleAttr = AttributedString(tab.hobbyName)
+        titleAttr.font = TypographyStyle.header16.font
+        config.attributedTitle = titleAttr
+
+        button.configuration = config
 
         button.addAction(UIAction { [weak self] _ in
             self?.handleTabTapped(at: index)
@@ -92,11 +99,9 @@ final class StoriesTabSegmentControl: UIView {
         tabButtons.enumerated().forEach { index, button in
             let isSelected = index == selectedIndex
 
-            if isSelected {
-                button.setTitleColor(.neutral900, for: .normal)
-            } else {
-                button.setTitleColor(.neutral400, for: .normal)
-            }
+            guard var config = button.configuration else { return }
+            config.baseForegroundColor = isSelected ? .neutral900 : .neutral400
+            button.configuration = config
         }
     }
 
@@ -146,7 +151,7 @@ final class StoriesTabSegmentControl: UIView {
 
 extension StoriesTabSegmentControl {
     private func style() {
-        backgroundColor = .systemBackground
+        backgroundColor = .neutralWhite
 
         scrollView.do {
             $0.showsHorizontalScrollIndicator = false

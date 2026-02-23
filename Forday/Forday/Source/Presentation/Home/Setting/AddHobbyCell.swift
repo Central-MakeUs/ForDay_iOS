@@ -55,7 +55,7 @@ class AddHobbyCell: UITableViewCell {
 
         // Plus Icon
         plusIconView.do {
-            $0.image = UIImage(systemName: "plus.circle")
+            $0.image = .Icon.plus
             $0.tintColor = .neutral600
             $0.contentMode = .scaleAspectFit
         }
@@ -69,7 +69,7 @@ class AddHobbyCell: UITableViewCell {
 
         // Chevron
         chevronIconView.do {
-            $0.image = UIImage(systemName: "chevron.right")
+            $0.image = .Icon.chevronRight
             $0.tintColor = .neutral400
             $0.contentMode = .scaleAspectFit
         }

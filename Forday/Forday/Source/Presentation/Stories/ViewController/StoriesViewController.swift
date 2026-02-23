@@ -12,22 +12,11 @@ import Combine
 
 final class StoriesViewController: UIViewController {
 
-    // MARK: - UI Components
-
-    private let searchBar = StoriesSearchBar()
-    private let tabSegmentControl = StoriesTabSegmentControl()
-    private let filterView = StoriesFilterView()
-
-    private lazy var collectionView: UICollectionView = {
-        let layout = StoriesPinterestLayout()
-        layout.delegate = self
-        let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        return cv
-    }()
-
-    private let refreshControl = UIRefreshControl()
-
     // MARK: - Properties
+
+    private var storiesView: StoriesView {
+        return view as! StoriesView
+    }
 
     private let viewModel: StoriesViewModel
     private var cancellables = Set<AnyCancellable>()
@@ -47,79 +36,66 @@ final class StoriesViewController: UIViewController {
 
     // MARK: - Lifecycle
 
+    override func loadView() {
+        view = StoriesView()
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupUI()
-        setupBindings()
+        setupNavigationBar()
         setupCollectionView()
+        setupCallbacks()
+        setupBindings()
+    }
 
-        // Load initial data
-        Task {
-            await viewModel.loadTabs()
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+
+        // Load initial data on first appearance
+        if viewModel.tabs.isEmpty {
+            loadInitialData()
         }
     }
 
-    // MARK: - Setup
+    // MARK: - Private Methods
 
-    private func setupUI() {
-        view.backgroundColor = .systemBackground
+    private func loadInitialData() {
+        Task {
+            await viewModel.loadInitialData()
+        }
+    }
+}
+
+// MARK: - Setup
+
+extension StoriesViewController {
+    private func setupNavigationBar() {
         navigationController?.setNavigationBarHidden(true, animated: false)
-
-        view.addSubview(searchBar)
-        view.addSubview(tabSegmentControl)
-        view.addSubview(filterView)
-        view.addSubview(collectionView)
-
-        searchBar.snp.makeConstraints {
-            $0.top.equalTo(view.safeAreaLayoutGuide).offset(12)
-            $0.leading.equalToSuperview().offset(20)
-            $0.trailing.equalToSuperview().offset(-20)
-        }
-
-        tabSegmentControl.snp.makeConstraints {
-            $0.top.equalTo(searchBar.snp.bottom).offset(16)
-            $0.leading.trailing.equalToSuperview()
-            $0.height.equalTo(44)
-        }
-
-        filterView.snp.makeConstraints {
-            $0.top.equalTo(tabSegmentControl.snp.bottom).offset(12)
-            $0.leading.trailing.equalToSuperview()
-            $0.height.equalTo(44)
-        }
-
-        collectionView.snp.makeConstraints {
-            $0.top.equalTo(filterView.snp.bottom).offset(12)
-            $0.leading.trailing.bottom.equalToSuperview()
-        }
-
-        // Setup callbacks
-        searchBar.onTap = { [weak self] in
-            self?.handleSearchBarTapped()
-        }
-
-        tabSegmentControl.onTabSelected = { [weak self] index, tab in
-            self?.viewModel.selectTab(at: index)
-        }
-
-        filterView.onFilterSelected = { [weak self] filter in
-            self?.viewModel.selectFilter(filter)
-        }
-
-        refreshControl.addAction(UIAction { [weak self] _ in
-            self?.handleRefresh()
-        }, for: .valueChanged)
     }
 
     private func setupCollectionView() {
-        collectionView.do {
-            $0.backgroundColor = .systemBackground
-            $0.register(StoryCell.self, forCellWithReuseIdentifier: StoryCell.identifier)
-            $0.delegate = self
-            $0.dataSource = self
-            $0.refreshControl = refreshControl
-            $0.contentInset = UIEdgeInsets(top: 0, left: 12, bottom: 20, right: 12)
+        storiesView.pinterestLayout.delegate = self
+        storiesView.collectionView.delegate = self
+        storiesView.collectionView.dataSource = self
+        storiesView.configureRefreshControl(target: self, action: #selector(handleRefresh))
+    }
+
+    private func setupCallbacks() {
+        // Tab selection
+        storiesView.tabSegmentControl.onTabSelected = { [weak self] index, _ in
+            Task {
+                await self?.viewModel.selectTab(at: index)
+            }
         }
+
+        // TODO: 필터 API 완성 후 활성화
+        // Filter selection
+//        storiesView.filterView.onFilterSelected = { [weak self] filterType in
+//            Task {
+//                await self?.viewModel.selectFilter(filterType)
+//            }
+//        }
     }
 
     private func setupBindings() {
@@ -127,25 +103,72 @@ final class StoriesViewController: UIViewController {
         viewModel.$tabs
             .receive(on: DispatchQueue.main)
             .sink { [weak self] tabs in
-                self?.tabSegmentControl.configure(with: tabs)
+                self?.storiesView.tabSegmentControl.configure(with: tabs)
+                // Hide tabs if only 1 hobby
+                self?.storiesView.updateTabVisibility(showTabs: tabs.count > 1)
             }
             .store(in: &cancellables)
 
         // Stories
         viewModel.$stories
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.collectionView.reloadData()
-                self?.collectionView.collectionViewLayout.invalidateLayout()
+            .sink { [weak self] stories in
+                guard let self = self else { return }
+                self.storiesView.pinterestLayout.invalidateLayout()
+                self.storiesView.collectionView.reloadData()
+
+                // 로딩 중일 때는 empty state 표시하지 않음
+                if !self.viewModel.isLoading {
+                    if stories.isEmpty {
+                        self.storiesView.showEmptyState()
+                    } else {
+                        self.storiesView.hideEmptyState()
+                    }
+                }
             }
             .store(in: &cancellables)
 
-        // Loading
+        // TODO: 필터 API 완성 후 활성화
+        // Selected filter
+//        viewModel.$selectedFilterType
+//            .receive(on: DispatchQueue.main)
+//            .sink { [weak self] filterType in
+//                self?.storiesView.filterView.selectFilter(filterType)
+//            }
+//            .store(in: &cancellables)
+
+        // Selected tab index
+        viewModel.$selectedTabIndex
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] index in
+                self?.storiesView.tabSegmentControl.selectTab(at: index, animated: false)
+            }
+            .store(in: &cancellables)
+
+        // Loading - 스켈레톤 표시
         viewModel.$isLoading
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isLoading in
-                if !isLoading {
-                    self?.refreshControl.endRefreshing()
+                guard let self = self else { return }
+
+                if isLoading {
+                    // pull-to-refresh가 아닌 경우에만 스켈레톤 표시
+                    if !self.storiesView.isRefreshing {
+                        // 초기 로드: 탭 + 셀 스켈레톤 / 탭 전환: 셀만 스켈레톤
+                        let isInitialLoad = self.viewModel.tabs.isEmpty
+                        self.storiesView.showSkeleton(includeTabs: isInitialLoad)
+                    }
+                } else {
+                    self.storiesView.hideSkeleton()
+                    self.storiesView.endRefreshing()
+                    // 스켈레톤 해제 후 탭 가시성 복원
+                    self.storiesView.updateTabVisibility(showTabs: self.viewModel.tabs.count > 1)
+                    // 로딩 완료 후 empty state 체크
+                    if self.viewModel.stories.isEmpty {
+                        self.storiesView.showEmptyState()
+                    } else {
+                        self.storiesView.hideEmptyState()
+                    }
                 }
             }
             .store(in: &cancellables)
@@ -155,32 +178,29 @@ final class StoriesViewController: UIViewController {
             .compactMap { $0 }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] error in
-                self?.handleError(error)
+                self?.handleAppError(error)
+            }
+            .store(in: &cancellables)
+
+        // Image sizes updated - 이미지 크기 프리페치 완료 시 레이아웃 갱신
+        viewModel.$imageSizesUpdated
+            .dropFirst()  // 초기값 무시
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.storiesView.pinterestLayout.invalidateLayout()
+                self?.storiesView.collectionView.reloadData()
             }
             .store(in: &cancellables)
     }
+}
 
-    // MARK: - Actions
+// MARK: - Actions
 
-    private func handleSearchBarTapped() {
-        // TODO: Navigate to search screen (to be implemented)
-        print("Search bar tapped")
-    }
-
-    private func handleRefresh() {
+extension StoriesViewController {
+    @objc private func handleRefresh() {
         Task {
-            await viewModel.refresh()
+            await viewModel.loadStories(reset: true)
         }
-    }
-
-    private func handleError(_ error: AppError) {
-        let alert = UIAlertController(
-            title: "오류",
-            message: error.userMessage,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
     }
 }
 
@@ -201,14 +221,7 @@ extension StoriesViewController: UICollectionViewDataSource {
 
         let story = viewModel.stories[indexPath.item]
         cell.configure(with: story)
-
-        cell.onReactionTapped = { [weak self] in
-            self?.handleReactionTapped(for: story)
-        }
-
-        cell.onUserInfoTapped = { [weak self] in
-            self?.handleUserInfoTapped(for: story)
-        }
+        cell.delegate = self
 
         return cell
     }
@@ -217,18 +230,10 @@ extension StoriesViewController: UICollectionViewDataSource {
 // MARK: - UICollectionViewDelegate
 
 extension StoriesViewController: UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let story = viewModel.stories[indexPath.item]
-        coordinator?.showActivityDetail(activityRecordId: story.recordId)
-    }
-
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         // Pagination: Load more when approaching the end
-        let threshold = max(0, viewModel.stories.count - 5)
-        if indexPath.item >= threshold {
-            Task {
-                await viewModel.loadMore()
-            }
+        Task {
+            await viewModel.loadMoreStoriesIfNeeded(currentIndex: indexPath.item)
         }
     }
 }
@@ -237,40 +242,61 @@ extension StoriesViewController: UICollectionViewDelegate {
 
 extension StoriesViewController: StoriesPinterestLayoutDelegate {
     func collectionView(_ collectionView: UICollectionView, heightForItemAt indexPath: IndexPath) -> CGFloat {
-        // Calculate cell height based on aspect ratio
-        // Cell width = (screen width - padding) / 2
-        let screenWidth: CGFloat = collectionView.bounds.width
-        let padding: CGFloat = 12 * 2 + 8 * 2 // left/right + column spacing
-        let cellWidth: CGFloat = (screenWidth - padding) / 2
+        // 셀 너비 (Pinterest 레이아웃에서 2열 기준)
+        let insets = collectionView.contentInset
+        let availableWidth = collectionView.bounds.width - (insets.left + insets.right)
+        let cellWidth = availableWidth / 2 - 8  // 2열, padding 고려
 
         let story = viewModel.stories[indexPath.item]
 
-        // Image area: aspect ratio 119:128
-        let imageHeight = cellWidth * (128.0 / 119.0)
+        // 썸네일 영역 높이 계산
+        let thumbnailHeight: CGFloat
 
-        // Content area: title (max 2 lines) + user info + padding
-        // Approximate: title ~40pt (2 lines) + spacing 6pt + user info 20pt + padding 16pt
-        let contentHeight: CGFloat = 8 + 40 + 6 + 20 + 8
+        if let imageSize = viewModel.getImageSize(for: story), imageSize.width > 0 {
+            // 캐시된 이미지 크기 기반으로 비율 계산
+            let aspectRatio = imageSize.height / imageSize.width
+            thumbnailHeight = cellWidth * aspectRatio
+        } else if story.thumbnailUrl != nil && !story.thumbnailUrl!.isEmpty {
+            // 이미지 URL은 있지만 크기가 아직 캐시되지 않은 경우 기본 비율 사용
+            thumbnailHeight = cellWidth * 1.0  // 1:1 기본 비율
+        } else {
+            // 그라데이션 모드: memo 유무에 따라 높이 결정
+            let hasMemo = story.memo != nil && !story.memo!.isEmpty
+            if hasMemo {
+                // memo 있음: 정방형 (1:1)
+                thumbnailHeight = cellWidth
+            } else {
+                // memo 없음: 더 컴팩트한 비율 (156:102 ≈ 1.53:1)
+                thumbnailHeight = cellWidth * 0.65
+            }
+        }
 
-        let totalHeight = imageHeight + contentHeight
+        // 썸네일 높이 클램프 (min 117, max 280으로 범위 확대)
+        let clampedThumbnailHeight = max(117, min(280, thumbnailHeight))
 
-        // Clamp to min/max based on design
-        let minHeight: CGFloat = 117
-        let maxHeight: CGFloat = 208
+        // 콘텐츠 영역: 타이틀 (최대 2줄 ~44pt) + 사용자 정보 (24pt) + 간격 (8+4)
+        let contentHeight: CGFloat = 8 + 44 + 4 + 24
 
-        return max(minHeight, min(maxHeight, totalHeight))
+        return clampedThumbnailHeight + contentHeight
     }
 }
 
-// MARK: - Cell Actions
+// MARK: - StoryCellDelegate
 
-extension StoriesViewController {
-    private func handleReactionTapped(for story: Story) {
-        // TODO: Implement reaction toggle using AddReactionUseCase / DeleteReactionUseCase
-        print("Reaction tapped for story: \(story.recordId)")
+extension StoriesViewController: StoryCellDelegate {
+    func storyCellDidTapGreatButton(_ cell: StoryCell, recordId: Int) {
+        Task {
+            await viewModel.toggleGreat(for: recordId)
+        }
     }
 
-    private func handleUserInfoTapped(for story: Story) {
-        coordinator?.showUserProfile(userId: story.userInfo.userId)
+    func storyCellDidTapContent(_ cell: StoryCell, recordId: Int) {
+        coordinator?.showActivityDetail(activityRecordId: recordId)
     }
 }
+
+#Preview {
+      let vc = StoriesViewController()
+      // 목데이터로 테스트
+      return vc
+  } 

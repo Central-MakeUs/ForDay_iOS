@@ -10,6 +10,7 @@ import Foundation
 enum AppError: Error {
     case network(NetworkError)
     case server(ServerError)
+    case auth(AuthError)
     case decoding(DecodingError)
     case unknown(Error)
 
@@ -19,10 +20,31 @@ enum AppError: Error {
             return error.userMessage
         case .server(let error):
             return error.message
+        case .auth(let error):
+            return error.userMessage
         case .decoding:
             return "데이터를 불러오는 중 문제가 발생했습니다."
         case .unknown(let error):
             return error.localizedDescription
+        }
+    }
+}
+
+// MARK: - Auth Errors
+
+enum AuthError: Error {
+    case unauthorized
+    case tokenExpired
+    case loginExpired
+
+    var userMessage: String {
+        switch self {
+        case .unauthorized:
+            return "인증에 실패했습니다."
+        case .tokenExpired:
+            return "세션이 만료되었습니다."
+        case .loginExpired:
+            return "로그인이 만료되었습니다.\n다시 로그인해주세요."
         }
     }
 }

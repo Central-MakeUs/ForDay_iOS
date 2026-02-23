@@ -59,7 +59,7 @@ final class StickerItemView: UIView {
             } else {
                 // Fallback for unknown sticker types
                 imageView.image = UIImage(systemName: "circle.fill")
-                imageView.tintColor = .systemGray
+                imageView.tintColor = .neutral400
             }
         }
     }

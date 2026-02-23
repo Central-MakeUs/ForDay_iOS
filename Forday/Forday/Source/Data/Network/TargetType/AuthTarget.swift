@@ -10,6 +10,7 @@ import Moya
 import Alamofire
 
 enum AuthTarget {
+    case healthCheck
     case kakaoLogin(request: DTO.KakaoLoginRequest)
     case appleLogin(request: DTO.AppleLoginRequest)
     case guestLogin(request: DTO.GuestLoginRequest)
@@ -27,6 +28,8 @@ extension AuthTarget: BaseTargetType {
 
     var path: String {
         switch self {
+        case .healthCheck:
+            return AuthAPI.healthCheck.endpoint
         case .kakaoLogin:
             return AuthAPI.kakaoLogin.endpoint
         case .appleLogin:
@@ -50,7 +53,7 @@ extension AuthTarget: BaseTargetType {
             return .post
         case .switchAccount:
             return .patch
-        case .validateToken:
+        case .healthCheck, .validateToken:
             return .get
         case .withdraw:
             return .delete
@@ -69,7 +72,7 @@ extension AuthTarget: BaseTargetType {
             return .requestJSONEncodable(request)
         case .switchAccount(let request):
             return .requestJSONEncodable(request)
-        case .validateToken, .withdraw:
+        case .healthCheck, .validateToken, .withdraw:
             return .requestPlain
         }
     }

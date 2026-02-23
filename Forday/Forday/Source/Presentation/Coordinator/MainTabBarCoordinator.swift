@@ -47,6 +47,16 @@ class MainTabBarCoordinator: NSObject, Coordinator {
             selectedImage: .Gnb.write
         )
 
+        // 소식 탭
+        let storiesVC = StoriesViewController()
+        storiesVC.coordinator = self
+        storiesVC.tabBarItem = UITabBarItem(
+            title: "소식",
+            image: .Gnb.story,
+            selectedImage: .Gnb.storyFill
+        )
+        let storiesNav = createNavigationController(rootViewController: storiesVC)
+
         // 프로필 탭
         let profileVC = MyPageViewController()
         profileVC.coordinator = self
@@ -59,10 +69,11 @@ class MainTabBarCoordinator: NSObject, Coordinator {
         )
         let profileNav = createNavigationController(rootViewController: profileVC)
 
-        // TabBar 설정 (홈, 작성, 마이)
+        // TabBar 설정 (홈, 작성, 소식, 마이)
         tabBarController.viewControllers = [
             homeNav,
             recordVC,
+            storiesNav,
             profileNav,
         ]
 
@@ -199,8 +210,10 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         let detailVC = ActivityDetailViewController(viewModel: viewModel)
         detailVC.coordinator = self
 
-        // Push to Home navigation stack
-        if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
+        // Push to current navigation stack
+        if let currentNav = tabBarController.selectedViewController as? UINavigationController {
+            currentNav.pushViewController(detailVC, animated: true)
+        } else if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
             homeNav.pushViewController(detailVC, animated: true)
         }
     }
@@ -314,6 +327,10 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
 
     func switchToHomeTab() {
         tabBarController.selectedIndex = 0
+    }
+
+    func switchToStoriesTab() {
+        tabBarController.selectedIndex = 2
     }
 
     func getCurrentNickname() -> String? {

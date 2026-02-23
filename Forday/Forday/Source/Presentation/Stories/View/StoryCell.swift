@@ -2,7 +2,7 @@
 //  StoryCell.swift
 //  Forday
 //
-//  Created by Subeen on 2/1/26.
+//  Created by Subeen on 2/19/26.
 //
 
 import UIKit
@@ -10,11 +10,22 @@ import SnapKit
 import Then
 import Kingfisher
 
+protocol StoryCellDelegate: AnyObject {
+    func storyCellDidTapGreatButton(_ cell: StoryCell, recordId: Int)
+    func storyCellDidTapContent(_ cell: StoryCell, recordId: Int)
+}
+
 final class StoryCell: UICollectionViewCell {
 
     // MARK: - Properties
 
     static let identifier = "StoryCell"
+
+    weak var delegate: StoryCellDelegate?
+    private var recordId: Int?
+
+    // Thumbnail container
+    private let thumbnailContainerView = UIView()
 
     // Image mode views
     private let imageView = UIImageView()
@@ -24,19 +35,19 @@ final class StoryCell: UICollectionViewCell {
     private let quoteIconImageView = UIImageView()
     private let memoLabel = UILabel()
 
-    // Shared sticker image view
+    // Sticker image view
     private let stickerImageView = UIImageView()
-    private let stickerBackgroundView = UIView()
 
-    // Content views
-    private let contentContainerView = UIView()
+    // Info views
     private let titleLabel = UILabel()
-    private let userInfoView = UserInfoView()
-    private let reactionButton = UIButton()
+    private let userInfoStackView = UIStackView()
+    private let profileImageView = UIImageView()
+    private let nicknameLabel = UILabel()
+    private let greatButton = UIButton(type: .custom)
 
-    // Callbacks
-    var onReactionTapped: (() -> Void)?
-    var onUserInfoTapped: (() -> Void)?
+    // Store pending gradient for async application
+    private var pendingGradient: AppGradient?
+    private var isGradientMode: Bool = false
 
     // MARK: - Initialization
 
@@ -44,6 +55,7 @@ final class StoryCell: UICollectionViewCell {
         super.init(frame: frame)
         style()
         layout()
+        setupActions()
     }
 
     required init?(coder: NSCoder) {
@@ -59,81 +71,131 @@ final class StoryCell: UICollectionViewCell {
         stickerImageView.image = nil
         memoLabel.text = nil
         titleLabel.text = nil
+        nicknameLabel.text = nil
+        profileImageView.image = nil
+        pendingGradient = nil
+        isGradientMode = false
+        recordId = nil
 
         // Remove gradient layers
         gradientContainerView.layer.sublayers?.removeAll(where: { $0 is CAGradientLayer })
+
+        // Reset great button state
+        updateGreatButtonState(isPressed: false)
+
+        // Reset memo visibility
+        quoteIconImageView.isHidden = false
+        memoLabel.isHidden = false
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+
+        // Update gradient layer frame when bounds change
+        if isGradientMode,
+           let existingLayer = gradientContainerView.layer.sublayers?.first(where: { $0 is CAGradientLayer }) as? CAGradientLayer {
+            existingLayer.frame = gradientContainerView.bounds
+        }
     }
 
     // MARK: - Configuration
 
     func configure(with story: Story) {
-        // Display sticker image
+        self.recordId = story.recordId
+
+        // Title
+        titleLabel.text = story.title
+
+        // User info
+        nicknameLabel.text = story.userInfo.nickname
+        if let profileUrl = story.userInfo.profileImageUrl, !profileUrl.isEmpty {
+            profileImageView.setImage(with: profileUrl)
+        } else {
+            profileImageView.image = .Icon.defaultProfile
+        }
+
+        // Great button state
+        updateGreatButtonState(isPressed: story.pressedAwesome)
+
+        // Sticker
         if let stickerType = story.stickerType {
             stickerImageView.image = stickerType.image
         }
 
-        // Branch based on thumbnailUrl
+        // Thumbnail or gradient
         if let thumbnailUrl = story.thumbnailUrl, !thumbnailUrl.isEmpty {
-            // Image mode: Show image
             showImageMode(imageUrl: thumbnailUrl)
         } else {
-            // Gradient mode: Show gradient + memo
-            showGradientMode(
-                memo: story.memo,
-                stickerType: story.stickerType
-            )
+            showGradientMode(memo: story.memo, stickerType: story.stickerType)
         }
-
-        // Set title
-        titleLabel.setTextWithTypography(story.title, style: .body14)
-
-        // Set user info
-        userInfoView.configure(
-            profileImageUrl: story.userInfo.profileImageUrl,
-            nickname: story.userInfo.nickname
-        )
-
-        // Set reaction state
-        updateReactionButton(isPressed: story.pressedAwesome)
     }
 
     private func showImageMode(imageUrl: String) {
-        // Show image view, hide gradient views
         imageView.isHidden = false
         gradientContainerView.isHidden = true
+        isGradientMode = false
 
-        // Load image
         imageView.setImage(with: imageUrl)
     }
 
     private func showGradientMode(memo: String?, stickerType: StickerType?) {
-        // Hide image view, show gradient views
+        isGradientMode = true
         imageView.isHidden = true
         gradientContainerView.isHidden = false
 
-        // Apply gradient background
-        if let stickerType = stickerType {
-            gradientContainerView.applyGradient(stickerType.gradient)
-        } else {
-            // Fallback to default gradient if sticker type unknown
-            gradientContainerView.applyGradient(DesignGradient.gradient001)
-        }
+        let gradient = stickerType?.gradient ?? DesignGradient.gradient001
+        pendingGradient = gradient
 
-        // Set memo text (max 2 lines)
+        gradientContainerView.layer.sublayers?.removeAll(where: { $0 is CAGradientLayer })
+
+        // memo가 없거나 비어있으면 인용부호와 메모 라벨 숨김
+        let hasMemo = memo != nil && !memo!.isEmpty
+        quoteIconImageView.isHidden = !hasMemo
+        memoLabel.isHidden = !hasMemo
         memoLabel.text = memo ?? ""
+
+        DispatchQueue.main.async { [weak self] in
+            self?.applyPendingGradientIfNeeded()
+        }
     }
 
-    private func updateReactionButton(isPressed: Bool) {
-        let image: UIImage? = isPressed ? .Reaction.awesome : .Reaction.great
-        reactionButton.setImage(image, for: .normal)
+    private func applyPendingGradientIfNeeded() {
+        guard isGradientMode,
+              let gradient = pendingGradient,
+              gradientContainerView.bounds.width > 0 else { return }
+
+        gradientContainerView.layer.sublayers?.removeAll(where: { $0 is CAGradientLayer })
+        gradientContainerView.applyGradient(gradient)
     }
 
-    @objc private func handleReactionTapped() {
-        onReactionTapped?()
+    private func updateGreatButtonState(isPressed: Bool) {
+        guard var config = greatButton.configuration else { return }
+        config.background.strokeColor = isPressed ? .action001 : .stroke001
+        greatButton.configuration = config
     }
 
-    @objc private func handleUserInfoTapped() {
-        onUserInfoTapped?()
+    // MARK: - Actions
+
+    private func setupActions() {
+        greatButton.addTarget(self, action: #selector(greatButtonTapped), for: .touchUpInside)
+
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(contentTapped))
+        thumbnailContainerView.addGestureRecognizer(tapGesture)
+        thumbnailContainerView.isUserInteractionEnabled = true
+
+        let titleTapGesture = UITapGestureRecognizer(target: self, action: #selector(contentTapped))
+        titleLabel.addGestureRecognizer(titleTapGesture)
+        titleLabel.isUserInteractionEnabled = true
+    }
+
+    @objc private func greatButtonTapped() {
+        guard let recordId = recordId else { return }
+        delegate?.storyCellDidTapGreatButton(self, recordId: recordId)
+    }
+
+    @objc private func contentTapped() {
+        guard let recordId = recordId else { return }
+        delegate?.storyCellDidTapContent(self, recordId: recordId)
     }
 }
 
@@ -141,8 +203,12 @@ final class StoryCell: UICollectionViewCell {
 
 extension StoryCell {
     private func style() {
-        contentView.do {
-            $0.backgroundColor = .systemBackground
+        contentView.backgroundColor = .clear
+
+        thumbnailContainerView.do {
+            $0.layer.cornerRadius = 8
+            $0.layer.borderWidth = 1
+            $0.layer.borderColor = UIColor.stroke001.cgColor
             $0.clipsToBounds = true
         }
 
@@ -157,138 +223,134 @@ extension StoryCell {
         }
 
         quoteIconImageView.do {
-            $0.image = UIImage(systemName: "quote.opening")
-            $0.tintColor = .white.withAlphaComponent(0.6)
+            $0.image = .Icon.quotationMark
             $0.contentMode = .scaleAspectFit
         }
 
         memoLabel.do {
-            $0.font = .systemFont(ofSize: 13, weight: .medium)
-            $0.textColor = .white
+            $0.font = TypographyStyle.label12.font
+            $0.textColor = .neutralWhite
             $0.textAlignment = .left
             $0.numberOfLines = 2
             $0.lineBreakMode = .byTruncatingTail
-        }
-
-        stickerBackgroundView.do {
-            $0.backgroundColor = UIColor.black.withAlphaComponent(0.3)
-            $0.clipsToBounds = true
         }
 
         stickerImageView.do {
             $0.contentMode = .scaleAspectFit
         }
 
-        contentContainerView.do {
-            $0.backgroundColor = .systemBackground
-        }
-
         titleLabel.do {
+            $0.font = TypographyStyle.body16.font
             $0.textColor = .neutral900
             $0.numberOfLines = 2
             $0.lineBreakMode = .byTruncatingTail
         }
 
-        userInfoView.do {
-            $0.onTap = { [weak self] in
-                self?.handleUserInfoTapped()
-            }
+        userInfoStackView.do {
+            $0.axis = .horizontal
+            $0.spacing = 4
+            $0.alignment = .center
         }
 
-        reactionButton.do {
-            $0.tintColor = .neutral600
-            $0.addTarget(self, action: #selector(handleReactionTapped), for: .touchUpInside)
+        profileImageView.do {
+            $0.contentMode = .scaleAspectFill
+            $0.layer.cornerRadius = 12
+            $0.clipsToBounds = true
+            $0.image = .Icon.defaultProfile
+        }
+
+        nicknameLabel.do {
+            $0.font = TypographyStyle.label12.font
+            $0.textColor = .neutral500
+        }
+
+        greatButton.do {
+            var config = UIButton.Configuration.plain()
+            config.image = .Reaction.great.resized(to: CGSize(width: 16, height: 16))
+            config.contentInsets = .zero
+            config.background.backgroundColor = .neutralWhite
+            config.background.cornerRadius = 12
+            config.background.strokeWidth = 1
+            config.background.strokeColor = .stroke001
+            $0.configuration = config
         }
     }
 
     private func layout() {
-        // Image view (for image mode)
-        contentView.addSubview(imageView)
+        contentView.addSubview(thumbnailContainerView)
+        contentView.addSubview(titleLabel)
+        contentView.addSubview(userInfoStackView)
 
-        // Gradient container (for gradient mode)
-        contentView.addSubview(gradientContainerView)
+        thumbnailContainerView.addSubview(imageView)
+        thumbnailContainerView.addSubview(gradientContainerView)
+        thumbnailContainerView.addSubview(stickerImageView)
+
         gradientContainerView.addSubview(quoteIconImageView)
         gradientContainerView.addSubview(memoLabel)
 
-        // Sticker (shared) - background view and image view
-        contentView.addSubview(stickerBackgroundView)
-        stickerBackgroundView.addSubview(stickerImageView)
+        userInfoStackView.addArrangedSubview(profileImageView)
+        userInfoStackView.addArrangedSubview(nicknameLabel)
 
-        // Content container
-        contentView.addSubview(contentContainerView)
-        contentContainerView.addSubview(titleLabel)
-        contentContainerView.addSubview(userInfoView)
-        contentContainerView.addSubview(reactionButton)
+        contentView.addSubview(greatButton)
 
-        // Image view layout
+        // User info stack (bottom anchored, 24pt height)
+        userInfoStackView.snp.makeConstraints {
+            $0.leading.bottom.equalToSuperview()
+            $0.height.equalTo(24)
+        }
+
+        // Profile image
+        profileImageView.snp.makeConstraints {
+            $0.width.height.equalTo(24)
+        }
+
+        // Great button
+        greatButton.snp.makeConstraints {
+            $0.trailing.equalToSuperview()
+            $0.centerY.equalTo(userInfoStackView)
+            $0.width.height.equalTo(24)
+        }
+
+        // Title label (above userInfo)
+        titleLabel.snp.makeConstraints {
+            $0.bottom.equalTo(userInfoStackView.snp.top).offset(-4)
+            $0.leading.trailing.equalToSuperview()
+        }
+
+        // Thumbnail container - fills remaining space above title
+        thumbnailContainerView.snp.makeConstraints {
+            $0.top.leading.trailing.equalToSuperview()
+            $0.bottom.equalTo(titleLabel.snp.top).offset(-8)
+        }
+
+        // Image view
         imageView.snp.makeConstraints {
-            $0.top.leading.trailing.equalToSuperview()
-            $0.height.equalTo(imageView.snp.width).multipliedBy(128.0 / 119.0)  // Aspect ratio
+            $0.edges.equalToSuperview()
         }
 
-        // Gradient container layout
+        // Gradient container
         gradientContainerView.snp.makeConstraints {
-            $0.top.leading.trailing.equalToSuperview()
-            $0.height.equalTo(gradientContainerView.snp.width).multipliedBy(128.0 / 119.0)
+            $0.edges.equalToSuperview()
         }
 
-        // Quote icon layout
+        // Quote icon
         quoteIconImageView.snp.makeConstraints {
             $0.top.equalToSuperview().offset(12)
             $0.leading.equalToSuperview().offset(12)
             $0.width.height.equalTo(16)
         }
 
-        // Memo label layout
+        // Memo label
         memoLabel.snp.makeConstraints {
             $0.top.equalTo(quoteIconImageView.snp.bottom).offset(6)
             $0.leading.equalToSuperview().offset(12)
             $0.trailing.equalToSuperview().offset(-12)
         }
 
-        // Sticker background layout (bottom-right of image area)
-        stickerBackgroundView.snp.makeConstraints {
-            $0.trailing.equalToSuperview().offset(-8)
-            $0.bottom.equalTo(imageView.snp.bottom).offset(-8)
-            $0.width.height.equalTo(36)
-        }
-
-        // Sticker image layout (centered in background)
+        // Sticker
         stickerImageView.snp.makeConstraints {
-            $0.center.equalToSuperview()
-            $0.width.height.equalTo(24)
-        }
-
-        // Content container layout
-        contentContainerView.snp.makeConstraints {
-            $0.top.equalTo(imageView.snp.bottom)
-            $0.leading.trailing.bottom.equalToSuperview()
-        }
-
-        // Title label layout
-        titleLabel.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(8)
-            $0.leading.equalToSuperview().offset(8)
-            $0.trailing.equalToSuperview().offset(-8)
-        }
-
-        // User info view layout
-        userInfoView.snp.makeConstraints {
-            $0.top.equalTo(titleLabel.snp.bottom).offset(6)
-            $0.leading.equalToSuperview().offset(8)
-        }
-
-        // Reaction button layout
-        reactionButton.snp.makeConstraints {
-            $0.centerY.equalTo(userInfoView)
-            $0.trailing.equalToSuperview().offset(-8)
-            $0.width.height.equalTo(20)
-            $0.bottom.lessThanOrEqualToSuperview().offset(-8)
-        }
-
-        // Make sticker background circular after layout
-        DispatchQueue.main.async {
-            self.stickerBackgroundView.layer.cornerRadius = 18
+            $0.bottom.trailing.equalToSuperview().inset(10)
+            $0.width.height.equalTo(40)
         }
     }
 }

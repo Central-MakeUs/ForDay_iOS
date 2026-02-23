@@ -16,7 +16,15 @@ final class AuthService {
     init(provider: MoyaProvider<AuthTarget> = NetworkProvider.createAuthProvider()) {
         self.provider = provider
     }
-    
+
+    // MARK: - Health Check
+
+    /// 서버 상태 확인 (status 200이면 정상)
+    func healthCheck() async throws -> Bool {
+        let response: DTO.HealthCheckResponse = try await provider.request(.healthCheck)
+        return response.status == 200
+    }
+
     // MARK: - Kakao Login
 
     func loginWithKakao(request: DTO.KakaoLoginRequest) async throws -> DTO.LoginResponse {

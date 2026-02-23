@@ -152,7 +152,7 @@ extension ProfileView {
         navigationView.snp.makeConstraints {
             $0.top.equalTo(safeAreaLayoutGuide)
             $0.leading.trailing.equalToSuperview()
-            $0.height.equalTo(56)
+            $0.height.equalTo(56).priority(.high)
         }
 
         titleLabel.snp.makeConstraints {
@@ -174,19 +174,19 @@ extension ProfileView {
 
         scrollContentView.snp.makeConstraints {
             $0.edges.equalToSuperview()
-            $0.width.equalToSuperview()
+            $0.width.equalToSuperview().priority(.high)
         }
 
         headerView.snp.makeConstraints {
             $0.top.equalToSuperview()
             $0.leading.trailing.equalToSuperview()
-            $0.height.equalTo(80)
+            $0.height.equalTo(80).priority(.high)
         }
 
         segmentedControlView.snp.makeConstraints {
             $0.top.equalTo(headerView.snp.bottom)
             $0.leading.trailing.equalToSuperview()
-            $0.height.equalTo(44)
+            $0.height.equalTo(44).priority(.high)
         }
 
         contentContainerView.snp.makeConstraints {

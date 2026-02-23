@@ -61,23 +61,23 @@ extension ActivityInputField {
         
         textField.do {
             $0.placeholder = "포비님의 취미활동을 적어주세요"
-            $0.font = .systemFont(ofSize: 16, weight: .regular)
-            $0.textColor = .label
+            $0.font = TypographyStyle.body16.font
+            $0.textColor = .neutral900
             $0.borderStyle = .none
             $0.delegate = self
             $0.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
         }
-        
+
         deleteButton.do {
-            $0.setImage(UIImage(systemName: "trash"), for: .normal)
-            $0.tintColor = .systemGray3
+            $0.setImage(.Icon.trash, for: .normal)
+            $0.tintColor = .neutral400
             $0.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
         }
-        
+
         characterCountLabel.do {
             $0.text = "0/\(maxCharacterCount)"
-            $0.font = .systemFont(ofSize: 12, weight: .regular)
-            $0.textColor = .systemGray3
+            $0.font = TypographyStyle.label12.font
+            $0.textColor = .neutral400
         }
     }
     
@@ -153,7 +153,7 @@ extension ActivityInputField {
     private func updateCharacterCount() {
         let count = textField.text?.count ?? 0
         characterCountLabel.text = "\(count)/\(maxCharacterCount)"
-        characterCountLabel.textColor = count > maxCharacterCount ? .systemRed : .systemGray3
+        characterCountLabel.textColor = count > maxCharacterCount ? .secondary003 : .neutral400
     }
 }
 

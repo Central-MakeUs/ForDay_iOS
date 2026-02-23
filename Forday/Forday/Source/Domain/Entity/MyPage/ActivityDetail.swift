@@ -25,7 +25,7 @@ struct ActivityDetail {
 }
 
 struct ActivityDetailUserInfo {
-    let userId: Int
+    let userId: String
     let nickname: String
     let profileImageUrl: String?
 }
@@ -36,7 +36,7 @@ struct ActivityDetailUserInfo {
 extension ActivityDetailUserInfo {
     static var preview: ActivityDetailUserInfo {
         ActivityDetailUserInfo(
-            userId: 1,
+            userId: "user-001",
             nickname: "러너",
             profileImageUrl: nil
         )
@@ -44,7 +44,7 @@ extension ActivityDetailUserInfo {
 
     static var previewWithImage: ActivityDetailUserInfo {
         ActivityDetailUserInfo(
-            userId: 2,
+            userId: "user-002",
             nickname: "달리기",
             profileImageUrl: "https://picsum.photos/200/200"
         )

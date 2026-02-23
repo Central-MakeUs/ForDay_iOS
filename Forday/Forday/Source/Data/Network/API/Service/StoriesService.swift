@@ -16,24 +16,21 @@ final class StoriesService {
         self.provider = provider
     }
 
-    /// Stories - 소식 탭 조회
-    func fetchStoriesTabs() async throws -> DTO.StoriesTabsResponse {
-        return try await provider.request(.fetchTabs)
-    }
-
-    /// Stories - 소식 목록 조회
+    /// Stories - 소식 목록 조회 (탭 정보 포함)
     func fetchStories(
         hobbyId: Int?,
         lastRecordId: Int?,
         size: Int,
-        keyword: String?
+        keyword: String?,
+        filterType: StoryFilterType
     ) async throws -> DTO.StoriesResponse {
         return try await provider.request(
             .fetchStories(
                 hobbyId: hobbyId,
                 lastRecordId: lastRecordId,
                 size: size,
-                keyword: keyword
+                keyword: keyword,
+                filterType: filterType
             )
         )
     }

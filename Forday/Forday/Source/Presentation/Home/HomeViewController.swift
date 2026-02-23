@@ -212,7 +212,7 @@ extension HomeViewController {
             .compactMap { $0 }
             .sink { [weak self] error in
                 print("❌ 에러: \(error)")
-                self?.handleError(error)
+                self?.handleAppError(error)
             }
             .store(in: &cancellables)
 
@@ -761,18 +761,6 @@ extension HomeViewController {
         let nav = UINavigationController(rootViewController: inputVC)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
-    }
-
-    // Error Handling
-
-    private func handleError(_ error: AppError) {
-        let alert = UIAlertController(
-            title: "오류",
-            message: error.userMessage,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
     }
 
     // Public Methods
