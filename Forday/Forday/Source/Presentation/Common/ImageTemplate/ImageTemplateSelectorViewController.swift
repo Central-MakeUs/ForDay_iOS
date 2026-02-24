@@ -52,7 +52,6 @@ final class ImageTemplateSelectorViewController: UIViewController {
 extension ImageTemplateSelectorViewController {
     private func setupActions() {
         selectorView.backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
-        selectorView.downloadButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
         selectorView.saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
     }
 
@@ -102,6 +101,15 @@ extension ImageTemplateSelectorViewController {
                 }
             }
             .store(in: &cancellables)
+
+        // Bind settings redirect
+        viewModel.$shouldOpenSettings
+            .receive(on: DispatchQueue.main)
+            .filter { $0 }
+            .sink { [weak self] _ in
+                self?.showPhotoPermissionAlert()
+            }
+            .store(in: &cancellables)
     }
 }
 
@@ -148,5 +156,26 @@ extension ImageTemplateSelectorViewController {
         } else {
             ToastView.showError(message: error.localizedDescription)
         }
+    }
+
+    private func showPhotoPermissionAlert() {
+        let alert = UIAlertController(
+            title: "사진 접근 권한 필요",
+            message: "활동기록 카드를 갤러리에 저장하려면 사진 접근 권한이 필요합니다. 설정에서 권한을 허용해주세요.",
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel) { [weak self] _ in
+            self?.viewModel.resetOpenSettingsState()
+        })
+
+        alert.addAction(UIAlertAction(title: "설정으로 이동", style: .default) { [weak self] _ in
+            self?.viewModel.resetOpenSettingsState()
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsURL)
+            }
+        })
+
+        present(alert, animated: true)
     }
 }

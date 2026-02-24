@@ -42,6 +42,7 @@ final class ImageTemplateSelectorViewModel {
     @Published private(set) var templateImage: UIImage?
     @Published private(set) var isLoading = false
     @Published private(set) var saveResult: Result<Void, Error>?
+    @Published private(set) var shouldOpenSettings = false
 
     // MARK: - Properties
 
@@ -86,14 +87,14 @@ final class ImageTemplateSelectorViewModel {
     func saveToGallery(image: UIImage) {
         isLoading = true
 
-        PHPhotoLibrary.requestAuthorization(for: .addOnly) { [weak self] status in
+        PHPhotoLibrary.requestAuthorization(for: .readWrite) { [weak self] status in
             DispatchQueue.main.async {
                 switch status {
                 case .authorized, .limited:
                     self?.performSave(image: image)
                 case .denied, .restricted:
                     self?.isLoading = false
-                    self?.saveResult = .failure(ImageTemplateError.photoPermissionDenied)
+                    self?.shouldOpenSettings = true
                 case .notDetermined:
                     self?.isLoading = false
                     self?.saveResult = .failure(ImageTemplateError.photoPermissionNotDetermined)
@@ -105,11 +106,76 @@ final class ImageTemplateSelectorViewModel {
         }
     }
 
+    /// 설정 열기 상태 리셋
+    func resetOpenSettingsState() {
+        shouldOpenSettings = false
+    }
+
     // MARK: - Private Methods
 
+    private static let albumName = "포데이"
+
     private func performSave(image: UIImage) {
+        // 1. Forday 앨범 찾기 또는 생성
+        findOrCreateFordayAlbum { [weak self] album in
+            guard let self = self else { return }
+
+            guard let album = album else {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.saveResult = .failure(ImageTemplateError.saveFailed)
+                }
+                return
+            }
+
+            // 2. 앨범에 이미지 저장
+            self.saveImageToAlbum(image: image, album: album)
+        }
+    }
+
+    private func findOrCreateFordayAlbum(completion: @escaping (PHAssetCollection?) -> Void) {
+        // 기존 Forday 앨범 찾기
+        let fetchOptions = PHFetchOptions()
+        fetchOptions.predicate = NSPredicate(format: "title = %@", Self.albumName)
+        let collections = PHAssetCollection.fetchAssetCollections(
+            with: .album,
+            subtype: .any,
+            options: fetchOptions
+        )
+
+        if let existingAlbum = collections.firstObject {
+            completion(existingAlbum)
+            return
+        }
+
+        // 앨범이 없으면 생성
+        var albumPlaceholder: PHObjectPlaceholder?
         PHPhotoLibrary.shared().performChanges {
-            PHAssetChangeRequest.creationRequestForAsset(from: image)
+            let createAlbumRequest = PHAssetCollectionChangeRequest.creationRequestForAssetCollection(withTitle: Self.albumName)
+            albumPlaceholder = createAlbumRequest.placeholderForCreatedAssetCollection
+        } completionHandler: { success, _ in
+            guard success, let placeholder = albumPlaceholder else {
+                completion(nil)
+                return
+            }
+
+            let fetchResult = PHAssetCollection.fetchAssetCollections(
+                withLocalIdentifiers: [placeholder.localIdentifier],
+                options: nil
+            )
+            completion(fetchResult.firstObject)
+        }
+    }
+
+    private func saveImageToAlbum(image: UIImage, album: PHAssetCollection) {
+        PHPhotoLibrary.shared().performChanges {
+            // 이미지 에셋 생성
+            let assetRequest = PHAssetChangeRequest.creationRequestForAsset(from: image)
+            guard let assetPlaceholder = assetRequest.placeholderForCreatedAsset else { return }
+
+            // 앨범에 에셋 추가
+            let albumChangeRequest = PHAssetCollectionChangeRequest(for: album)
+            albumChangeRequest?.addAssets([assetPlaceholder] as NSFastEnumeration)
         } completionHandler: { [weak self] success, error in
             DispatchQueue.main.async {
                 self?.isLoading = false
