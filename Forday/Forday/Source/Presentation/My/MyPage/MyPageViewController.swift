@@ -176,15 +176,17 @@ extension MyPageViewController {
             .store(in: &cancellables)
 
         // Segment counts from API
-        Publishers.CombineLatest(
+        Publishers.CombineLatest3(
             viewModel.$inProgressHobbyCount,
-            viewModel.$hobbyCardCount
+            viewModel.$hobbyCardCount,
+            viewModel.$totalScrapCount
         )
         .receive(on: DispatchQueue.main)
-        .sink { [weak self] inProgressCount, hobbyCardsCount in
+        .sink { [weak self] inProgressCount, hobbyCardsCount, scrapsCount in
             self?.myPageView.segmentedControlView.updateCounts(
                 inProgressCount: inProgressCount,
-                hobbyCardsCount: hobbyCardsCount
+                hobbyCardsCount: hobbyCardsCount,
+                scrapsCount: scrapsCount
             )
         }
         .store(in: &cancellables)
