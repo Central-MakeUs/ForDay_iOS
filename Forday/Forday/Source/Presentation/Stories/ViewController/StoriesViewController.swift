@@ -271,8 +271,12 @@ extension StoriesViewController: StoriesPinterestLayoutDelegate {
             }
         }
 
-        // 썸네일 높이 클램프 (min 117, max 280으로 범위 확대)
-        let clampedThumbnailHeight = max(117, min(280, thumbnailHeight))
+        // 썸네일 높이 클램프 (비율 기반)
+        // min: 4:3 landscape (width * 0.75)
+        // max: 3:4 portrait (width * 4/3)
+        let minHeight = cellWidth * 0.75
+        let maxHeight = cellWidth * (4.0 / 3.0)
+        let clampedThumbnailHeight = max(minHeight, min(maxHeight, thumbnailHeight))
 
         // 콘텐츠 영역: 타이틀 (최대 2줄 ~44pt) + 사용자 정보 (24pt) + 간격 (8+4)
         let contentHeight: CGFloat = 8 + 44 + 4 + 24

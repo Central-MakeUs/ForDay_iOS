@@ -223,6 +223,8 @@ extension StoryCell {
             $0.layer.borderWidth = 1
             $0.layer.borderColor = UIColor.stroke001.cgColor
             $0.clipsToBounds = true
+            $0.setContentHuggingPriority(.defaultLow, for: .vertical)
+            $0.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
         }
 
         imageView.do {
@@ -257,6 +259,7 @@ extension StoryCell {
             $0.textColor = .neutral900
             $0.numberOfLines = 2
             $0.lineBreakMode = .byTruncatingTail
+            $0.setContentCompressionResistancePriority(.required, for: .vertical)
         }
 
         userInfoStackView.do {
@@ -324,10 +327,11 @@ extension StoryCell {
             $0.width.height.equalTo(24)
         }
 
-        // Title label (above userInfo)
+        // Title label (above userInfo) - 최소 1줄(~22pt), 최대 2줄(~44pt)
         titleLabel.snp.makeConstraints {
             $0.bottom.equalTo(userInfoStackView.snp.top).offset(-4)
             $0.leading.trailing.equalToSuperview()
+            $0.height.greaterThanOrEqualTo(22)
         }
 
         // Thumbnail container - fills remaining space above title
