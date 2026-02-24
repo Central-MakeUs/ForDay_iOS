@@ -27,6 +27,10 @@ final class MockHobbyRepository: HobbyRepositoryInterface {
     var createHobbyCallCount = 0
     var lastCreateHobbyParams: (hobbyInfoId: Int?, hobbyName: String, hobbyTimeMinutes: Int, hobbyPurpose: String, executionCount: Int, isDurationSet: Bool)?
 
+    var updateHobbyCallCount = 0
+    var lastUpdateHobbyParams: (hobbyId: Int, hobbyInfoId: Int?, hobbyName: String, hobbyTimeMinutes: Int, hobbyPurpose: String, executionCount: Int, isDurationSet: Bool)?
+    var updateHobbyIdToReturn: Int = 1
+
     var fetchHobbySettingsCallCount = 0
     var lastFetchHobbySettingsStatus: HobbyStatus?
 
@@ -47,6 +51,8 @@ final class MockHobbyRepository: HobbyRepositoryInterface {
         lastFetchHomeInfoHobbyId = nil
         createHobbyCallCount = 0
         lastCreateHobbyParams = nil
+        updateHobbyCallCount = 0
+        lastUpdateHobbyParams = nil
         fetchHobbySettingsCallCount = 0
         lastFetchHobbySettingsStatus = nil
         updateHobbyTimeCallCount = 0
@@ -83,6 +89,24 @@ final class MockHobbyRepository: HobbyRepositoryInterface {
             throw error
         }
         return createHobbyIdToReturn
+    }
+
+    func updateHobby(
+        hobbyId: Int,
+        hobbyInfoId: Int?,
+        hobbyName: String,
+        hobbyTimeMinutes: Int,
+        hobbyPurpose: String,
+        executionCount: Int,
+        isDurationSet: Bool
+    ) async throws -> Int {
+        updateHobbyCallCount += 1
+        lastUpdateHobbyParams = (hobbyId, hobbyInfoId, hobbyName, hobbyTimeMinutes, hobbyPurpose, executionCount, isDurationSet)
+
+        if let error = errorToThrow {
+            throw error
+        }
+        return updateHobbyIdToReturn
     }
 
     func fetchHobbySettings(hobbyStatus: HobbyStatus?) async throws -> HobbySettings {
