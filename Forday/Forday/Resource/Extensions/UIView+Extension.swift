@@ -213,12 +213,26 @@ struct AppGradient {
     let colors: [UIColor]
     let start: GradientPoint
     let end: GradientPoint
+    let locations: [NSNumber]?
+
+    init(
+        colors: [UIColor],
+        start: GradientPoint,
+        end: GradientPoint,
+        locations: [NSNumber]? = nil
+    ) {
+        self.colors = colors
+        self.start = start
+        self.end = end
+        self.locations = locations
+    }
 
     func makeLayer() -> CAGradientLayer {
         let layer = CAGradientLayer()
         layer.colors = colors.map { $0.cgColor }
         layer.startPoint = start.point
         layer.endPoint = end.point
+        layer.locations = locations
         return layer
     }
 }

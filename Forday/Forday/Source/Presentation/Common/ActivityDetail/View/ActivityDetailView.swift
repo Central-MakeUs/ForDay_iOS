@@ -35,6 +35,7 @@ final class ActivityDetailView: UIView {
     private let navigationView = UIView()
     private let navigationTitleLabel = UILabel()
     let backButton = UIButton()
+    let saveButton = UIButton()
     let moreButton = UIButton()
 
     // 홈으로 가기 버튼 (기록 완료 후 모드에서만 표시)
@@ -124,6 +125,9 @@ final class ActivityDetailView: UIView {
             // 이미지 없을 때는 메모 안(또는 날짜 아래)에 스티커 표시
             memoStickerImageView.isHidden = false
         }
+
+        // Save button: 내가 쓴 글 + 이미지 있을 때만 표시
+        saveButton.isHidden = !(detail.recordOwner && hasImage)
 
         // Configure reaction buttons
         reactionButtonsView.configure(with: detail)
@@ -231,6 +235,12 @@ extension ActivityDetailView {
             $0.tintColor = .neutral900
         }
 
+        saveButton.do {
+            $0.setImage(.Icon.save, for: .normal)
+            $0.tintColor = .neutral900
+            $0.isHidden = true  // 기본적으로 숨김 (내가 쓴 글 + 이미지 있을 때만 표시)
+        }
+
         navigationTitleLabel.do {
             $0.setTextWithTypography("내 활동 보기", style: .header16)
             $0.textColor = .neutral800
@@ -300,6 +310,7 @@ extension ActivityDetailView {
         // Custom Navigation
         addSubview(navigationView)
         navigationView.addSubview(backButton)
+        navigationView.addSubview(saveButton)
         navigationView.addSubview(moreButton)
         navigationView.addSubview(navigationTitleLabel)
 
@@ -320,6 +331,12 @@ extension ActivityDetailView {
 
         backButton.snp.makeConstraints {
             $0.leading.equalToSuperview().offset(20)
+            $0.centerY.equalToSuperview()
+            $0.width.height.equalTo(24)
+        }
+
+        saveButton.snp.makeConstraints {
+            $0.trailing.equalTo(moreButton.snp.leading).offset(-16)
             $0.centerY.equalToSuperview()
             $0.width.height.equalTo(24)
         }
@@ -458,6 +475,7 @@ extension ActivityDetailView {
             // 일반 모드: 네비게이션 버튼 표시, 반응 버튼 표시, 홈으로 가기 숨김
             backButton.isHidden = false
             moreButton.isHidden = false
+            // saveButton visibility is controlled by configure(with:) based on recordOwner && hasImage
             navigationTitleLabel.isHidden = true
             reactionButtonsView.isHidden = false
             reactionUsersScrollView.isHidden = false
@@ -474,6 +492,7 @@ extension ActivityDetailView {
             // 기록 완료 후 모드: 네비게이션 버튼 숨김, 타이틀만 표시, 반응 버튼 숨김, 홈으로 가기 표시
             backButton.isHidden = true
             moreButton.isHidden = true
+            saveButton.isHidden = true
             navigationTitleLabel.isHidden = false
             reactionButtonsView.isHidden = true
             reactionUsersScrollView.isHidden = true

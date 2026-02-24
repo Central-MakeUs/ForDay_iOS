@@ -121,10 +121,21 @@ extension ActivityDetailViewController {
         // 커스텀 내비게이션 버튼 액션 연결
         detailView.backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
         detailView.moreButton.addTarget(self, action: #selector(moreButtonTapped), for: .touchUpInside)
+        detailView.saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
     }
 
     @objc private func backButtonTapped() {
         navigationController?.popViewController(animated: true)
+    }
+
+    @objc private func saveButtonTapped() {
+        guard let detail = viewModel.activityDetail else { return }
+
+        print("💾 Save button tapped - navigating to template selector")
+
+        let templateViewModel = ImageTemplateSelectorViewModel(activityDetail: detail)
+        let templateVC = ImageTemplateSelectorViewController(viewModel: templateViewModel)
+        navigationController?.pushViewController(templateVC, animated: true)
     }
 
     private func setupGestures() {
