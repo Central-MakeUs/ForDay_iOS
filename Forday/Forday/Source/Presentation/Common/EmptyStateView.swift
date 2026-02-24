@@ -13,6 +13,7 @@ final class EmptyStateView: UIView {
 
     // MARK: - UI Components
 
+    private let bubbleImageView = UIImageView()
     private let iconImageView = UIImageView()
     private let messageContainerView = UIView()
     private let titleLabel = UILabel()
@@ -22,6 +23,12 @@ final class EmptyStateView: UIView {
     // MARK: - Properties
 
     var onActionTapped: (() -> Void)?
+
+    /// 게스트 모드 레이아웃 (아이콘과 텍스트가 겹치지 않음)
+    private var isGuestLayout: Bool = false
+
+    /// 소식 탭 레이아웃 (sorryBubble + emptyBox 조합)
+    private var isStoriesLayout: Bool = false
 
     // MARK: - Initialization
 
@@ -40,6 +47,7 @@ final class EmptyStateView: UIView {
 
     /// Legacy configure method for backward compatibility
     func configure(icon: UIImage?, message: String, actionTitle: String? = nil) {
+        resetToDefaultLayout()
         onActionTapped = nil // 이전 클로저 초기화
         iconImageView.image = icon
         iconImageView.alpha = 1.0
@@ -60,6 +68,7 @@ final class EmptyStateView: UIView {
 
     /// New configure method for activities empty state
     func configureForActivities(onActionTapped: (() -> Void)? = nil) {
+        resetToDefaultLayout()
         iconImageView.image = .Icon.emptyBox
         iconImageView.alpha = 0.4
         titleLabel.setTextWithTypography("활동을 기록해보세요!", style: .header16)
@@ -78,6 +87,7 @@ final class EmptyStateView: UIView {
 
     /// Configure for hobby cards empty state
     func configureForHobbyCards() {
+        resetToDefaultLayout()
         iconImageView.image = .Icon.emptyBox
         iconImageView.alpha = 0.4
         titleLabel.setTextWithTypography("취미카드를 준비 중이에요.", style: .header16)
@@ -89,6 +99,7 @@ final class EmptyStateView: UIView {
 
     /// Configure for scraps empty state
     func configureForScraps() {
+        resetToDefaultLayout()
         iconImageView.image = .Icon.emptyBox
         iconImageView.alpha = 0.4
         titleLabel.setTextWithTypography("아직 스크랩한 기록이 없어요.", style: .header16)
@@ -98,8 +109,27 @@ final class EmptyStateView: UIView {
         self.onActionTapped = nil
     }
 
+    /// Configure for stories empty state (활동기록 없음)
+    func configureForStories() {
+        isStoriesLayout = true
+        updateLayoutForStoriesMode()
+
+        bubbleImageView.image = .Icon.sorryBubble
+        bubbleImageView.isHidden = false
+        iconImageView.image = .Icon.emptyBox
+        iconImageView.alpha = 1.0
+        titleLabel.setTextWithTypography("아직 활동기록이 존재하지 않아요", style: .body14)
+        titleLabel.textColor = .neutral600
+        subtitleLabel.isHidden = true
+        actionButton.isHidden = true
+        self.onActionTapped = nil
+    }
+
     /// Configure for guest activity empty state (로그인 유도)
     func configureForGuestActivity(onActionTapped: (() -> Void)? = nil) {
+        isGuestLayout = true
+        updateLayoutForGuestMode()
+
         iconImageView.image = .Icon.sorryBubble
         iconImageView.alpha = 1.0
         titleLabel.setTextWithTypography("활동 기록은 로그인 이후에\n확인이 가능해요.", style: .header16)
@@ -115,6 +145,80 @@ final class EmptyStateView: UIView {
 
         self.onActionTapped = onActionTapped
     }
+
+    /// 게스트 모드 레이아웃 업데이트 (아이콘-텍스트 분리형)
+    private func updateLayoutForGuestMode() {
+        // sorryBubble 아이콘: 80x80
+        iconImageView.snp.remakeConstraints {
+            $0.centerX.equalToSuperview()
+            $0.top.equalToSuperview().offset(20)
+            $0.width.equalTo(80)
+            $0.height.equalTo(80)
+        }
+
+        // 메시지 컨테이너: 아이콘 아래에 배치 (겹치지 않음)
+        messageContainerView.snp.remakeConstraints {
+            $0.top.equalTo(iconImageView.snp.bottom).offset(16)
+            $0.centerX.equalToSuperview()
+            $0.leading.trailing.equalToSuperview()
+        }
+    }
+
+    /// 소식 탭 레이아웃 업데이트 (sorryBubble + emptyBox 조합, 겹침 없음)
+    private func updateLayoutForStoriesMode() {
+        // bubbleImageView: 48x48, 상단 중앙
+        bubbleImageView.snp.remakeConstraints {
+            $0.centerX.equalToSuperview()
+            $0.top.equalToSuperview()
+            $0.width.height.equalTo(48)
+        }
+
+        // emptyBox: 160x140, bubbleImageView 바로 아래
+        iconImageView.snp.remakeConstraints {
+            $0.centerX.equalToSuperview()
+            $0.top.equalTo(bubbleImageView.snp.bottom)
+            $0.width.equalTo(160)
+            $0.height.equalTo(140)
+        }
+
+        // 메시지 컨테이너: emptyBox 아래 40pt
+        messageContainerView.snp.remakeConstraints {
+            $0.top.equalTo(iconImageView.snp.bottom).offset(40)
+            $0.centerX.equalToSuperview()
+            $0.leading.trailing.equalToSuperview()
+        }
+    }
+
+    /// 기본 레이아웃으로 복원 (emptyBox 스타일)
+    private func resetToDefaultLayout() {
+        let needsReset = isGuestLayout || isStoriesLayout
+
+        // Stories 레이아웃 복원
+        if isStoriesLayout {
+            bubbleImageView.isHidden = true
+            titleLabel.textColor = .neutral900
+        }
+
+        isStoriesLayout = false
+        isGuestLayout = false
+
+        guard needsReset else { return }
+
+        // emptyBox 이미지: 160x140
+        iconImageView.snp.remakeConstraints {
+            $0.centerX.equalToSuperview()
+            $0.top.equalToSuperview().offset(20)
+            $0.width.equalTo(160)
+            $0.height.equalTo(140)
+        }
+
+        // 메시지 컨테이너: 이미지와 겹치도록 배치
+        messageContainerView.snp.remakeConstraints {
+            $0.top.equalTo(iconImageView.snp.top).offset(77)
+            $0.centerX.equalToSuperview()
+            $0.leading.trailing.equalToSuperview()
+        }
+    }
 }
 
 // MARK: - Setup
@@ -122,6 +226,11 @@ final class EmptyStateView: UIView {
 extension EmptyStateView {
     private func style() {
         backgroundColor = .systemBackground
+
+        bubbleImageView.do {
+            $0.contentMode = .scaleAspectFit
+            $0.isHidden = true
+        }
 
         iconImageView.do {
             $0.contentMode = .scaleAspectFit
@@ -157,6 +266,8 @@ extension EmptyStateView {
     }
 
     private func layout() {
+        // bubbleImageView (소식 탭용, 기본 hidden)
+        addSubview(bubbleImageView)
         // emptyBox 이미지가 맨 뒤에 깔림
         addSubview(iconImageView)
         // 메시지 컨테이너가 이미지 위에 위치
@@ -164,6 +275,13 @@ extension EmptyStateView {
         messageContainerView.addSubview(titleLabel)
         messageContainerView.addSubview(subtitleLabel)
         messageContainerView.addSubview(actionButton)
+
+        // bubbleImageView: 48x48, 기본적으로 숨김
+        bubbleImageView.snp.makeConstraints {
+            $0.centerX.equalToSuperview()
+            $0.top.equalToSuperview()
+            $0.width.height.equalTo(48)
+        }
 
         // emptyBox 이미지: 160x140, 상단 중앙
         iconImageView.snp.makeConstraints {
