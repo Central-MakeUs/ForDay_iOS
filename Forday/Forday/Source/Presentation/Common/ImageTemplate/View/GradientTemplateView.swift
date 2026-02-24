@@ -120,8 +120,7 @@ final class GradientTemplateView: UIView {
         }
 
         // 날짜 형식 변환: "2026-01-11 12:06" → "2026.01.11. (토)"
-        let formattedDate = formatDate(date)
-        dateLabel.setTextWithTypography(formattedDate, style: .label10)
+        dateLabel.setTextWithTypography(date.toTemplateDate(), style: .label10)
     }
 
     // MARK: - Render to Image
@@ -143,30 +142,6 @@ final class GradientTemplateView: UIView {
         gradientLayer.startPoint = gradient.start.point
         gradientLayer.endPoint = gradient.end.point
         gradientLayer.locations = gradient.locations
-    }
-
-    private func formatDate(_ dateString: String) -> String {
-        // Input: "2026-01-11 12:06" or "2026-01-11"
-        // Output: "2026.01.11. (토)"
-        let inputFormatter = DateFormatter()
-        inputFormatter.dateFormat = "yyyy-MM-dd HH:mm"
-        inputFormatter.locale = Locale(identifier: "ko_KR")
-
-        var date: Date?
-        date = inputFormatter.date(from: dateString)
-
-        if date == nil {
-            inputFormatter.dateFormat = "yyyy-MM-dd"
-            date = inputFormatter.date(from: dateString)
-        }
-
-        guard let parsedDate = date else { return dateString }
-
-        let outputFormatter = DateFormatter()
-        outputFormatter.dateFormat = "yyyy.MM.dd. (E)"
-        outputFormatter.locale = Locale(identifier: "ko_KR")
-
-        return outputFormatter.string(from: parsedDate)
     }
 }
 
