@@ -290,16 +290,11 @@ extension ImageTemplateSelectorView {
         for i in 0..<numberOfPages {
             let indicator = UIView()
             indicator.layer.cornerRadius = 4
-            indicator.backgroundColor = i == 0 ? .neutral600 : .neutral300
+            indicator.backgroundColor = i == 0 ? .neutral600 : .neutral200
             pageIndicatorStackView.addArrangedSubview(indicator)
 
             indicator.snp.makeConstraints {
-                if i == 0 {
-                    $0.width.equalTo(14)
-                    $0.height.equalTo(8)
-                } else {
-                    $0.size.equalTo(8)
-                }
+                $0.size.equalTo(8)
             }
 
             pageIndicators.append(indicator)
@@ -309,20 +304,7 @@ extension ImageTemplateSelectorView {
     private func updatePageIndicator(to page: Int) {
         for (index, indicator) in pageIndicators.enumerated() {
             let isActive = index == page
-            indicator.backgroundColor = isActive ? .neutral600 : .neutral300
-
-            indicator.snp.remakeConstraints {
-                if isActive {
-                    $0.width.equalTo(14)
-                    $0.height.equalTo(8)
-                } else {
-                    $0.size.equalTo(8)
-                }
-            }
-        }
-
-        UIView.animate(withDuration: 0.2) {
-            self.pageIndicatorStackView.layoutIfNeeded()
+            indicator.backgroundColor = isActive ? .neutral600 : .neutral200
         }
     }
 
