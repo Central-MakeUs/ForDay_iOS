@@ -1,40 +1,35 @@
 //
-//  MyPageViewModel.swift
+//  UserProfileViewModel.swift
 //  Forday
 //
-//  Created by Subeen on 1/23/26.
+//  Created by Subeen on 2/24/26.
 //
 
 import Foundation
 import Combine
 
-enum MyPageTab {
-    case activities
-    case hobbyCards
-    case scraps
-}
-
-final class MyPageViewModel: ProfileViewModelProtocol {
+final class UserProfileViewModel: ProfileViewModelProtocol {
 
     // MARK: - Published Properties
 
     @Published var userProfile: UserInfo?
     @Published var currentTab: MyPageTab = .activities
     @Published var myHobbies: [MyPageHobby] = []
-    @Published var inProgressHobbyCount: Int = 0  // Segment "진행 중(n)" 표시용
-    @Published var hobbyCardCount: Int = 0        // Segment "취미 카드(n)" 표시용
+    @Published var inProgressHobbyCount: Int = 0
+    @Published var hobbyCardCount: Int = 0
     @Published var activities: [FeedItem] = []
     @Published var hobbyCards: [CompletedHobbyCard] = []
     @Published var scraps: [FeedItem] = []
-    @Published var totalActivityCount: Int = 0    // 진행중 피드 총 개수
-    @Published var totalScrapCount: Int = 0       // 스크랩 총 개수
-    @Published var selectedHobbyIds: Set<Int> = [] // Empty = all hobbies
+    @Published var totalActivityCount: Int = 0
+    @Published var totalScrapCount: Int = 0
+    @Published var selectedHobbyIds: Set<Int> = []
     @Published var isLoading: Bool = false
     @Published var isLoadingMore: Bool = false
     @Published var error: AppError?
 
     // MARK: - Private Properties
 
+    private let userId: String
     private var lastRecordId: Int? = nil
     private var hasMoreActivities: Bool = true
     private var lastHobbyCardId: Int? = nil
@@ -52,12 +47,14 @@ final class MyPageViewModel: ProfileViewModelProtocol {
     // MARK: - Initialization
 
     init(
+        userId: String,
         fetchUserProfileUseCase: FetchUserProfileUseCase = FetchUserProfileUseCase(),
         fetchMyActivitiesUseCase: FetchMyActivitiesUseCase = FetchMyActivitiesUseCase(),
         fetchMyHobbiesUseCase: FetchMyHobbiesUseCase = FetchMyHobbiesUseCase(),
         fetchHobbyCardsUseCase: FetchHobbyCardsUseCase = FetchHobbyCardsUseCase(),
         fetchScrapsUseCase: FetchScrapsUseCase = FetchScrapsUseCase()
     ) {
+        self.userId = userId
         self.fetchUserProfileUseCase = fetchUserProfileUseCase
         self.fetchMyActivitiesUseCase = fetchMyActivitiesUseCase
         self.fetchMyHobbiesUseCase = fetchMyHobbiesUseCase
@@ -67,39 +64,37 @@ final class MyPageViewModel: ProfileViewModelProtocol {
 
     // MARK: - Public Methods
 
-    /// 게스트 유저 여부 확인
-    var isGuestUser: Bool {
-        return TokenStorage.shared.loadGuestUserId() != nil
-    }
-
     func fetchInitialData() async {
-        // 게스트 유저는 API 호출 스킵 (마이페이지 데이터 불필요)
-        guard !isGuestUser else {
-            await MainActor.run {
-                self.isLoading = false
-            }
-            return
-        }
-
         await MainActor.run {
             isLoading = true
         }
 
-        // Fetch all data in parallel, each can fail independently
-        async let profile = try? await fetchUserProfileUseCase.execute()
-        async let hobbiesResult = try? await fetchMyHobbiesUseCase.execute()
-        async let activitiesResult = try? await fetchMyActivitiesUseCase.execute(hobbyIds: [], lastRecordId: nil)
-        async let cardsResult = try? await fetchHobbyCardsUseCase.execute(lastHobbyCardId: nil, size: 20)
+        async let profile = try? await fetchUserProfileUseCase.execute(userId: userId)
+        async let hobbiesResult = try? await fetchMyHobbiesUseCase.execute(userId: userId)
+        async let activitiesResult = try? await fetchMyActivitiesUseCase.execute(
+            hobbyIds: [],
+            lastRecordId: nil,
+            userId: userId
+        )
+        async let cardsResult = try? await fetchHobbyCardsUseCase.execute(
+            lastHobbyCardId: nil,
+            size: 20,
+            userId: userId
+        )
+        async let scrapsResult = try? await fetchScrapsUseCase.execute(
+            lastRecordId: nil,
+            userId: userId
+        )
 
-        let (profileOpt, hobbiesOpt, activitiesOpt, cardsOpt) = await (
+        let (profileOpt, hobbiesOpt, activitiesOpt, cardsOpt, scrapsOpt) = await (
             profile,
             hobbiesResult,
             activitiesResult,
-            cardsResult
+            cardsResult,
+            scrapsResult
         )
 
         await MainActor.run {
-            // Update only successful results
             if let profile = profileOpt {
                 self.userProfile = profile
             }
@@ -123,6 +118,13 @@ final class MyPageViewModel: ProfileViewModelProtocol {
                 self.lastHobbyCardId = cards.lastCardId
             }
 
+            if let scraps = scrapsOpt {
+                self.scraps = scraps.feedList
+                self.totalScrapCount = scraps.totalFeedCount ?? 0
+                self.hasMoreScraps = scraps.hasNext
+                self.lastScrapRecordId = scraps.lastRecordId
+            }
+
             self.isLoading = false
         }
     }
@@ -131,14 +133,11 @@ final class MyPageViewModel: ProfileViewModelProtocol {
         currentTab = tab
     }
 
-    /// 취미 필터 선택 상태 초기화 (전체 보기로 리셋)
     func resetHobbyFilter() {
         selectedHobbyIds = []
     }
 
     func filterByHobbies(hobbyIds: Set<Int>) async {
-        guard !isGuestUser else { return }
-
         await MainActor.run {
             selectedHobbyIds = hobbyIds
             lastRecordId = nil
@@ -149,8 +148,6 @@ final class MyPageViewModel: ProfileViewModelProtocol {
     }
 
     func refreshActivities() async {
-        guard !isGuestUser else { return }
-
         await MainActor.run {
             isLoading = true
         }
@@ -160,7 +157,8 @@ final class MyPageViewModel: ProfileViewModelProtocol {
 
             let result = try await fetchMyActivitiesUseCase.execute(
                 hobbyIds: hobbyIdsArray,
-                lastRecordId: nil
+                lastRecordId: nil,
+                userId: userId
             )
 
             await MainActor.run {
@@ -185,7 +183,7 @@ final class MyPageViewModel: ProfileViewModelProtocol {
     }
 
     func loadMoreActivities() async {
-        guard !isGuestUser, !isLoadingMore && hasMoreActivities else { return }
+        guard !isLoadingMore && hasMoreActivities else { return }
 
         await MainActor.run {
             isLoadingMore = true
@@ -194,7 +192,8 @@ final class MyPageViewModel: ProfileViewModelProtocol {
         do {
             let result = try await fetchMyActivitiesUseCase.execute(
                 hobbyIds: Array(selectedHobbyIds),
-                lastRecordId: lastRecordId
+                lastRecordId: lastRecordId,
+                userId: userId
             )
 
             await MainActor.run {
@@ -217,47 +216,18 @@ final class MyPageViewModel: ProfileViewModelProtocol {
         }
     }
 
-    // MARK: - Refresh Individual Data
-
-    func refreshUserProfile() async {
-        guard !isGuestUser else { return }
-
-        do {
-            let profile = try await fetchUserProfileUseCase.execute()
-            await MainActor.run {
-                self.userProfile = profile
-            }
-        } catch {
-            // Silently fail - user can refresh manually if needed
-            print("❌ Failed to refresh user profile: \(error)")
-        }
-    }
-
-    func refreshHobbies() async {
-        guard !isGuestUser else { return }
-
-        do {
-            let hobbies = try await fetchMyHobbiesUseCase.execute()
-            await MainActor.run {
-                self.myHobbies = hobbies.hobbies
-                self.inProgressHobbyCount = hobbies.inProgressHobbyCount
-                self.hobbyCardCount = hobbies.hobbyCardCount
-            }
-        } catch {
-            // Silently fail - user can refresh manually if needed
-            print("❌ Failed to refresh hobbies: \(error)")
-        }
-    }
-
     func refreshScraps() async {
-        guard !isGuestUser else { return }
-
         await MainActor.run {
             isLoading = true
+            lastScrapRecordId = nil
+            hasMoreScraps = true
         }
 
         do {
-            let result = try await fetchScrapsUseCase.execute(lastRecordId: nil)
+            let result = try await fetchScrapsUseCase.execute(
+                lastRecordId: nil,
+                userId: userId
+            )
 
             await MainActor.run {
                 self.scraps = result.feedList
@@ -281,14 +251,17 @@ final class MyPageViewModel: ProfileViewModelProtocol {
     }
 
     func loadMoreScraps() async {
-        guard !isGuestUser, !isLoadingMore && hasMoreScraps else { return }
+        guard !isLoadingMore && hasMoreScraps else { return }
 
         await MainActor.run {
             isLoadingMore = true
         }
 
         do {
-            let result = try await fetchScrapsUseCase.execute(lastRecordId: lastScrapRecordId)
+            let result = try await fetchScrapsUseCase.execute(
+                lastRecordId: lastScrapRecordId,
+                userId: userId
+            )
 
             await MainActor.run {
                 self.scraps.append(contentsOf: result.feedList)
@@ -313,7 +286,7 @@ final class MyPageViewModel: ProfileViewModelProtocol {
 
 // MARK: - ProfileViewModelProtocol
 
-extension MyPageViewModel {
+extension UserProfileViewModel {
     var activitiesPublisher: Published<[FeedItem]>.Publisher { $activities }
     var totalActivityCountPublisher: Published<Int>.Publisher { $totalActivityCount }
     var myHobbiesPublisher: Published<[MyPageHobby]>.Publisher { $myHobbies }
