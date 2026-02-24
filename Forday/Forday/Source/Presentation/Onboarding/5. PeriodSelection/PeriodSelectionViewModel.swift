@@ -25,11 +25,16 @@ class PeriodSelectionViewModel {
 
     // UseCase
     private let createHobbyUseCase: CreateHobbyUseCase
+    private let updateHobbyUseCase: UpdateHobbyUseCase
 
     // Initialization
 
-    init(createHobbyUseCase: CreateHobbyUseCase = CreateHobbyUseCase()) {
+    init(
+        createHobbyUseCase: CreateHobbyUseCase = CreateHobbyUseCase(),
+        updateHobbyUseCase: UpdateHobbyUseCase = UpdateHobbyUseCase()
+    ) {
         self.createHobbyUseCase = createHobbyUseCase
+        self.updateHobbyUseCase = updateHobbyUseCase
         loadMockData()
     }
     
@@ -67,14 +72,26 @@ class PeriodSelectionViewModel {
         return periods[index].id == selectedPeriod?.id
     }
 
-    /// 취미 생성 API 호출
+    /// 취미 생성 또는 수정 API 호출
+    /// - existingHobbyId가 있으면 updateHobby (온보딩 재개 시)
+    /// - existingHobbyId가 없으면 createHobby (최초 온보딩 시)
     @MainActor
     func createHobby(with onboardingData: OnboardingData) async {
         isLoading = true
         errorMessage = nil
 
         do {
-            let hobbyId = try await createHobbyUseCase.execute(onboardingData: onboardingData)
+            let hobbyId: Int
+
+            // 기존 취미 ID가 있으면 수정, 없으면 생성
+            if let existingHobbyId = onboardingData.existingHobbyId {
+                print("🔄 기존 취미 수정 - hobbyId: \(existingHobbyId)")
+                hobbyId = try await updateHobbyUseCase.execute(hobbyId: existingHobbyId, onboardingData: onboardingData)
+            } else {
+                print("🆕 새 취미 생성")
+                hobbyId = try await createHobbyUseCase.execute(onboardingData: onboardingData)
+            }
+
             isLoading = false
             AppEventBus.shared.hobbyCreated.send(hobbyId)
             onHobbyCreated?(hobbyId)
@@ -89,7 +106,7 @@ class PeriodSelectionViewModel {
             }
 
             errorMessage = error.localizedDescription
-            print("❌ 취미 생성 실패: \(error)")
+            print("❌ 취미 생성/수정 실패: \(error)")
         }
     }
 }
