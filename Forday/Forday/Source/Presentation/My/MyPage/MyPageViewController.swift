@@ -503,6 +503,9 @@ extension MyPageViewController {
 
 extension MyPageViewController: GuestLoginBottomSheetDelegate {
     func guestLoginBottomSheetDidLoginSuccess(_ controller: GuestLoginBottomSheetViewController, authToken: AuthToken) {
+        // 홈 상태 초기화 (이전 사용자의 hobbyId 제거)
+        coordinator?.resetHomeState()
+
         // 게스트 Empty State View 제거
         guestEmptyStateView?.removeFromSuperview()
         guestEmptyStateView = nil
