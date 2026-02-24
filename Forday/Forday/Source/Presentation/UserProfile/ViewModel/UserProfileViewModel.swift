@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 
+@MainActor
 final class UserProfileViewModel: ProfileViewModelProtocol {
 
     // MARK: - Published Properties
@@ -65,9 +66,7 @@ final class UserProfileViewModel: ProfileViewModelProtocol {
     // MARK: - Public Methods
 
     func fetchInitialData() async {
-        await MainActor.run {
-            isLoading = true
-        }
+        isLoading = true
 
         // 병렬로 모든 데이터 fetch (각각 독립적으로 실패 가능)
         async let profile = try? await fetchUserProfileUseCase.execute(userId: userId)
@@ -95,40 +94,38 @@ final class UserProfileViewModel: ProfileViewModelProtocol {
             scrapsResult
         )
 
-        await MainActor.run {
-            // 성공한 결과만 업데이트
-            if let profile = profileOpt {
-                self.userProfile = profile
-            }
-
-            if let hobbies = hobbiesOpt {
-                self.myHobbies = hobbies.hobbies
-                self.inProgressHobbyCount = hobbies.inProgressHobbyCount
-                self.hobbyCardCount = hobbies.hobbyCardCount
-            }
-
-            if let activities = activitiesOpt {
-                self.activities = activities.feedList
-                self.totalActivityCount = activities.totalFeedCount ?? 0
-                self.hasMoreActivities = activities.hasNext
-                self.lastRecordId = activities.lastRecordId
-            }
-
-            if let cards = cardsOpt {
-                self.hobbyCards = cards.cards
-                self.hasMoreHobbyCards = cards.hasNext
-                self.lastHobbyCardId = cards.lastCardId
-            }
-
-            if let scraps = scrapsOpt {
-                self.scraps = scraps.feedList
-                self.totalScrapCount = scraps.totalFeedCount ?? 0
-                self.hasMoreScraps = scraps.hasNext
-                self.lastScrapRecordId = scraps.lastRecordId
-            }
-
-            self.isLoading = false
+        // 성공한 결과만 업데이트
+        if let profile = profileOpt {
+            self.userProfile = profile
         }
+
+        if let hobbies = hobbiesOpt {
+            self.myHobbies = hobbies.hobbies
+            self.inProgressHobbyCount = hobbies.inProgressHobbyCount
+            self.hobbyCardCount = hobbies.hobbyCardCount
+        }
+
+        if let activities = activitiesOpt {
+            self.activities = activities.feedList
+            self.totalActivityCount = activities.totalFeedCount ?? 0
+            self.hasMoreActivities = activities.hasNext
+            self.lastRecordId = activities.lastRecordId
+        }
+
+        if let cards = cardsOpt {
+            self.hobbyCards = cards.cards
+            self.hasMoreHobbyCards = cards.hasNext
+            self.lastHobbyCardId = cards.lastCardId
+        }
+
+        if let scraps = scrapsOpt {
+            self.scraps = scraps.feedList
+            self.totalScrapCount = scraps.totalFeedCount ?? 0
+            self.hasMoreScraps = scraps.hasNext
+            self.lastScrapRecordId = scraps.lastRecordId
+        }
+
+        self.isLoading = false
     }
 
     func switchTab(to tab: MyPageTab) {
@@ -140,19 +137,15 @@ final class UserProfileViewModel: ProfileViewModelProtocol {
     }
 
     func filterByHobbies(hobbyIds: Set<Int>) async {
-        await MainActor.run {
-            selectedHobbyIds = hobbyIds
-            lastRecordId = nil
-            hasMoreActivities = true
-        }
+        selectedHobbyIds = hobbyIds
+        lastRecordId = nil
+        hasMoreActivities = true
 
         await refreshActivities()
     }
 
     func refreshActivities() async {
-        await MainActor.run {
-            isLoading = true
-        }
+        isLoading = true
 
         do {
             let hobbyIdsArray = Array(selectedHobbyIds)
@@ -163,36 +156,24 @@ final class UserProfileViewModel: ProfileViewModelProtocol {
                 userId: userId
             )
 
-            await MainActor.run {
-                self.activities = result.feedList
-                self.totalActivityCount = result.totalFeedCount ?? 0
-                self.hasMoreActivities = result.hasNext
-                self.lastRecordId = result.lastRecordId
-                self.isLoading = false
-            }
+            self.activities = result.feedList
+            self.totalActivityCount = result.totalFeedCount ?? 0
+            self.hasMoreActivities = result.hasNext
+            self.lastRecordId = result.lastRecordId
+            self.isLoading = false
 
         } catch let appError as AppError {
-            await MainActor.run {
-                self.error = appError
-                self.isLoading = false
-            }
+            self.error = appError
+            self.isLoading = false
         } catch {
-            await MainActor.run {
-                self.error = .unknown(error)
-                self.isLoading = false
-            }
+            self.error = .unknown(error)
+            self.isLoading = false
         }
     }
 
     func loadMoreActivities() async {
-        // Atomic check-and-set on MainActor to prevent race conditions
-        let shouldProceed = await MainActor.run {
-            guard !isLoadingMore && hasMoreActivities else { return false }
-            isLoadingMore = true
-            return true
-        }
-
-        guard shouldProceed else { return }
+        guard !isLoadingMore && hasMoreActivities else { return }
+        isLoadingMore = true
 
         do {
             let result = try await fetchMyActivitiesUseCase.execute(
@@ -201,32 +182,24 @@ final class UserProfileViewModel: ProfileViewModelProtocol {
                 userId: userId
             )
 
-            await MainActor.run {
-                self.activities.append(contentsOf: result.feedList)
-                self.hasMoreActivities = result.hasNext
-                self.lastRecordId = result.lastRecordId
-                self.isLoadingMore = false
-            }
+            self.activities.append(contentsOf: result.feedList)
+            self.hasMoreActivities = result.hasNext
+            self.lastRecordId = result.lastRecordId
+            self.isLoadingMore = false
 
         } catch let appError as AppError {
-            await MainActor.run {
-                self.error = appError
-                self.isLoadingMore = false
-            }
+            self.error = appError
+            self.isLoadingMore = false
         } catch {
-            await MainActor.run {
-                self.error = .unknown(error)
-                self.isLoadingMore = false
-            }
+            self.error = .unknown(error)
+            self.isLoadingMore = false
         }
     }
 
     func refreshScraps() async {
-        await MainActor.run {
-            isLoading = true
-            lastScrapRecordId = nil
-            hasMoreScraps = true
-        }
+        isLoading = true
+        lastScrapRecordId = nil
+        hasMoreScraps = true
 
         do {
             let result = try await fetchScrapsUseCase.execute(
@@ -234,36 +207,24 @@ final class UserProfileViewModel: ProfileViewModelProtocol {
                 userId: userId
             )
 
-            await MainActor.run {
-                self.scraps = result.feedList
-                self.totalScrapCount = result.totalFeedCount ?? 0
-                self.hasMoreScraps = result.hasNext
-                self.lastScrapRecordId = result.lastRecordId
-                self.isLoading = false
-            }
+            self.scraps = result.feedList
+            self.totalScrapCount = result.totalFeedCount ?? 0
+            self.hasMoreScraps = result.hasNext
+            self.lastScrapRecordId = result.lastRecordId
+            self.isLoading = false
 
         } catch let appError as AppError {
-            await MainActor.run {
-                self.error = appError
-                self.isLoading = false
-            }
+            self.error = appError
+            self.isLoading = false
         } catch {
-            await MainActor.run {
-                self.error = .unknown(error)
-                self.isLoading = false
-            }
+            self.error = .unknown(error)
+            self.isLoading = false
         }
     }
 
     func loadMoreScraps() async {
-        // Atomic check-and-set on MainActor to prevent race conditions
-        let shouldProceed = await MainActor.run {
-            guard !isLoadingMore && hasMoreScraps else { return false }
-            isLoadingMore = true
-            return true
-        }
-
-        guard shouldProceed else { return }
+        guard !isLoadingMore && hasMoreScraps else { return }
+        isLoadingMore = true
 
         do {
             let result = try await fetchScrapsUseCase.execute(
@@ -271,23 +232,17 @@ final class UserProfileViewModel: ProfileViewModelProtocol {
                 userId: userId
             )
 
-            await MainActor.run {
-                self.scraps.append(contentsOf: result.feedList)
-                self.hasMoreScraps = result.hasNext
-                self.lastScrapRecordId = result.lastRecordId
-                self.isLoadingMore = false
-            }
+            self.scraps.append(contentsOf: result.feedList)
+            self.hasMoreScraps = result.hasNext
+            self.lastScrapRecordId = result.lastRecordId
+            self.isLoadingMore = false
 
         } catch let appError as AppError {
-            await MainActor.run {
-                self.error = appError
-                self.isLoadingMore = false
-            }
+            self.error = appError
+            self.isLoadingMore = false
         } catch {
-            await MainActor.run {
-                self.error = .unknown(error)
-                self.isLoadingMore = false
-            }
+            self.error = .unknown(error)
+            self.isLoadingMore = false
         }
     }
 }
