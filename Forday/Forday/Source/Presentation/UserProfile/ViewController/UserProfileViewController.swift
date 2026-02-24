@@ -81,16 +81,18 @@ final class UserProfileViewController: UIViewController, UIGestureRecognizerDele
     private func loadUserProfileData() {
         userProfileView.showSkeleton()
 
-        Task {
-            await viewModel.fetchInitialData()
+        Task { [weak self] in
+            guard let self = self else { return }
+            await self.viewModel.fetchInitialData()
 
-            await MainActor.run {
-                userProfileView.hideSkeleton()
+            await MainActor.run { [weak self] in
+                guard let self = self else { return }
+                self.userProfileView.hideSkeleton()
 
-                if isFirstLoad {
-                    setupChildViewControllers()
-                    switchToTab(.activities)
-                    isFirstLoad = false
+                if self.isFirstLoad {
+                    self.setupChildViewControllers()
+                    self.switchToTab(.activities)
+                    self.isFirstLoad = false
                 }
             }
         }
@@ -174,11 +176,22 @@ extension UserProfileViewController {
             self?.userProfileView.updateContentHeight(height)
         }
         addChild(activityGridVC)
+        userProfileView.contentContainerView.addSubview(activityGridVC.view)
+        activityGridVC.view.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(20)
+            $0.leading.trailing.bottom.equalToSuperview()
+        }
+        activityGridVC.didMove(toParent: self)
         self.activityGridVC = activityGridVC
 
         // Hobby Card Stack ViewController
         let hobbyCardStackVC = HobbyCardStackViewController(viewModel: viewModel)
         addChild(hobbyCardStackVC)
+        userProfileView.contentContainerView.addSubview(hobbyCardStackVC.view)
+        hobbyCardStackVC.view.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+        hobbyCardStackVC.didMove(toParent: self)
         self.hobbyCardStackVC = hobbyCardStackVC
 
         // Scrap Grid ViewController
@@ -188,43 +201,24 @@ extension UserProfileViewController {
             self?.userProfileView.updateContentHeight(height)
         }
         addChild(scrapGridVC)
+        userProfileView.contentContainerView.addSubview(scrapGridVC.view)
+        scrapGridVC.view.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(20)
+            $0.leading.trailing.bottom.equalToSuperview()
+        }
+        scrapGridVC.didMove(toParent: self)
         self.scrapGridVC = scrapGridVC
+
+        // Initially hide all except activities
+        hobbyCardStackVC.view.isHidden = true
+        scrapGridVC.view.isHidden = true
     }
 
     private func switchToTab(_ tab: MyPageTab) {
-        // Remove current child view
-        userProfileView.contentContainerView.subviews.forEach { $0.removeFromSuperview() }
-
-        switch tab {
-        case .activities:
-            if let activityGridVC = activityGridVC {
-                userProfileView.contentContainerView.addSubview(activityGridVC.view)
-                activityGridVC.view.snp.makeConstraints {
-                    $0.top.equalToSuperview().offset(20)
-                    $0.leading.trailing.bottom.equalToSuperview()
-                }
-                activityGridVC.didMove(toParent: self)
-            }
-
-        case .hobbyCards:
-            if let hobbyCardStackVC = hobbyCardStackVC {
-                userProfileView.contentContainerView.addSubview(hobbyCardStackVC.view)
-                hobbyCardStackVC.view.snp.makeConstraints {
-                    $0.edges.equalToSuperview()
-                }
-                hobbyCardStackVC.didMove(toParent: self)
-            }
-
-        case .scraps:
-            if let scrapGridVC = scrapGridVC {
-                userProfileView.contentContainerView.addSubview(scrapGridVC.view)
-                scrapGridVC.view.snp.makeConstraints {
-                    $0.top.equalToSuperview().offset(20)
-                    $0.leading.trailing.bottom.equalToSuperview()
-                }
-                scrapGridVC.didMove(toParent: self)
-            }
-        }
+        // Toggle visibility instead of removing/adding views
+        activityGridVC?.view.isHidden = tab != .activities
+        hobbyCardStackVC?.view.isHidden = tab != .hobbyCards
+        scrapGridVC?.view.isHidden = tab != .scraps
     }
 }
 
@@ -244,11 +238,12 @@ extension UserProfileViewController {
     }
 
     @objc private func refreshData() {
-        Task {
-            await viewModel.fetchInitialData()
+        Task { [weak self] in
+            guard let self = self else { return }
+            await self.viewModel.fetchInitialData()
 
-            await MainActor.run {
-                userProfileView.refreshControl.endRefreshing()
+            await MainActor.run { [weak self] in
+                self?.userProfileView.refreshControl.endRefreshing()
             }
         }
     }

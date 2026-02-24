@@ -320,6 +320,12 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         // Push to current navigation stack (enables swipe back gesture)
         if let currentNav = tabBarController.selectedViewController as? UINavigationController {
             currentNav.pushViewController(profileVC, animated: true)
+        } else if let storiesNav = tabBarController.viewControllers?[2] as? UINavigationController {
+            // Fallback to stories navigation (most likely source of user profile navigation)
+            storiesNav.pushViewController(profileVC, animated: true)
+        } else if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
+            // Final fallback to home navigation
+            homeNav.pushViewController(profileVC, animated: true)
         }
     }
 
