@@ -82,8 +82,14 @@ extension StoriesViewController {
     private func setupCallbacks() {
         // Tab selection
         storiesView.tabSegmentControl.onTabSelected = { [weak self] index, _ in
+            guard let self = self else { return }
+            // 탭 전환 시 스크롤 맨 위로 리셋
+            self.storiesView.collectionView.setContentOffset(
+                CGPoint(x: 0, y: -self.storiesView.collectionView.contentInset.top),
+                animated: false
+            )
             Task {
-                await self?.viewModel.selectTab(at: index)
+                await self.viewModel.selectTab(at: index)
             }
         }
 
