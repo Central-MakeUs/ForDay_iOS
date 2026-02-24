@@ -42,6 +42,20 @@ enum StickerType: String, Codable, CaseIterable {
         }
     }
 
+    /// Returns the card template background image for this sticker type
+    var cardTemplateBackground: UIImage {
+        switch self {
+        case .smile:
+            return .Template.cardSmile
+        case .sad:
+            return .Template.cardSad
+        case .laugh:
+            return .Template.cardLaugh
+        case .angry:
+            return .Template.cardAngry
+        }
+    }
+
     /// Initialize from a filename string
     /// - Parameter fileName: The sticker filename (e.g., "smile.jpg" or "smile")
     /// - Returns: The corresponding StickerType, or nil if not recognized
