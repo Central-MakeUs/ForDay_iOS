@@ -30,7 +30,6 @@ final class ImageTemplateSelectorView: UIView {
     private let navigationView = UIView()
     let backButton = UIButton()
     private let titleLabel = UILabel()
-    let downloadButton = UIButton()
 
     // Header
     private let headerStackView = UIStackView()
@@ -130,11 +129,6 @@ extension ImageTemplateSelectorView {
             $0.textAlignment = .center
         }
 
-        downloadButton.do {
-            $0.setImage(.Icon.download, for: .normal)
-            $0.tintColor = .neutral900
-        }
-
         // Header
         headerStackView.do {
             $0.axis = .vertical
@@ -200,7 +194,6 @@ extension ImageTemplateSelectorView {
         addSubview(navigationView)
         navigationView.addSubview(backButton)
         navigationView.addSubview(titleLabel)
-        navigationView.addSubview(downloadButton)
 
         addSubview(headerStackView)
         headerStackView.addArrangedSubview(headerTitleLabel)
@@ -232,12 +225,6 @@ extension ImageTemplateSelectorView {
 
         titleLabel.snp.makeConstraints {
             $0.center.equalToSuperview()
-        }
-
-        downloadButton.snp.makeConstraints {
-            $0.trailing.equalToSuperview().offset(-20)
-            $0.centerY.equalToSuperview()
-            $0.size.equalTo(24)
         }
 
         // Header
