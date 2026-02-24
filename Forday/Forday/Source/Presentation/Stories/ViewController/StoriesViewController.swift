@@ -52,10 +52,8 @@ final class StoriesViewController: UIViewController {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
 
-        // Load initial data on first appearance
-        if viewModel.tabs.isEmpty {
-            loadInitialData()
-        }
+        // 탭 진입 시 항상 새로고침 (탭 정보 + 스토리)
+        loadInitialData()
     }
 
     // MARK: - Private Methods
@@ -104,8 +102,6 @@ extension StoriesViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] tabs in
                 self?.storiesView.tabSegmentControl.configure(with: tabs)
-                // Hide tabs if only 1 hobby
-                self?.storiesView.updateTabVisibility(showTabs: tabs.count > 1)
             }
             .store(in: &cancellables)
 
@@ -161,8 +157,6 @@ extension StoriesViewController {
                 } else {
                     self.storiesView.hideSkeleton()
                     self.storiesView.endRefreshing()
-                    // 스켈레톤 해제 후 탭 가시성 복원
-                    self.storiesView.updateTabVisibility(showTabs: self.viewModel.tabs.count > 1)
                     // 로딩 완료 후 empty state 체크
                     if self.viewModel.stories.isEmpty {
                         self.storiesView.showEmptyState()
