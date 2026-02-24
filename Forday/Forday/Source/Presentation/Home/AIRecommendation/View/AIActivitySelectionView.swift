@@ -706,14 +706,15 @@ extension AIActivitySelectionView {
         nextButton.isEnabled = false
 
         // Save using use case
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
                 _ = try await createActivitiesUseCase.execute(
                     hobbyId: hobbyId,
                     activities: [activityInput]
                 )
 
-                await MainActor.run {
+                await MainActor.run { [weak self] in
                     // 홈 화면 업데이트를 위한 이벤트 발생
                     AppEventBus.shared.activityRecordCreated.send(hobbyId)
 
@@ -729,12 +730,12 @@ extension AIActivitySelectionView {
                     }
 
                     // 저장 완료 콜백 (바텀시트 닫지 않음)
-                    onActivitySaved?()
+                    self?.onActivitySaved?()
                 }
             } catch {
-                await MainActor.run {
-                    setNextButtonEnabled(true)
-                    onError?(error.localizedDescription)
+                await MainActor.run { [weak self] in
+                    self?.setNextButtonEnabled(true)
+                    self?.onError?(error.localizedDescription)
                 }
             }
         }

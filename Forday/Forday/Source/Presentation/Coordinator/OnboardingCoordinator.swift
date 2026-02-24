@@ -174,7 +174,8 @@ class OnboardingCoordinator: Coordinator {
         // 프로그래스바 초기화 (이전 인스턴스 제거)
         BaseOnboardingViewController.resetProgressBar()
 
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
                 // 1. 서버에서 취미 목록 가져오기
                 let fetchAppMetadataUseCase = FetchAppMetadataUseCase()
@@ -183,21 +184,24 @@ class OnboardingCoordinator: Coordinator {
                 // 2. hobbyInfoId로 해당 HobbyCard 찾기
                 guard let hobbyCard = metadata.hobbyCards.first(where: { $0.id == savedData.hobbyInfoId }) else {
                     print("❌ 취미 카드를 찾을 수 없음: \(savedData.hobbyInfoId)")
-                    await MainActor.run {
-                        showNicknameSetup()  // 실패 시 닉네임 화면으로
+                    await MainActor.run { [weak self] in
+                        self?.showNicknameSetup()  // 실패 시 닉네임 화면으로
                     }
                     return
                 }
 
                 // 3. onboardingData에 데이터 채우기
-                await MainActor.run {
-                    onboardingData.selectedHobbyCard = hobbyCard
-                    onboardingData.timeMinutes = savedData.hobbyTimeMinutes
-                    onboardingData.purpose = savedData.hobbyPurpose
-                    onboardingData.executionCount = savedData.executionCount
-                    onboardingData.isDurationSet = savedData.durationSet
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+                    self.onboardingData.selectedHobbyCard = hobbyCard
+                    self.onboardingData.timeMinutes = savedData.hobbyTimeMinutes
+                    self.onboardingData.purpose = savedData.hobbyPurpose
+                    self.onboardingData.executionCount = savedData.executionCount
+                    self.onboardingData.isDurationSet = savedData.durationSet
+                    self.onboardingData.existingHobbyId = savedData.id  // 기존 취미 ID 저장 (updateHobby 호출용)
 
                     print("✅ 온보딩 데이터 복원 완료:")
+                    print("   - 기존 취미 ID: \(savedData.id)")
                     print("   - 취미: \(hobbyCard.name)")
                     print("   - 시간: \(savedData.hobbyTimeMinutes)분")
                     print("   - 목적: \(savedData.hobbyPurpose)")
@@ -205,12 +209,12 @@ class OnboardingCoordinator: Coordinator {
                     print("   - 기간 설정: \(savedData.durationSet)")
 
                     // 4. 화면들을 스택에 쌓기
-                    buildOnboardingStack(with: hobbyCard, allHobbies: metadata.hobbyCards, savedData: savedData)
+                    self.buildOnboardingStack(with: hobbyCard, allHobbies: metadata.hobbyCards, savedData: savedData)
                 }
             } catch {
                 print("❌ 온보딩 재개 실패: \(error)")
-                await MainActor.run {
-                    showNicknameSetup()  // 실패 시 닉네임 화면으로
+                await MainActor.run { [weak self] in
+                    self?.showNicknameSetup()  // 실패 시 닉네임 화면으로
                 }
             }
         }
@@ -267,7 +271,7 @@ class OnboardingCoordinator: Coordinator {
             self?.updatePeriod(isDurationSet)
         }
         periodViewModel.onHobbyCreated = { [weak self] hobbyId in
-            print("✅ 취미 생성 완료 - hobbyId: \(hobbyId)")
+            print("✅ 취미 수정 완료 - hobbyId: \(hobbyId)")
             self?.showNicknameTransition()
         }
         let periodVC = PeriodSelectionViewController(viewModel: periodViewModel)

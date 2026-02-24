@@ -15,7 +15,7 @@ final class FetchScrapsUseCase {
         self.repository = repository
     }
 
-    func execute(lastRecordId: Int? = nil, size: Int = 24) async throws -> FeedResult {
-        return try await repository.fetchScraps(lastRecordId: lastRecordId, feedSize: size)
+    func execute(lastRecordId: Int? = nil, size: Int = 24, userId: String? = nil) async throws -> FeedResult {
+        return try await repository.fetchScraps(lastRecordId: lastRecordId, feedSize: size, userId: userId)
     }
 }

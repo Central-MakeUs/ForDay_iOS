@@ -63,7 +63,7 @@ extension UserInfoView {
         }
 
         nicknameLabel.do {
-            $0.textColor = .neutral600
+            $0.textColor = .neutral500
         }
     }
 
@@ -73,7 +73,7 @@ extension UserInfoView {
 
         profileImageView.snp.makeConstraints {
             $0.leading.centerY.equalToSuperview()
-            $0.width.height.equalTo(20)
+            $0.width.height.equalTo(24)
         }
 
         nicknameLabel.snp.makeConstraints {
@@ -84,7 +84,7 @@ extension UserInfoView {
 
         // Make profile image circular after layout
         DispatchQueue.main.async {
-            self.profileImageView.layer.cornerRadius = 10
+            self.profileImageView.layer.cornerRadius = 12
         }
     }
 }

@@ -86,16 +86,18 @@ final class MyPageViewController: UIViewController {
             viewModel.resetHobbyFilter()
         }
 
-        Task {
-            await viewModel.fetchInitialData()
+        Task { [weak self] in
+            guard let self = self else { return }
+            await self.viewModel.fetchInitialData()
 
-            await MainActor.run {
-                myPageView.hideSkeleton()
+            await MainActor.run { [weak self] in
+                guard let self = self else { return }
+                self.myPageView.hideSkeleton()
 
-                if isFirstLoad {
-                    setupChildViewControllers()
-                    switchToTab(.activities)
-                    isFirstLoad = false
+                if self.isFirstLoad {
+                    self.setupChildViewControllers()
+                    self.switchToTab(.activities)
+                    self.isFirstLoad = false
                 }
             }
         }
@@ -271,8 +273,8 @@ extension MyPageViewController {
 
                 // Load scraps when first switched to scraps tab
                 if viewModel.scraps.isEmpty {
-                    Task {
-                        await viewModel.refreshScraps()
+                    Task { [weak self] in
+                        await self?.viewModel.refreshScraps()
                     }
                 }
             }
@@ -284,11 +286,12 @@ extension MyPageViewController {
 
 extension MyPageViewController {
     @objc private func refreshMyPageData() {
-        Task {
-            await viewModel.fetchInitialData()
+        Task { [weak self] in
+            guard let self = self else { return }
+            await self.viewModel.fetchInitialData()
 
-            await MainActor.run {
-                myPageView.refreshControl.endRefreshing()
+            await MainActor.run { [weak self] in
+                self?.myPageView.refreshControl.endRefreshing()
             }
         }
     }
@@ -436,8 +439,8 @@ extension MyPageViewController {
 
     private func performLogout() {
         do {
-            // Delete tokens
-            try TokenStorage.shared.deleteAllTokens()
+            // Delete tokens only (guestUserId는 유지하여 재로그인 시 복원 가능)
+            try TokenStorage.shared.deleteTokens()
 
             // Delete onboarding data (optional)
             try? OnboardingDataStorage.shared.delete()
@@ -466,8 +469,8 @@ extension MyPageViewController {
 extension MyPageViewController: GuestLoginBottomSheetDelegate {
     func guestLoginBottomSheetDidLoginSuccess(_ controller: GuestLoginBottomSheetViewController, authToken: AuthToken) {
         // 로그인 성공 후 데이터 새로고침
-        Task {
-            await viewModel.fetchInitialData()
+        Task { [weak self] in
+            await self?.viewModel.fetchInitialData()
         }
 
         // 토스트 메시지 표시

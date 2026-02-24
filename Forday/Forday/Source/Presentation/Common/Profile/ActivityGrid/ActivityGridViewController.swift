@@ -1,8 +1,8 @@
 //
-//  ScrapGridViewController.swift
+//  ActivityGridViewController.swift
 //  Forday
 //
-//  Created by Subeen on 2/1/26.
+//  Created by Subeen on 1/23/26.
 //
 
 import UIKit
@@ -10,18 +10,19 @@ import SnapKit
 import Then
 import Combine
 
-final class ScrapGridViewController: UIViewController {
+final class ActivityGridViewController: UIViewController {
 
     // MARK: - Properties
 
-    private let viewModel: MyPageViewModel
+    private let viewModel: ProfileViewModelProtocol
     private var cancellables = Set<AnyCancellable>()
 
     weak var coordinator: MainTabBarCoordinator?
 
     // UI Components
+    private let hobbyFilterView = HobbyFilterView()
     private let countLabel = UILabel()
-    private let scrapCollectionView: UICollectionView
+    private let activityCollectionView: UICollectionView
     private let emptyStateView = EmptyStateView()
 
     // Height constraint for dynamic sizing
@@ -32,16 +33,16 @@ final class ScrapGridViewController: UIViewController {
 
     // MARK: - Initialization
 
-    init(viewModel: MyPageViewModel) {
+    init(viewModel: ProfileViewModelProtocol) {
         self.viewModel = viewModel
 
         // Setup collection view layout
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
-        layout.minimumLineSpacing = 4
-        layout.minimumInteritemSpacing = 4
+        layout.minimumLineSpacing = 1
+        layout.minimumInteritemSpacing = 1
 
-        self.scrapCollectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        self.activityCollectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
 
         super.init(nibName: nil, bundle: nil)
     }
@@ -57,13 +58,14 @@ final class ScrapGridViewController: UIViewController {
         style()
         layout()
         setupCollectionView()
+        setupHobbyFilter()
         bind()
     }
 }
 
 // MARK: - Setup
 
-extension ScrapGridViewController {
+extension ActivityGridViewController {
     private func style() {
         view.backgroundColor = .systemBackground
 
@@ -73,22 +75,28 @@ extension ScrapGridViewController {
             $0.text = "0개"
         }
 
-        scrapCollectionView.do {
+        activityCollectionView.do {
             $0.backgroundColor = .systemBackground
             $0.isScrollEnabled = false  // Disable scroll - parent scrollView handles it
         }
     }
 
     private func layout() {
+        view.addSubview(hobbyFilterView)
         view.addSubview(countLabel)
-        view.addSubview(scrapCollectionView)
+        view.addSubview(activityCollectionView)
+
+        hobbyFilterView.snp.makeConstraints {
+            $0.top.leading.trailing.equalToSuperview()
+            $0.height.equalTo(90)
+        }
 
         countLabel.snp.makeConstraints {
-            $0.top.equalToSuperview()
+            $0.top.equalTo(hobbyFilterView.snp.bottom).offset(16)
             $0.leading.equalToSuperview().offset(20)
         }
 
-        scrapCollectionView.snp.makeConstraints {
+        activityCollectionView.snp.makeConstraints {
             $0.top.equalTo(countLabel.snp.bottom).offset(8)
             $0.leading.trailing.equalToSuperview()
             $0.bottom.lessThanOrEqualToSuperview()
@@ -98,15 +106,15 @@ extension ScrapGridViewController {
     }
 
     private func setupCollectionView() {
-        scrapCollectionView.delegate = self
-        scrapCollectionView.dataSource = self
-        scrapCollectionView.register(
+        activityCollectionView.delegate = self
+        activityCollectionView.dataSource = self
+        activityCollectionView.register(
             ActivityPhotoCell.self,
             forCellWithReuseIdentifier: ActivityPhotoCell.identifier
         )
 
         // Observe contentSize changes for dynamic height
-        scrapCollectionView.publisher(for: \.contentSize)
+        activityCollectionView.publisher(for: \.contentSize)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] contentSize in
                 self?.updateCollectionViewHeight(contentSize.height)
@@ -118,56 +126,85 @@ extension ScrapGridViewController {
         guard height > 0 else { return }
         collectionViewHeightConstraint?.update(offset: height)
 
-        // Notify parent about height change (countLabel ~17 + spacing 8 + collectionView)
-        let totalHeight = 17 + 8 + height
+        // Notify parent about height change (hobbyFilter 90 + spacing 16 + countLabel ~17 + spacing 8 + collectionView)
+        let totalHeight = 90 + 16 + 17 + 8 + height
         onContentHeightChanged?(totalHeight)
     }
 
+    private func setupHobbyFilter() {
+        hobbyFilterView.onHobbiesSelected = { [weak self] hobbyIds in
+            Task { [weak self] in
+                await self?.viewModel.filterByHobbies(hobbyIds: hobbyIds)
+            }
+        }
+    }
+
     private func bind() {
-        // Scraps
-        viewModel.$scraps
+        // Activities
+        viewModel.activitiesPublisher
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] scraps in
-                self?.scrapCollectionView.reloadData()
-                self?.updateEmptyState(hasScraps: !scraps.isEmpty)
+            .sink { [weak self] activities in
+                self?.activityCollectionView.reloadData()
+                self?.updateEmptyState(hasActivities: !activities.isEmpty)
             }
             .store(in: &cancellables)
 
-        // Scrap count (totalScrapCount from server)
-        viewModel.$totalScrapCount
+        // Activity count (totalFeedCount from server)
+        viewModel.totalActivityCountPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] count in
                 self?.countLabel.text = "\(count)개"
             }
             .store(in: &cancellables)
+
+        // Hobbies for filter
+        viewModel.myHobbiesPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] hobbies in
+                self?.hobbyFilterView.configure(with: hobbies)
+            }
+            .store(in: &cancellables)
+
+        // Selected hobby IDs (sync view with viewModel)
+        viewModel.selectedHobbyIdsPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] selectedIds in
+                self?.hobbyFilterView.selectHobbies(selectedIds)
+            }
+            .store(in: &cancellables)
+
     }
 }
 
 // MARK: - Actions
 
-extension ScrapGridViewController {
-    private func updateEmptyState(hasScraps: Bool) {
-        if hasScraps {
+extension ActivityGridViewController {
+    private func updateEmptyState(hasActivities: Bool) {
+        if hasActivities {
             emptyStateView.removeFromSuperview()
         } else {
-            guard emptyStateView.superview == nil else { return }
             view.addSubview(emptyStateView)
             emptyStateView.snp.makeConstraints {
-                $0.top.equalToSuperview().offset(100)
-                $0.leading.trailing.equalToSuperview()
-                $0.height.equalTo(200)
+                $0.top.equalTo(hobbyFilterView.snp.bottom)
+                $0.leading.trailing.bottom.equalToSuperview()
             }
 
-            emptyStateView.configureForScraps()
+            emptyStateView.configureForActivities { [weak self] in
+                self?.navigateToActivityRecord()
+            }
         }
+    }
+
+    private func navigateToActivityRecord() {
+        coordinator?.showActivityRecord()
     }
 }
 
 // MARK: - UICollectionViewDataSource
 
-extension ScrapGridViewController: UICollectionViewDataSource {
+extension ActivityGridViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return viewModel.scraps.count
+        return viewModel.activities.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -178,8 +215,8 @@ extension ScrapGridViewController: UICollectionViewDataSource {
             return UICollectionViewCell()
         }
 
-        let scrap = viewModel.scraps[indexPath.item]
-        cell.configure(with: scrap)
+        let activity = viewModel.activities[indexPath.item]
+        cell.configure(with: activity)
 
         return cell
     }
@@ -187,10 +224,10 @@ extension ScrapGridViewController: UICollectionViewDataSource {
 
 // MARK: - UICollectionViewDelegate
 
-extension ScrapGridViewController: UICollectionViewDelegate {
+extension ActivityGridViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let scrap = viewModel.scraps[indexPath.item]
-        showActivityDetail(activityRecordId: scrap.recordId)
+        let activity = viewModel.activities[indexPath.item]
+        showActivityDetail(activityRecordId: activity.recordId)
     }
 
     private func showActivityDetail(activityRecordId: Int) {
@@ -216,8 +253,8 @@ extension ScrapGridViewController: UICollectionViewDelegate {
         // Load more when scrolled to 80% of content
         // Prevent duplicate calls by checking isLoadingMore
         if offsetY > contentHeight - height * 1.2 && !viewModel.isLoadingMore {
-            Task {
-                await viewModel.loadMoreScraps()
+            Task { [weak self] in
+                await self?.viewModel.loadMoreActivities()
             }
         }
     }
@@ -225,27 +262,37 @@ extension ScrapGridViewController: UICollectionViewDelegate {
 
 // MARK: - UICollectionViewDelegateFlowLayout
 
-extension ScrapGridViewController: UICollectionViewDelegateFlowLayout {
+extension ActivityGridViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let numberOfColumns: CGFloat = 3
-        let spacing: CGFloat = 4 // minimumInteritemSpacing
-        let inset: CGFloat = 4 // left + right insets
+        let spacing: CGFloat = 1 // 1pt spacing between cells
 
         // Calculate total spacing between items (2 spacings for 3 columns)
         let totalSpacing = spacing * (numberOfColumns - 1)
-        let totalInsets = inset * 2
 
-        // Calculate available width
-        let availableWidth = collectionView.bounds.width - totalSpacing - totalInsets
+        // Calculate available width (no insets - fill screen)
+        let availableWidth = collectionView.bounds.width - totalSpacing
         let itemWidth = floor(availableWidth / numberOfColumns)
 
-        // Aspect ratio: 119:128 (slightly taller than square)
-        let itemHeight = floor(itemWidth * 128 / 119)
+        // Aspect ratio from Figma: 119.33 x 144.1 (height/width ≈ 1.2077)
+        let itemHeight = floor(itemWidth * 144.1 / 119.33)
 
         return CGSize(width: itemWidth, height: itemHeight)
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-        return UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4)
+        return .zero
     }
+
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return 1
+    }
+
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+        return 1
+    }
+}
+
+#Preview {
+    MyPageViewController()
 }

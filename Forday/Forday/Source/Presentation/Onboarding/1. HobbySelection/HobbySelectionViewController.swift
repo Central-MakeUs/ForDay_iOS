@@ -44,8 +44,8 @@ class HobbySelectionViewController: BaseOnboardingViewController {
     }
 
     private func loadHobbies() {
-        Task {
-            await viewModel.fetchHobbies()
+        Task { [weak self] in
+            await self?.viewModel.fetchHobbies()
         }
     }
 

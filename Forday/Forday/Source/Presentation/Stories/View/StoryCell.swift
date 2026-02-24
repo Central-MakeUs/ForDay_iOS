@@ -13,6 +13,7 @@ import Kingfisher
 protocol StoryCellDelegate: AnyObject {
     func storyCellDidTapGreatButton(_ cell: StoryCell, recordId: Int)
     func storyCellDidTapContent(_ cell: StoryCell, recordId: Int)
+    func storyCellDidTapProfile(_ cell: StoryCell, userId: String)
 }
 
 final class StoryCell: UICollectionViewCell {
@@ -23,6 +24,7 @@ final class StoryCell: UICollectionViewCell {
 
     weak var delegate: StoryCellDelegate?
     private var recordId: Int?
+    private var userId: String?
 
     // Thumbnail container
     private let thumbnailContainerView = UIView()
@@ -76,6 +78,7 @@ final class StoryCell: UICollectionViewCell {
         pendingGradient = nil
         isGradientMode = false
         recordId = nil
+        userId = nil
 
         // Remove gradient layers
         gradientContainerView.layer.sublayers?.removeAll(where: { $0 is CAGradientLayer })
@@ -102,6 +105,7 @@ final class StoryCell: UICollectionViewCell {
 
     func configure(with story: Story) {
         self.recordId = story.recordId
+        self.userId = story.userInfo.userId
 
         // Title
         titleLabel.text = story.title
@@ -186,6 +190,10 @@ final class StoryCell: UICollectionViewCell {
         let titleTapGesture = UITapGestureRecognizer(target: self, action: #selector(contentTapped))
         titleLabel.addGestureRecognizer(titleTapGesture)
         titleLabel.isUserInteractionEnabled = true
+
+        let profileTapGesture = UITapGestureRecognizer(target: self, action: #selector(profileTapped))
+        userInfoStackView.addGestureRecognizer(profileTapGesture)
+        userInfoStackView.isUserInteractionEnabled = true
     }
 
     @objc private func greatButtonTapped() {
@@ -196,6 +204,11 @@ final class StoryCell: UICollectionViewCell {
     @objc private func contentTapped() {
         guard let recordId = recordId else { return }
         delegate?.storyCellDidTapContent(self, recordId: recordId)
+    }
+
+    @objc private func profileTapped() {
+        guard let userId = userId else { return }
+        delegate?.storyCellDidTapProfile(self, userId: userId)
     }
 }
 
@@ -210,6 +223,8 @@ extension StoryCell {
             $0.layer.borderWidth = 1
             $0.layer.borderColor = UIColor.stroke001.cgColor
             $0.clipsToBounds = true
+            $0.setContentHuggingPriority(.defaultLow, for: .vertical)
+            $0.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
         }
 
         imageView.do {
@@ -244,6 +259,7 @@ extension StoryCell {
             $0.textColor = .neutral900
             $0.numberOfLines = 2
             $0.lineBreakMode = .byTruncatingTail
+            $0.setContentCompressionResistancePriority(.required, for: .vertical)
         }
 
         userInfoStackView.do {
@@ -311,10 +327,11 @@ extension StoryCell {
             $0.width.height.equalTo(24)
         }
 
-        // Title label (above userInfo)
+        // Title label (above userInfo) - 최소 1줄(~22pt), 최대 2줄(~44pt)
         titleLabel.snp.makeConstraints {
             $0.bottom.equalTo(userInfoStackView.snp.top).offset(-4)
             $0.leading.trailing.equalToSuperview()
+            $0.height.greaterThanOrEqualTo(22)
         }
 
         // Thumbnail container - fills remaining space above title

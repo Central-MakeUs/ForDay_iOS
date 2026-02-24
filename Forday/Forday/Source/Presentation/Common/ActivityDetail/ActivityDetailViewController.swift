@@ -152,6 +152,7 @@ extension ActivityDetailViewController {
             .sink { [weak self] detail in
                 guard let detail = detail else { return }
                 self?.detailView.configure(with: detail)
+                self?.setupUserInfoTap(with: detail)
             }
             .store(in: &cancellables)
 
@@ -233,8 +234,16 @@ extension ActivityDetailViewController {
     }
 
     private func loadData() {
-        Task {
-            await viewModel.fetchDetail()
+        Task { [weak self] in
+            await self?.viewModel.fetchDetail()
+        }
+    }
+
+    private func setupUserInfoTap(with detail: ActivityDetail) {
+        guard let userInfo = detail.userInfo, !detail.recordOwner else { return }
+
+        detailView.userInfoView.onTap = { [weak self] in
+            self?.coordinator?.showUserProfile(userId: userInfo.userId)
         }
     }
 }
@@ -299,25 +308,26 @@ extension ActivityDetailViewController {
 
         print("📸 대표사진 설정: \(detail.imageUrl)")
 
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                try await viewModel.setCoverImage()
-                await MainActor.run {
+                try await self.viewModel.setCoverImage()
+                await MainActor.run { [weak self] in
                     print("✅ 대표사진 설정 성공")
-                    showSuccessAlert(
+                    self?.showSuccessAlert(
                         title: "완료",
                         message: "대표사진이 설정되었습니다."
                     )
                 }
             } catch let appError as AppError {
-                await MainActor.run {
+                await MainActor.run { [weak self] in
                     print("❌ 대표사진 설정 실패: \(appError)")
-                    handleAppError(appError)
+                    self?.handleAppError(appError)
                 }
             } catch {
-                await MainActor.run {
+                await MainActor.run { [weak self] in
                     print("❌ 대표사진 설정 실패: \(error)")
-                    handleAppError(.unknown(error))
+                    self?.handleAppError(.unknown(error))
                 }
             }
         }
@@ -356,29 +366,31 @@ extension ActivityDetailViewController {
     private func deleteActivity() {
         print("🗑️ 활동 기록 삭제")
 
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                try await viewModel.deleteRecord()
-                await MainActor.run {
+                try await self.viewModel.deleteRecord()
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
                     print("✅ 활동 기록 삭제 성공")
 
                     // Notify observers that a record was deleted
-                    if let detail = viewModel.activityDetail {
+                    if let detail = self.viewModel.activityDetail {
                         AppEventBus.shared.activityRecordCreated.send(detail.hobbyId)
                     }
 
                     // Navigate back
-                    navigationController?.popViewController(animated: true)
+                    self.navigationController?.popViewController(animated: true)
                 }
             } catch let appError as AppError {
-                await MainActor.run {
+                await MainActor.run { [weak self] in
                     print("❌ 활동 기록 삭제 실패: \(appError)")
-                    handleAppError(appError)
+                    self?.handleAppError(appError)
                 }
             } catch {
-                await MainActor.run {
+                await MainActor.run { [weak self] in
                     print("❌ 활동 기록 삭제 실패: \(error)")
-                    handleAppError(.unknown(error))
+                    self?.handleAppError(.unknown(error))
                 }
             }
         }
@@ -397,24 +409,24 @@ extension ActivityDetailViewController {
     private func handleReactionSingleTapped(_ reactionType: ReactionType) {
         print("👆 \(reactionType.displayName) 반응 버튼 단일 탭 - 유저 목록 표시")
 
-        Task {
-            await viewModel.fetchReactionUsers(for: reactionType)
+        Task { [weak self] in
+            await self?.viewModel.fetchReactionUsers(for: reactionType)
         }
     }
 
     private func handleReactionDoubleTapped(_ reactionType: ReactionType) {
         print("👆👆 \(reactionType.displayName) 반응 버튼 더블 탭 - 반응 추가/삭제")
 
-        Task {
-            await viewModel.toggleReaction(reactionType)
+        Task { [weak self] in
+            await self?.viewModel.toggleReaction(reactionType)
         }
     }
 
     private func handleBookmarkTapped() {
         print("🔖 북마크 버튼 탭 - 스크랩 추가/삭제")
 
-        Task {
-            await viewModel.toggleScrap()
+        Task { [weak self] in
+            await self?.viewModel.toggleScrap()
         }
     }
 

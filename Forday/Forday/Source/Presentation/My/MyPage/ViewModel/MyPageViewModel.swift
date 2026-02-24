@@ -14,7 +14,7 @@ enum MyPageTab {
     case scraps
 }
 
-final class MyPageViewModel {
+final class MyPageViewModel: ProfileViewModelProtocol {
 
     // MARK: - Published Properties
 
@@ -90,12 +90,14 @@ final class MyPageViewModel {
         async let hobbiesResult = try? await fetchMyHobbiesUseCase.execute()
         async let activitiesResult = try? await fetchMyActivitiesUseCase.execute(hobbyIds: [], lastRecordId: nil)
         async let cardsResult = try? await fetchHobbyCardsUseCase.execute(lastHobbyCardId: nil, size: 20)
+        async let scrapsResult = try? await fetchScrapsUseCase.execute(lastRecordId: nil)
 
-        let (profileOpt, hobbiesOpt, activitiesOpt, cardsOpt) = await (
+        let (profileOpt, hobbiesOpt, activitiesOpt, cardsOpt, scrapsOpt) = await (
             profile,
             hobbiesResult,
             activitiesResult,
-            cardsResult
+            cardsResult,
+            scrapsResult
         )
 
         await MainActor.run {
@@ -121,6 +123,13 @@ final class MyPageViewModel {
                 self.hobbyCards = cards.cards
                 self.hasMoreHobbyCards = cards.hasNext
                 self.lastHobbyCardId = cards.lastCardId
+            }
+
+            if let scraps = scrapsOpt {
+                self.scraps = scraps.feedList
+                self.totalScrapCount = scraps.totalFeedCount ?? 0
+                self.hasMoreScraps = scraps.hasNext
+                self.lastScrapRecordId = scraps.lastRecordId
             }
 
             self.isLoading = false
@@ -185,11 +194,16 @@ final class MyPageViewModel {
     }
 
     func loadMoreActivities() async {
-        guard !isGuestUser, !isLoadingMore && hasMoreActivities else { return }
+        guard !isGuestUser else { return }
 
-        await MainActor.run {
+        // Atomic check-and-set on MainActor to prevent race conditions
+        let shouldProceed = await MainActor.run {
+            guard !isLoadingMore && hasMoreActivities else { return false }
             isLoadingMore = true
+            return true
         }
+
+        guard shouldProceed else { return }
 
         do {
             let result = try await fetchMyActivitiesUseCase.execute(
@@ -281,11 +295,16 @@ final class MyPageViewModel {
     }
 
     func loadMoreScraps() async {
-        guard !isGuestUser, !isLoadingMore && hasMoreScraps else { return }
+        guard !isGuestUser else { return }
 
-        await MainActor.run {
+        // Atomic check-and-set on MainActor to prevent race conditions
+        let shouldProceed = await MainActor.run {
+            guard !isLoadingMore && hasMoreScraps else { return false }
             isLoadingMore = true
+            return true
         }
+
+        guard shouldProceed else { return }
 
         do {
             let result = try await fetchScrapsUseCase.execute(lastRecordId: lastScrapRecordId)
@@ -309,4 +328,17 @@ final class MyPageViewModel {
             }
         }
     }
+}
+
+// MARK: - ProfileViewModelProtocol
+
+extension MyPageViewModel {
+    var activitiesPublisher: Published<[FeedItem]>.Publisher { $activities }
+    var totalActivityCountPublisher: Published<Int>.Publisher { $totalActivityCount }
+    var myHobbiesPublisher: Published<[MyPageHobby]>.Publisher { $myHobbies }
+    var selectedHobbyIdsPublisher: Published<Set<Int>>.Publisher { $selectedHobbyIds }
+    var hobbyCardsPublisher: Published<[CompletedHobbyCard]>.Publisher { $hobbyCards }
+    var scrapsPublisher: Published<[FeedItem]>.Publisher { $scraps }
+    var totalScrapCountPublisher: Published<Int>.Publisher { $totalScrapCount }
+    var isLoadingMorePublisher: Published<Bool>.Publisher { $isLoadingMore }
 }

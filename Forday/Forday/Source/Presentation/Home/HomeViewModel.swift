@@ -46,8 +46,10 @@ class HomeViewModel {
     // Methods
 
     func fetchHomeInfo(hobbyId: Int? = nil) async {
-        isLoading = true
-        error = nil
+        await MainActor.run {
+            isLoading = true
+            error = nil
+        }
 
         do {
             let info = try await fetchHomeInfoUseCase.execute(hobbyId: hobbyId)

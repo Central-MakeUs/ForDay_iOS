@@ -52,17 +52,15 @@ final class StoriesViewController: UIViewController {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
 
-        // Load initial data on first appearance
-        if viewModel.tabs.isEmpty {
-            loadInitialData()
-        }
+        // 탭 진입 시 항상 새로고침 (탭 정보 + 스토리)
+        loadInitialData()
     }
 
     // MARK: - Private Methods
 
     private func loadInitialData() {
-        Task {
-            await viewModel.loadInitialData()
+        Task { [weak self] in
+            await self?.viewModel.loadInitialData()
         }
     }
 }
@@ -84,7 +82,13 @@ extension StoriesViewController {
     private func setupCallbacks() {
         // Tab selection
         storiesView.tabSegmentControl.onTabSelected = { [weak self] index, _ in
-            Task {
+            guard let self = self else { return }
+            // 탭 전환 시 스크롤 맨 위로 리셋
+            self.storiesView.collectionView.setContentOffset(
+                CGPoint(x: 0, y: -self.storiesView.collectionView.contentInset.top),
+                animated: false
+            )
+            Task { [weak self] in
                 await self?.viewModel.selectTab(at: index)
             }
         }
@@ -104,8 +108,6 @@ extension StoriesViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] tabs in
                 self?.storiesView.tabSegmentControl.configure(with: tabs)
-                // Hide tabs if only 1 hobby
-                self?.storiesView.updateTabVisibility(showTabs: tabs.count > 1)
             }
             .store(in: &cancellables)
 
@@ -161,8 +163,6 @@ extension StoriesViewController {
                 } else {
                     self.storiesView.hideSkeleton()
                     self.storiesView.endRefreshing()
-                    // 스켈레톤 해제 후 탭 가시성 복원
-                    self.storiesView.updateTabVisibility(showTabs: self.viewModel.tabs.count > 1)
                     // 로딩 완료 후 empty state 체크
                     if self.viewModel.stories.isEmpty {
                         self.storiesView.showEmptyState()
@@ -198,8 +198,8 @@ extension StoriesViewController {
 
 extension StoriesViewController {
     @objc private func handleRefresh() {
-        Task {
-            await viewModel.loadStories(reset: true)
+        Task { [weak self] in
+            await self?.viewModel.loadStories(reset: true)
         }
     }
 }
@@ -232,8 +232,8 @@ extension StoriesViewController: UICollectionViewDataSource {
 extension StoriesViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         // Pagination: Load more when approaching the end
-        Task {
-            await viewModel.loadMoreStoriesIfNeeded(currentIndex: indexPath.item)
+        Task { [weak self] in
+            await self?.viewModel.loadMoreStoriesIfNeeded(currentIndex: indexPath.item)
         }
     }
 }
@@ -271,8 +271,12 @@ extension StoriesViewController: StoriesPinterestLayoutDelegate {
             }
         }
 
-        // 썸네일 높이 클램프 (min 117, max 280으로 범위 확대)
-        let clampedThumbnailHeight = max(117, min(280, thumbnailHeight))
+        // 썸네일 높이 클램프 (비율 기반)
+        // min: 4:3 landscape (width * 0.75)
+        // max: 3:4 portrait (width * 4/3)
+        let minHeight = cellWidth * 0.75
+        let maxHeight = cellWidth * (4.0 / 3.0)
+        let clampedThumbnailHeight = max(minHeight, min(maxHeight, thumbnailHeight))
 
         // 콘텐츠 영역: 타이틀 (최대 2줄 ~44pt) + 사용자 정보 (24pt) + 간격 (8+4)
         let contentHeight: CGFloat = 8 + 44 + 4 + 24
@@ -285,13 +289,17 @@ extension StoriesViewController: StoriesPinterestLayoutDelegate {
 
 extension StoriesViewController: StoryCellDelegate {
     func storyCellDidTapGreatButton(_ cell: StoryCell, recordId: Int) {
-        Task {
-            await viewModel.toggleGreat(for: recordId)
+        Task { [weak self] in
+            await self?.viewModel.toggleGreat(for: recordId)
         }
     }
 
     func storyCellDidTapContent(_ cell: StoryCell, recordId: Int) {
         coordinator?.showActivityDetail(activityRecordId: recordId)
+    }
+
+    func storyCellDidTapProfile(_ cell: StoryCell, userId: String) {
+        coordinator?.showUserProfile(userId: userId)
     }
 }
 

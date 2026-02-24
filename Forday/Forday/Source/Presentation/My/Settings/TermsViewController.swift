@@ -69,23 +69,24 @@ extension TermsViewController {
     private func loadContent() {
         termsView.showLoading()
 
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                switch termsType {
+                switch self.termsType {
                 case .termsOfService:
-                    let data = try await termsService.fetchTermsOfService()
-                    await MainActor.run {
-                        termsView.updateTermsOfService(data)
+                    let data = try await self.termsService.fetchTermsOfService()
+                    await MainActor.run { [weak self] in
+                        self?.termsView.updateTermsOfService(data)
                     }
                 case .privacyPolicy:
-                    let data = try await termsService.fetchPrivacyPolicy()
-                    await MainActor.run {
-                        termsView.updatePrivacyPolicy(data)
+                    let data = try await self.termsService.fetchPrivacyPolicy()
+                    await MainActor.run { [weak self] in
+                        self?.termsView.updatePrivacyPolicy(data)
                     }
                 }
             } catch {
-                await MainActor.run {
-                    termsView.showError("내용을 불러오는데 실패했습니다.\n다시 시도해주세요.")
+                await MainActor.run { [weak self] in
+                    self?.termsView.showError("내용을 불러오는데 실패했습니다.\n다시 시도해주세요.")
                     print("❌ Failed to load terms: \(error)")
                 }
             }

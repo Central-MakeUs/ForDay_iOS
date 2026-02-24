@@ -15,7 +15,8 @@ final class FetchMyHobbiesUseCase {
         self.repository = repository
     }
 
-    func execute() async throws -> MyHobbiesResult {
-        return try await repository.fetchMyHobbies()
+    /// 사용자 취미 진행 상태 조회 (userId가 nil이면 본인)
+    func execute(userId: String? = nil) async throws -> MyHobbiesResult {
+        return try await repository.fetchMyHobbies(userId: userId)
     }
 }

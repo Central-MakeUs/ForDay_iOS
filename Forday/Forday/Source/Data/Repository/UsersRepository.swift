@@ -33,15 +33,15 @@ final class UsersRepository: UsersRepositoryInterface {
 
     // MARK: - Fetch User Info
 
-    func fetchUserInfo() async throws -> UserInfo {
-        let response = try await usersService.fetchUserInfo()
+    func fetchUserInfo(userId: String? = nil) async throws -> UserInfo {
+        let response = try await usersService.fetchUserInfo(userId: userId)
         return response.toDomain()
     }
 
     // MARK: - Fetch Hobby Cards
 
-    func fetchHobbyCards(lastHobbyCardId: Int?, size: Int = 20) async throws -> HobbyCardsResult {
-        let response = try await usersService.fetchHobbyCards(lastHobbyCardId: lastHobbyCardId, size: size)
+    func fetchHobbyCards(lastHobbyCardId: Int?, size: Int = 20, userId: String? = nil) async throws -> HobbyCardsResult {
+        let response = try await usersService.fetchHobbyCards(lastHobbyCardId: lastHobbyCardId, size: size, userId: userId)
         return response.toDomain()
     }
 
@@ -54,15 +54,15 @@ final class UsersRepository: UsersRepositoryInterface {
 
     // MARK: - Fetch Feeds
 
-    func fetchFeeds(hobbyIds: [Int], lastRecordId: Int?, feedSize: Int = 24) async throws -> FeedResult {
-        let response = try await usersService.fetchFeeds(hobbyIds: hobbyIds, lastRecordId: lastRecordId, feedSize: feedSize)
+    func fetchFeeds(hobbyIds: [Int], lastRecordId: Int?, feedSize: Int = 24, userId: String? = nil) async throws -> FeedResult {
+        let response = try await usersService.fetchFeeds(hobbyIds: hobbyIds, lastRecordId: lastRecordId, feedSize: feedSize, userId: userId)
         return response.toDomain(requestedSize: feedSize)
     }
 
     // MARK: - Fetch Scraps
 
-    func fetchScraps(lastRecordId: Int?, feedSize: Int = 24) async throws -> FeedResult {
-        let response = try await usersService.fetchScraps(lastRecordId: lastRecordId, feedSize: feedSize)
+    func fetchScraps(lastRecordId: Int?, feedSize: Int = 24, userId: String? = nil) async throws -> FeedResult {
+        let response = try await usersService.fetchScraps(lastRecordId: lastRecordId, feedSize: feedSize, userId: userId)
         return response.toDomain(requestedSize: feedSize)
     }
 }

@@ -152,8 +152,9 @@ extension ActivityListViewController {
     }
 
     private func loadActivities() {
-        Task {
-            await viewModel.fetchActivities(hobbyId: hobbyId)
+        Task { [weak self] in
+            guard let self = self else { return }
+            await self.viewModel.fetchActivities(hobbyId: self.hobbyId)
         }
     }
 
@@ -209,43 +210,47 @@ extension ActivityListViewController {
     }
 
     private func updateActivity(activityId: Int, content: String) {
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                try await viewModel.updateActivity(activityId: activityId, content: content)
-                await viewModel.fetchActivities(hobbyId: hobbyId)  // 새로고침
+                try await self.viewModel.updateActivity(activityId: activityId, content: content)
+                await self.viewModel.fetchActivities(hobbyId: self.hobbyId)  // 새로고침
 
                 // 홈 화면 업데이트를 위한 이벤트 발생
-                await MainActor.run {
-                    AppEventBus.shared.activityUpdated.send(hobbyId)
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+                    AppEventBus.shared.activityUpdated.send(self.hobbyId)
                 }
             } catch let appError as AppError {
-                await MainActor.run {
-                    showError(appError.userMessage)
+                await MainActor.run { [weak self] in
+                    self?.showError(appError.userMessage)
                 }
             } catch {
-                await MainActor.run {
-                    showError(error.localizedDescription)
+                await MainActor.run { [weak self] in
+                    self?.showError(error.localizedDescription)
                 }
             }
         }
     }
 
     private func deleteActivity(activityId: Int) {
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                try await viewModel.deleteActivity(activityId: activityId)
+                try await self.viewModel.deleteActivity(activityId: activityId)
 
                 // 홈 화면 업데이트를 위한 이벤트 발생
-                await MainActor.run {
-                    AppEventBus.shared.activityDeleted.send(hobbyId)
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+                    AppEventBus.shared.activityDeleted.send(self.hobbyId)
                 }
             } catch let appError as AppError {
-                await MainActor.run {
-                    showError(appError.userMessage)
+                await MainActor.run { [weak self] in
+                    self?.showError(appError.userMessage)
                 }
             } catch {
-                await MainActor.run {
-                    showError(error.localizedDescription)
+                await MainActor.run { [weak self] in
+                    self?.showError(error.localizedDescription)
                 }
             }
         }

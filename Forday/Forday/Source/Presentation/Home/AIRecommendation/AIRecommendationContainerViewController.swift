@@ -202,8 +202,8 @@ extension AIRecommendationContainerViewController {
             transitionToView(loadingView)
 
             // 닉네임 가져오기 및 AI 추천 동시 호출
-            Task {
-                await fetchNicknameAndAIRecommendations(hobbyName: resolvedHobbyName)
+            Task { [weak self] in
+                await self?.fetchNicknameAndAIRecommendations(hobbyName: resolvedHobbyName)
             }
         }
     }
@@ -248,8 +248,8 @@ extension AIRecommendationContainerViewController {
         transitionToView(listView)
 
         // Fetch AI activity items
-        Task {
-            await fetchAIActivityItems(hobbyId: hobbyId)
+        Task { [weak self] in
+            await self?.fetchAIActivityItems(hobbyId: hobbyId)
         }
     }
 
@@ -259,8 +259,8 @@ extension AIRecommendationContainerViewController {
         transitionToView(loadingView)
 
         // API 호출
-        Task {
-            await fetchAIRecommendationsAsync()
+        Task { [weak self] in
+            await self?.fetchAIRecommendationsAsync()
         }
     }
 
@@ -448,20 +448,21 @@ extension AIRecommendationContainerViewController {
 
     /// Refresh without transitioning to loading view (uses skeleton in selection view)
     private func refreshAIRecommendation() {
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                if let viewModel = viewModel {
+                if let viewModel = self.viewModel {
                     try await viewModel.fetchAIRecommendations()
-                } else if let hobbyId = hobbyId {
-                    let result = try await fetchAIRecommendationsUseCase.execute(hobbyId: hobbyId)
-                    await MainActor.run {
-                        self.aiRecommendationResult = result
+                } else if let hobbyId = self.hobbyId {
+                    let result = try await self.fetchAIRecommendationsUseCase.execute(hobbyId: hobbyId)
+                    await MainActor.run { [weak self] in
+                        self?.aiRecommendationResult = result
                     }
                 }
             } catch {
-                await MainActor.run {
-                    self.selectionView?.hideSkeleton()
-                    self.showError(error)
+                await MainActor.run { [weak self] in
+                    self?.selectionView?.hideSkeleton()
+                    self?.showError(error)
                 }
             }
         }

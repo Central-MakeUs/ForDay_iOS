@@ -133,27 +133,28 @@ class EditProfileViewController: UIViewController {
     }
 
     @objc private func duplicateCheckButtonTapped() {
-        Task {
-            await viewModel.checkDuplicate()
+        Task { [weak self] in
+            await self?.viewModel.checkDuplicate()
         }
     }
 
     @objc private func saveButtonTapped() {
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                try await viewModel.saveProfile()
+                try await self.viewModel.saveProfile()
 
-                await MainActor.run {
+                await MainActor.run { [weak self] in
                     ToastView.show(message: "프로필 수정 완료!")
-                    self.navigationController?.popViewController(animated: true)
+                    self?.navigationController?.popViewController(animated: true)
                 }
             } catch let appError as AppError {
-                await MainActor.run {
-                    self.handleAppError(appError)
+                await MainActor.run { [weak self] in
+                    self?.handleAppError(appError)
                 }
             } catch {
-                await MainActor.run {
-                    self.handleAppError(.unknown(error))
+                await MainActor.run { [weak self] in
+                    self?.handleAppError(.unknown(error))
                 }
             }
         }

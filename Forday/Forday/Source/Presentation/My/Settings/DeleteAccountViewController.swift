@@ -75,9 +75,10 @@ extension DeleteAccountViewController {
     }
 
     private func performDeleteAccount() {
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                let response = try await authService.withdraw()
+                let response = try await self.authService.withdraw()
 
                 // Delete local tokens
                 try? TokenStorage.shared.deleteAllTokens()
@@ -87,14 +88,14 @@ extension DeleteAccountViewController {
 
                 print("✅ Account deleted successfully")
 
-                await MainActor.run {
-                    showSuccessPopup(message: response.data.message)
+                await MainActor.run { [weak self] in
+                    self?.showSuccessPopup(message: response.data.message)
                 }
 
             } catch {
                 print("❌ Delete account failed: \(error)")
-                await MainActor.run {
-                    showErrorPopup(message: "탈퇴 처리 중 오류가 발생했습니다.")
+                await MainActor.run { [weak self] in
+                    self?.showErrorPopup(message: "탈퇴 처리 중 오류가 발생했습니다.")
                 }
             }
         }

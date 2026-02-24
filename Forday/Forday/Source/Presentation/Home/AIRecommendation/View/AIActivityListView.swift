@@ -286,16 +286,18 @@ extension AIActivityListView {
         saveButton.isEnabled = false
 
         // Save using use case
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                _ = try await createActivitiesUseCase.execute(
-                    hobbyId: hobbyId,
+                _ = try await self.createActivitiesUseCase.execute(
+                    hobbyId: self.hobbyId,
                     activities: [activityInput]
                 )
 
-                await MainActor.run {
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
                     // 홈 화면 업데이트를 위한 이벤트 발생
-                    AppEventBus.shared.activityRecordCreated.send(hobbyId)
+                    AppEventBus.shared.activityRecordCreated.send(self.hobbyId)
 
                     // 토스트 표시 (버튼 위에, 이동하기 액션 포함)
                     ToastView.show(
@@ -309,13 +311,13 @@ extension AIActivityListView {
                     }
 
                     // 저장 완료 콜백 (바텀시트 닫지 않음)
-                    onActivitySaved?()
+                    self.onActivitySaved?()
                 }
             } catch {
-                await MainActor.run {
-                    setSaveButtonEnabled(true)
+                await MainActor.run { [weak self] in
+                    self?.setSaveButtonEnabled(true)
                     let message = (error as? AppError)?.userMessage ?? error.localizedDescription
-                    onError?(message)
+                    self?.onError?(message)
                 }
             }
         }

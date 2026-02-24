@@ -52,14 +52,14 @@ final class UsersService {
         }
     }
     
-    /// Users - 사용자 피드 목록 조회
-    func fetchFeeds(hobbyIds: [Int], lastRecordId: Int?, feedSize: Int = 24) async throws -> DTO.UsersFeedsResponse {
-        return try await provider.request(.feeds(hobbyIds: hobbyIds, lastRecordId: lastRecordId, feedSize: feedSize))
+    /// Users - 사용자 피드 목록 조회 (userId가 nil이면 본인)
+    func fetchFeeds(hobbyIds: [Int], lastRecordId: Int?, feedSize: Int = 24, userId: String? = nil) async throws -> DTO.UsersFeedsResponse {
+        return try await provider.request(.feeds(hobbyIds: hobbyIds, lastRecordId: lastRecordId, feedSize: feedSize, userId: userId))
     }
-    
-    /// Users - 사용자 정보 조회
-    func fetchUserInfo() async throws -> DTO.UsersInfoResponse {
-        return try await provider.request(.info)
+
+    /// Users - 사용자 정보 조회 (userId가 nil이면 본인)
+    func fetchUserInfo(userId: String? = nil) async throws -> DTO.UsersInfoResponse {
+        return try await provider.request(.info(userId: userId))
     }
     
     /// Users - 사용자 프로필 이미지 설정
@@ -67,18 +67,18 @@ final class UsersService {
         return try await provider.request(.profileImageUpload(profileImageUrl: profileImageUrl))
     }
 
-    /// Users - 사용자 취미 진행 상단탭 조회
-    func fetchHobbiesInProgress() async throws -> DTO.UsersHobbiesInProgressResponse {
-        return try await provider.request(.hobbiesInProgress)
+    /// Users - 사용자 취미 진행 상단탭 조회 (userId가 nil이면 본인)
+    func fetchHobbiesInProgress(userId: String? = nil) async throws -> DTO.UsersHobbiesInProgressResponse {
+        return try await provider.request(.hobbiesInProgress(userId: userId))
     }
 
-    /// Users - 사용자 취미 카드 리스트 조회
-    func fetchHobbyCards(lastHobbyCardId: Int?, size: Int = 20) async throws -> DTO.UsersHobbyCardResponse {
-        return try await provider.request(.hobbyCards(lastHobbyCardId: lastHobbyCardId, size: size))
+    /// Users - 사용자 취미 카드 리스트 조회 (userId가 nil이면 본인)
+    func fetchHobbyCards(lastHobbyCardId: Int?, size: Int = 20, userId: String? = nil) async throws -> DTO.UsersHobbyCardResponse {
+        return try await provider.request(.hobbyCards(lastHobbyCardId: lastHobbyCardId, size: size, userId: userId))
     }
 
-    /// Users - 사용자 스크랩 목록 조회
-    func fetchScraps(lastRecordId: Int?, feedSize: Int = 24) async throws -> DTO.UsersScrapsResponse {
-        return try await provider.request(.scraps(lastRecordId: lastRecordId, feedSize: feedSize))
+    /// Users - 사용자 스크랩 목록 조회 (userId가 nil이면 본인)
+    func fetchScraps(lastRecordId: Int?, feedSize: Int = 24, userId: String? = nil) async throws -> DTO.UsersScrapsResponse {
+        return try await provider.request(.scraps(lastRecordId: lastRecordId, feedSize: feedSize, userId: userId))
     }
 }

@@ -125,9 +125,9 @@ class HobbySettingsViewController: UIViewController {
     }
 
     private func fetchInitialData() {
-        Task {
+        Task { [weak self] in
             do {
-                try await viewModel.fetchHobbies(status: .inProgress)
+                try await self?.viewModel.fetchHobbies(status: .inProgress)
             } catch {
                 // Error already handled via binding
             }
@@ -139,8 +139,8 @@ class HobbySettingsViewController: UIViewController {
     @objc private func segmentChanged(_ sender: UISegmentedControl) {
         let status: HobbyStatus = sender.selectedSegmentIndex == 0 ? .inProgress : .archived
         hobbySettingsView.animateUnderline(to: sender.selectedSegmentIndex)
-        Task {
-            await viewModel.switchSegment(to: status)
+        Task { [weak self] in
+            await self?.viewModel.switchSegment(to: status)
         }
     }
 
@@ -152,9 +152,9 @@ class HobbySettingsViewController: UIViewController {
         print("🔄 segmentedControl.selectedSegmentIndex set to: \(index)")
         hobbySettingsView.animateUnderline(to: index)
         print("🔄 animateUnderline called")
-        Task {
+        Task { [weak self] in
             print("🔄 calling viewModel.switchSegment")
-            await viewModel.switchSegment(to: status)
+            await self?.viewModel.switchSegment(to: status)
             print("🔄 viewModel.switchSegment completed")
         }
     }
@@ -391,9 +391,10 @@ class HobbySettingsViewController: UIViewController {
     }
 
     private func refreshCurrentList() {
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                try await viewModel.fetchHobbies(status: viewModel.currentStatus)
+                try await self.viewModel.fetchHobbies(status: self.viewModel.currentStatus)
             } catch {
                 // Error already handled via binding
             }
@@ -422,7 +423,8 @@ class HobbySettingsViewController: UIViewController {
             self.onboardingCoordinator = nil
 
             // Refresh hobby list
-            Task {
+            Task { [weak self] in
+                guard let self = self else { return }
                 do {
                     try await self.viewModel.fetchHobbies(status: self.viewModel.currentStatus)
                 } catch {

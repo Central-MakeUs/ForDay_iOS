@@ -66,22 +66,23 @@ class NicknameViewController: BaseOnboardingViewController {
         // 다음 버튼 비활성화 (중복 클릭 방지)
         setNextButtonEnabled(false)
 
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
                 // 닉네임 설정 API 호출
-                try await viewModel.setNickname()
+                try await self.viewModel.setNickname()
 
                 // 성공 시 홈으로
-                await MainActor.run {
-                    if let onboardingCoordinator = coordinator as? OnboardingCoordinator {
+                await MainActor.run { [weak self] in
+                    if let onboardingCoordinator = self?.coordinator as? OnboardingCoordinator {
                         onboardingCoordinator.finishOnboarding()
                     }
                 }
             } catch {
                 // 실패 시 에러 처리
-                await MainActor.run {
-                    setNextButtonEnabled(true)
-                    showError(error)
+                await MainActor.run { [weak self] in
+                    self?.setNextButtonEnabled(true)
+                    self?.showError(error)
                 }
             }
         }
@@ -150,8 +151,8 @@ extension NicknameViewController {
         nicknameView.nicknameTextField.resignFirstResponder()
         
         // async 호출
-        Task {
-            await viewModel.checkDuplicate()
+        Task { [weak self] in
+            await self?.viewModel.checkDuplicate()
         }
     }
 }

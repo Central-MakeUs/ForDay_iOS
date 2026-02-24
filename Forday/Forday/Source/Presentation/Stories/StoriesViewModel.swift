@@ -65,12 +65,14 @@ final class StoriesViewModel {
                 filterType: selectedFilterType
             )
 
+            // 탭 정보 설정 (전체 탭 + 취미 탭들)
+            var allTabs = [StoriesTab.allTab]  // 전체 탭을 맨 앞에 추가
             if let result = result {
-                // 탭 정보 설정 (전체 탭 + 취미 탭들)
-                var allTabs = [StoriesTab.allTab]  // 전체 탭을 맨 앞에 추가
                 allTabs.append(contentsOf: result.tabs)
-                self.tabs = allTabs
+            }
+            self.tabs = allTabs
 
+            if let result = result, !result.tabs.isEmpty {
                 // currentHobby가 true인 탭 찾기 (전체 탭 추가로 인해 index +1)
                 if let currentIndex = result.tabs.firstIndex(where: { $0.currentHobby }) {
                     self.selectedTabIndex = currentIndex + 1  // 전체 탭이 0번이므로 +1
@@ -88,10 +90,29 @@ final class StoriesViewModel {
 
                 // 이미지 크기 프리페치
                 prefetchImageSizes(for: result.stories)
+            } else {
+                // tabInfo가 비어있으면 전체 탭만, 전체 스토리 조회
+                self.selectedTabIndex = 0
+                self.currentHobbyId = nil
+
+                if let result = result {
+                    self.stories = result.stories
+                    self.lastRecordId = result.lastRecordId
+                    self.hasNext = result.hasNext
+                    prefetchImageSizes(for: result.stories)
+                }
             }
         } catch let appError as AppError {
+            // 에러 발생 시에도 전체 탭은 표시
+            self.tabs = [StoriesTab.allTab]
+            self.selectedTabIndex = 0
+            self.currentHobbyId = nil
             self.error = appError
         } catch {
+            // 에러 발생 시에도 전체 탭은 표시
+            self.tabs = [StoriesTab.allTab]
+            self.selectedTabIndex = 0
+            self.currentHobbyId = nil
             self.error = .unknown(error)
         }
 

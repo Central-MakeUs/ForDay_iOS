@@ -290,9 +290,9 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         // Set completion handler to dismiss and refresh home
         onboardingCoordinator?.onHobbyCreationCompleted = { [weak self] in
             // Dismiss onboarding
-            onboardingNav.dismiss(animated: true) {
+            onboardingNav.dismiss(animated: true) { [weak self] in
                 // Refresh home view
-                Task {
+                Task { [weak self] in
                     await self?.homeViewController?.viewModel.fetchHomeInfo()
                 }
                 // Clean up coordinator reference
@@ -314,15 +314,19 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
     }
 
     func showUserProfile(userId: String) {
-        // TODO: Implement user profile screen navigation
-        // For now, just print
-        print("Navigate to user profile: \(userId)")
+        let profileVC = UserProfileViewController(userId: userId)
+        profileVC.coordinator = self
 
-        // When UserProfileViewController is ready:
-        // let profileVC = UserProfileViewController(userId: userId)
-        // if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
-        //     homeNav.pushViewController(profileVC, animated: true)
-        // }
+        // Push to current navigation stack (enables swipe back gesture)
+        if let currentNav = tabBarController.selectedViewController as? UINavigationController {
+            currentNav.pushViewController(profileVC, animated: true)
+        } else if let storiesNav = tabBarController.viewControllers?[2] as? UINavigationController {
+            // Fallback to stories navigation (most likely source of user profile navigation)
+            storiesNav.pushViewController(profileVC, animated: true)
+        } else if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
+            // Final fallback to home navigation
+            homeNav.pushViewController(profileVC, animated: true)
+        }
     }
 
     func switchToHomeTab() {

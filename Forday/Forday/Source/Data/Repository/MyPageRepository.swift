@@ -17,14 +17,14 @@ final class MyPageRepository: MyPageRepositoryInterface {
         self.recordsService = recordsService
     }
 
-    func fetchUserInfo() async throws -> UserInfo {
-        let response = try await usersService.fetchUserInfo()
+    func fetchUserInfo(userId: String? = nil) async throws -> UserInfo {
+        let response = try await usersService.fetchUserInfo(userId: userId)
 
         return response.toDomain()
     }
 
-    func fetchMyHobbies() async throws -> MyHobbiesResult {
-        let response = try await usersService.fetchHobbiesInProgress()
+    func fetchMyHobbies(userId: String? = nil) async throws -> MyHobbiesResult {
+        let response = try await usersService.fetchHobbiesInProgress(userId: userId)
         return response.toDomain()
     }
 

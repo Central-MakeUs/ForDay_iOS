@@ -83,13 +83,6 @@ final class StoriesView: UIView {
         collectionView.isHidden = false
     }
 
-    func updateTabVisibility(showTabs: Bool) {
-        tabSegmentControl.isHidden = !showTabs
-        tabSegmentControl.snp.updateConstraints {
-            $0.height.equalTo(showTabs ? 44 : 0)
-        }
-    }
-
     // MARK: - Skeleton
 
     /// 스켈레톤 표시
@@ -134,9 +127,8 @@ final class StoriesView: UIView {
         skeletonContainerView.isHidden = true
 
         // Show actual content
+        tabSegmentControl.isHidden = false
         collectionView.isHidden = false
-        // tabSegmentControl visibility is controlled by updateTabVisibility
-        // filterView is controlled by its own logic
     }
 
     private func startSkeletonAnimations() {

@@ -8,8 +8,8 @@
 import Foundation
 
 protocol MyPageRepositoryInterface {
-    func fetchUserInfo() async throws -> UserInfo
-    func fetchMyHobbies() async throws -> MyHobbiesResult
+    func fetchUserInfo(userId: String?) async throws -> UserInfo
+    func fetchMyHobbies(userId: String?) async throws -> MyHobbiesResult
     func fetchActivityDetail(activityRecordId: Int) async throws -> ActivityDetail
     func updateProfile(nickname: String, profileImageUrl: String) async throws -> UserInfo
     func addReaction(recordId: Int, reactionType: ReactionType) async throws -> AddReactionResult

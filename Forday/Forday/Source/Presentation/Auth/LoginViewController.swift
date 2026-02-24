@@ -76,22 +76,23 @@ extension LoginViewController {
     
     @objc private func kakaoLoginButtonTapped() {
         loginView.isLoginInProgress = true
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             defer {
-                Task { @MainActor in
-                    self.loginView.isLoginInProgress = false
+                Task { @MainActor [weak self] in
+                    self?.loginView.isLoginInProgress = false
                 }
             }
             do {
-                let authToken = try await kakaoLoginUseCase.execute()
-                await MainActor.run {
-                    coordinator?.handleLoginSuccess(authToken: authToken)
+                let authToken = try await self.kakaoLoginUseCase.execute()
+                await MainActor.run { [weak self] in
+                    self?.coordinator?.handleLoginSuccess(authToken: authToken)
                 }
             } catch {
                 // 사용자 취소 시 에러 알림 표시하지 않음
-                if isUserCancellationError(error) { return }
-                await MainActor.run {
-                    showError(error)
+                if self.isUserCancellationError(error) { return }
+                await MainActor.run { [weak self] in
+                    self?.showError(error)
                 }
             }
         }
@@ -99,22 +100,23 @@ extension LoginViewController {
 
     @objc private func appleLoginButtonTapped() {
         loginView.isLoginInProgress = true
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             defer {
-                Task { @MainActor in
-                    self.loginView.isLoginInProgress = false
+                Task { @MainActor [weak self] in
+                    self?.loginView.isLoginInProgress = false
                 }
             }
             do {
-                let authToken = try await appleLoginUseCase.execute()
-                await MainActor.run {
-                    coordinator?.handleLoginSuccess(authToken: authToken)
+                let authToken = try await self.appleLoginUseCase.execute()
+                await MainActor.run { [weak self] in
+                    self?.coordinator?.handleLoginSuccess(authToken: authToken)
                 }
             } catch {
                 // 사용자 취소 시 에러 알림 표시하지 않음
-                if isUserCancellationError(error) { return }
-                await MainActor.run {
-                    showError(error)
+                if self.isUserCancellationError(error) { return }
+                await MainActor.run { [weak self] in
+                    self?.showError(error)
                 }
             }
         }
@@ -122,20 +124,21 @@ extension LoginViewController {
 
     @objc private func guestLoginButtonTapped() {
         loginView.isLoginInProgress = true
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             defer {
-                Task { @MainActor in
-                    self.loginView.isLoginInProgress = false
+                Task { @MainActor [weak self] in
+                    self?.loginView.isLoginInProgress = false
                 }
             }
             do {
-                let authToken = try await guestLoginUseCase.execute()
-                await MainActor.run {
-                    coordinator?.handleLoginSuccess(authToken: authToken)
+                let authToken = try await self.guestLoginUseCase.execute()
+                await MainActor.run { [weak self] in
+                    self?.coordinator?.handleLoginSuccess(authToken: authToken)
                 }
             } catch {
-                await MainActor.run {
-                    showError(error)
+                await MainActor.run { [weak self] in
+                    self?.showError(error)
                 }
             }
         }
