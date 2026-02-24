@@ -70,6 +70,7 @@ extension ImageTemplateSelectorViewController {
                 self.selectorView.configureTemplate(
                     image: image,
                     title: detail.activityContent,
+                    memo: detail.memo,
                     date: detail.createdAt,
                     stickerType: stickerType
                 )
@@ -112,7 +113,7 @@ extension ImageTemplateSelectorViewController {
     }
 
     @objc private func saveButtonTapped() {
-        guard let renderedImage = selectorView.cardTemplateView.renderToImage() else {
+        guard let renderedImage = selectorView.renderCurrentTemplate() else {
             ToastView.showError(message: "이미지 생성에 실패했습니다.")
             return
         }
@@ -133,7 +134,12 @@ extension ImageTemplateSelectorViewController {
     }
 
     private func showSuccessToast() {
-        ToastView.showSuccess(message: "활동기록 사진 저장완료!")
+        // 버튼 위에 토스트 표시 (버튼 높이 ~56 + 버튼 하단 여백 16 + 토스트 여백 16 = 88)
+        ToastView.show(
+            message: "활동기록 사진 저장완료!",
+            icon: .success,
+            position: .aboveButton(bottomInset: 88)
+        )
     }
 
     private func showError(_ error: Error) {

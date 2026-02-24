@@ -56,6 +56,20 @@ enum StickerType: String, Codable, CaseIterable {
         }
     }
 
+    /// Returns the gradient template overlay for this sticker type
+    var templateGradient: AppGradient {
+        switch self {
+        case .smile:
+            return DesignGradient.templateSmile
+        case .sad:
+            return DesignGradient.templateSad
+        case .laugh:
+            return DesignGradient.templateLaugh
+        case .angry:
+            return DesignGradient.templateAngry
+        }
+    }
+
     /// Initialize from a filename string
     /// - Parameter fileName: The sticker filename (e.g., "smile.jpg" or "smile")
     /// - Returns: The corresponding StickerType, or nil if not recognized

@@ -43,7 +43,7 @@ final class CardTemplateView: UIView {
         static let titleDateGap: CGFloat = 4     // gap between title and date
 
         // 로고
-        static let logoWidth: CGFloat = 47.758
+        static let logoWidth: CGFloat = 48
         static let logoHeight: CGFloat = 16
     }
 
