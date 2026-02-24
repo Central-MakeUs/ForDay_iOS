@@ -39,7 +39,7 @@ final class ProfileSegmentedControlView: UIView {
     func updateCounts(inProgressCount: Int, hobbyCardsCount: Int, scrapsCount: Int = 0) {
         activitiesButton.setTitle("진행중 \(inProgressCount)", for: .normal)
         hobbyCardsButton.setTitle("취미카드 \(hobbyCardsCount)", for: .normal)
-        scrapsButton.setTitle("스크랩", for: .normal)
+        scrapsButton.setTitle("스크랩 \(scrapsCount)", for: .normal)
     }
 
     func selectSegment(_ segment: MyPageTab, animated: Bool = false) {

@@ -14,7 +14,7 @@ final class HobbyCardStackViewController: UIViewController {
 
     // MARK: - Properties
 
-    private let viewModel: MyPageViewModel
+    private let viewModel: ProfileViewModelProtocol
     private var cancellables = Set<AnyCancellable>()
 
     private let titleLabel = UILabel()
@@ -23,7 +23,7 @@ final class HobbyCardStackViewController: UIViewController {
 
     // MARK: - Initialization
 
-    init(viewModel: MyPageViewModel) {
+    init(viewModel: ProfileViewModelProtocol) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -75,7 +75,7 @@ extension HobbyCardStackViewController {
     }
 
     private func bind() {
-        viewModel.$hobbyCards
+        viewModel.hobbyCardsPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] cards in
                 self?.updateContent(cards: cards)

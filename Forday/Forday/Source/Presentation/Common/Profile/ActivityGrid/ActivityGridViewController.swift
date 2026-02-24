@@ -14,7 +14,7 @@ final class ActivityGridViewController: UIViewController {
 
     // MARK: - Properties
 
-    private let viewModel: MyPageViewModel
+    private let viewModel: ProfileViewModelProtocol
     private var cancellables = Set<AnyCancellable>()
 
     weak var coordinator: MainTabBarCoordinator?
@@ -33,7 +33,7 @@ final class ActivityGridViewController: UIViewController {
 
     // MARK: - Initialization
 
-    init(viewModel: MyPageViewModel) {
+    init(viewModel: ProfileViewModelProtocol) {
         self.viewModel = viewModel
 
         // Setup collection view layout
@@ -141,7 +141,7 @@ extension ActivityGridViewController {
 
     private func bind() {
         // Activities
-        viewModel.$activities
+        viewModel.activitiesPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] activities in
                 self?.activityCollectionView.reloadData()
@@ -150,7 +150,7 @@ extension ActivityGridViewController {
             .store(in: &cancellables)
 
         // Activity count (totalFeedCount from server)
-        viewModel.$totalActivityCount
+        viewModel.totalActivityCountPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] count in
                 self?.countLabel.text = "\(count)개"
@@ -158,7 +158,7 @@ extension ActivityGridViewController {
             .store(in: &cancellables)
 
         // Hobbies for filter
-        viewModel.$myHobbies
+        viewModel.myHobbiesPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] hobbies in
                 self?.hobbyFilterView.configure(with: hobbies)
@@ -166,7 +166,7 @@ extension ActivityGridViewController {
             .store(in: &cancellables)
 
         // Selected hobby IDs (sync view with viewModel)
-        viewModel.$selectedHobbyIds
+        viewModel.selectedHobbyIdsPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] selectedIds in
                 self?.hobbyFilterView.selectHobbies(selectedIds)

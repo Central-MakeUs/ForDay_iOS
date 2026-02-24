@@ -14,7 +14,7 @@ final class ScrapGridViewController: UIViewController {
 
     // MARK: - Properties
 
-    private let viewModel: MyPageViewModel
+    private let viewModel: ProfileViewModelProtocol
     private var cancellables = Set<AnyCancellable>()
 
     weak var coordinator: MainTabBarCoordinator?
@@ -32,7 +32,7 @@ final class ScrapGridViewController: UIViewController {
 
     // MARK: - Initialization
 
-    init(viewModel: MyPageViewModel) {
+    init(viewModel: ProfileViewModelProtocol) {
         self.viewModel = viewModel
 
         // Setup collection view layout
@@ -125,7 +125,7 @@ extension ScrapGridViewController {
 
     private func bind() {
         // Scraps
-        viewModel.$scraps
+        viewModel.scrapsPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] scraps in
                 self?.scrapCollectionView.reloadData()
@@ -134,7 +134,7 @@ extension ScrapGridViewController {
             .store(in: &cancellables)
 
         // Scrap count (totalScrapCount from server)
-        viewModel.$totalScrapCount
+        viewModel.totalScrapCountPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] count in
                 self?.countLabel.text = "\(count)개"
