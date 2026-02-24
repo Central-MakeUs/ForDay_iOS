@@ -314,15 +314,17 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
     }
 
     func showUserProfile(userId: String) {
-        // TODO: Implement user profile screen navigation
-        // For now, just print
-        print("Navigate to user profile: \(userId)")
+        let profileVC = UserProfileViewController(userId: userId)
+        profileVC.coordinator = self
 
-        // When UserProfileViewController is ready:
-        // let profileVC = UserProfileViewController(userId: userId)
-        // if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
-        //     homeNav.pushViewController(profileVC, animated: true)
-        // }
+        // Present as fullScreen modal with navigation controller
+        let nav = UINavigationController(rootViewController: profileVC)
+        nav.modalPresentationStyle = .fullScreen
+        nav.setNavigationBarHidden(true, animated: false)
+
+        if let currentNav = tabBarController.selectedViewController as? UINavigationController {
+            currentNav.present(nav, animated: true)
+        }
     }
 
     func switchToHomeTab() {

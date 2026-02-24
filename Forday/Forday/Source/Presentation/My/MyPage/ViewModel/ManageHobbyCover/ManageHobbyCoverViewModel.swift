@@ -63,7 +63,8 @@ class ManageHobbyCoverViewModel {
             let result = try await usersRepository.fetchFeeds(
                 hobbyIds: hobbyIds,
                 lastRecordId: nil,
-                feedSize: 12
+                feedSize: 12,
+                userId: nil
             )
 
             await MainActor.run {

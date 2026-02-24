@@ -152,7 +152,7 @@ class AuthCoordinator: Coordinator {
                 print("   - guestUserId 없음 → 일반 사용자로 처리")
                 // 2. 일반 사용자 (카카오/애플) - 사용자 정보 조회로 닉네임 설정 여부 확인
                 let usersService = UsersService()
-                let userInfo = try await usersService.fetchUserInfo()
+                let userInfo = try await usersService.fetchUserInfo(userId: nil)
 
                 await MainActor.run {
                     // nickname이 비어있으면 닉네임 설정 화면으로

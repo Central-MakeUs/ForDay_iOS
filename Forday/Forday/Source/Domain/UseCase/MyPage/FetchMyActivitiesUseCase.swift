@@ -15,7 +15,8 @@ final class FetchMyActivitiesUseCase {
         self.repository = repository
     }
 
-    func execute(hobbyIds: [Int], lastRecordId: Int? = nil, size: Int = 24) async throws -> FeedResult {
-        return try await repository.fetchFeeds(hobbyIds: hobbyIds, lastRecordId: lastRecordId, feedSize: size)
+    /// 사용자 활동 피드 조회 (userId가 nil이면 본인)
+    func execute(hobbyIds: [Int], lastRecordId: Int? = nil, size: Int = 24, userId: String? = nil) async throws -> FeedResult {
+        return try await repository.fetchFeeds(hobbyIds: hobbyIds, lastRecordId: lastRecordId, feedSize: size, userId: userId)
     }
 }

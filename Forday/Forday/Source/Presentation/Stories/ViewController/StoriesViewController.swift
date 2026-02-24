@@ -293,6 +293,10 @@ extension StoriesViewController: StoryCellDelegate {
     func storyCellDidTapContent(_ cell: StoryCell, recordId: Int) {
         coordinator?.showActivityDetail(activityRecordId: recordId)
     }
+
+    func storyCellDidTapProfile(_ cell: StoryCell, userId: String) {
+        coordinator?.showUserProfile(userId: userId)
+    }
 }
 
 #Preview {

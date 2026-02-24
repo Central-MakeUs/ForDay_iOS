@@ -163,7 +163,7 @@ extension ProfileSettingsViewController {
         Task {
             do {
                 let usersRepository = UsersRepository()
-                let userInfo = try await usersRepository.fetchUserInfo()
+                let userInfo = try await usersRepository.fetchUserInfo(userId: nil)
 
                 await MainActor.run {
                     self.viewModel.setInitialProfile(

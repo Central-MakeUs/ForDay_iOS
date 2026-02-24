@@ -15,7 +15,8 @@ final class FetchUserProfileUseCase {
         self.repository = repository
     }
 
-    func execute() async throws -> UserInfo {
-        return try await repository.fetchUserInfo()
+    /// 사용자 정보 조회 (userId가 nil이면 본인)
+    func execute(userId: String? = nil) async throws -> UserInfo {
+        return try await repository.fetchUserInfo(userId: userId)
     }
 }
