@@ -134,17 +134,15 @@ extension UserProfileViewController {
             .store(in: &cancellables)
 
         // Segment counts
-        Publishers.CombineLatest3(
+        Publishers.CombineLatest(
             viewModel.$inProgressHobbyCount,
-            viewModel.$hobbyCardCount,
-            viewModel.$totalScrapCount
+            viewModel.$hobbyCardCount
         )
         .receive(on: DispatchQueue.main)
-        .sink { [weak self] inProgressCount, hobbyCardsCount, scrapsCount in
+        .sink { [weak self] inProgressCount, hobbyCardsCount in
             self?.userProfileView.segmentedControlView.updateCounts(
                 inProgressCount: inProgressCount,
-                hobbyCardsCount: hobbyCardsCount,
-                scrapsCount: scrapsCount
+                hobbyCardsCount: hobbyCardsCount
             )
         }
         .store(in: &cancellables)
