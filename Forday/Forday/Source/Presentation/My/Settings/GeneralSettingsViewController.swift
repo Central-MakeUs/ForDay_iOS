@@ -120,8 +120,8 @@ extension GeneralSettingsViewController {
 
     private func performLogout() {
         do {
-            // Delete tokens
-            try TokenStorage.shared.deleteAllTokens()
+            // Delete tokens only (guestUserId는 유지하여 재로그인 시 복원 가능)
+            try TokenStorage.shared.deleteTokens()
 
             // Delete onboarding data (optional)
             try? OnboardingDataStorage.shared.delete()
