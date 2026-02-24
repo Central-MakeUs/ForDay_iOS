@@ -101,6 +101,11 @@ final class ActivityService {
         return try await provider.request(.fetchHobbySettings(hobbyStatus: hobbyStatus))
     }
 
+    /// 온보딩 중 취미 수정 (nicknameSet: false && onboardingCompleted: true 상태)
+    func updateHobby(hobbyId: Int, request: DTO.UpdateHobbyRequest) async throws -> DTO.UpdateHobbyDetailResponse {
+        return try await provider.request(.updateHobby(hobbyId: hobbyId, request: request))
+    }
+
     func updateHobbyTime(hobbyId: Int, request: DTO.UpdateHobbyTimeRequest) async throws -> DTO.UpdateHobbyResponse {
         return try await provider.request(.updateHobbyTime(hobbyId: hobbyId, request: request))
     }

@@ -36,6 +36,28 @@ final class HobbyRepository: HobbyRepositoryInterface {
         return response.data.hobbyId
     }
 
+    func updateHobby(
+        hobbyId: Int,
+        hobbyInfoId: Int?,
+        hobbyName: String,
+        hobbyTimeMinutes: Int,
+        hobbyPurpose: String,
+        executionCount: Int,
+        isDurationSet: Bool
+    ) async throws -> Int {
+        let request = DTO.UpdateHobbyRequest(
+            hobbyInfoId: hobbyInfoId,
+            hobbyName: hobbyName,
+            hobbyTimeMinutes: hobbyTimeMinutes,
+            hobbyPurpose: hobbyPurpose,
+            executionCount: executionCount,
+            durationSet: isDurationSet
+        )
+
+        let response = try await activityService.updateHobby(hobbyId: hobbyId, request: request)
+        return response.data.hobbyId
+    }
+
     func fetchHomeInfo(hobbyId: Int?) async throws -> HomeInfo? {
         let response = try await activityService.fetchHomeInfo(hobbyId: hobbyId)
         return response.toDomain()

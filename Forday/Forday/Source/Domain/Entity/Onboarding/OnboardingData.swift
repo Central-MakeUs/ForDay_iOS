@@ -13,4 +13,8 @@ struct OnboardingData: Codable {
     var purpose: String = ""
     var executionCount: Int = 0
     var isDurationSet: Bool = false
+
+    /// 기존 취미 ID (온보딩 재개 시 updateHobby 호출용)
+    /// nicknameSet: false && onboardingCompleted: true 상태에서 사용
+    var existingHobbyId: Int?
 }
