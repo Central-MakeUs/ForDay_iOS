@@ -29,6 +29,9 @@ final class MyPageViewController: UIViewController {
     private var hobbyCardStackVC: HobbyCardStackViewController?
     private var scrapGridVC: ScrapGridViewController?
 
+    // Guest mode empty state view
+    private var guestEmptyStateView: EmptyStateView?
+
     // Settings dropdown
     private var settingsDropdownBackgroundView: UIView?
     private var settingsDropdownView: UIView?  // Either DropdownMenuView<MySettingsMenuItem> or DropdownMenuView<GuestSettingsMenuItem>
@@ -126,7 +129,7 @@ final class MyPageViewController: UIViewController {
         guard !hasShownGuestLoginSheet else { return }
 
         // 게스트 유저인 경우 로그인 바텀시트 표시
-        if TokenStorage.shared.loadGuestUserId() != nil {
+        if viewModel.isGuestUser {
             hasShownGuestLoginSheet = true
             GuestLoginBottomSheetViewController.present(from: self, delegate: self)
         }
@@ -215,33 +218,65 @@ extension MyPageViewController {
     }
 
     private func setupChildViewControllers() {
-        // Activity Grid ViewController
-        let activityGridVC = ActivityGridViewController(viewModel: viewModel)
-        activityGridVC.coordinator = coordinator
-        activityGridVC.onContentHeightChanged = { [weak self] height in
-            self?.myPageView.updateContentHeight(height)
-        }
-        addChild(activityGridVC)
-        self.activityGridVC = activityGridVC
+        // 게스트 모드 확인
+        let isGuest = viewModel.isGuestUser
 
-        // Hobby Card Stack ViewController
-        let hobbyCardStackVC = HobbyCardStackViewController(viewModel: viewModel)
-        addChild(hobbyCardStackVC)
-        self.hobbyCardStackVC = hobbyCardStackVC
+        // 게스트 모드일 때 탭 비활성화 설정
+        myPageView.segmentedControlView.setGuestMode(isGuest)
 
-        // Scrap Grid ViewController
-        let scrapGridVC = ScrapGridViewController(viewModel: viewModel)
-        scrapGridVC.coordinator = coordinator
-        scrapGridVC.onContentHeightChanged = { [weak self] height in
-            self?.myPageView.updateContentHeight(height)
+        if isGuest {
+            // 게스트 모드: Empty State View 생성
+            let emptyStateView = EmptyStateView()
+            emptyStateView.configureForGuestActivity { [weak self] in
+                self?.showGuestLoginBottomSheet()
+            }
+            self.guestEmptyStateView = emptyStateView
+        } else {
+            // 정상 모드: Activity Grid ViewController
+            let activityGridVC = ActivityGridViewController(viewModel: viewModel)
+            activityGridVC.coordinator = coordinator
+            activityGridVC.onContentHeightChanged = { [weak self] height in
+                self?.myPageView.updateContentHeight(height)
+            }
+            addChild(activityGridVC)
+            self.activityGridVC = activityGridVC
+
+            // Hobby Card Stack ViewController
+            let hobbyCardStackVC = HobbyCardStackViewController(viewModel: viewModel)
+            addChild(hobbyCardStackVC)
+            self.hobbyCardStackVC = hobbyCardStackVC
+
+            // Scrap Grid ViewController
+            let scrapGridVC = ScrapGridViewController(viewModel: viewModel)
+            scrapGridVC.coordinator = coordinator
+            scrapGridVC.onContentHeightChanged = { [weak self] height in
+                self?.myPageView.updateContentHeight(height)
+            }
+            addChild(scrapGridVC)
+            self.scrapGridVC = scrapGridVC
         }
-        addChild(scrapGridVC)
-        self.scrapGridVC = scrapGridVC
+    }
+
+    private func showGuestLoginBottomSheet() {
+        GuestLoginBottomSheetViewController.present(from: self, delegate: self)
     }
 
     private func switchToTab(_ tab: MyPageTab) {
         // Remove current child view
         myPageView.contentContainerView.subviews.forEach { $0.removeFromSuperview() }
+
+        // 게스트 모드일 때는 항상 Empty State View 표시
+        if viewModel.isGuestUser {
+            if let guestEmptyStateView = guestEmptyStateView {
+                myPageView.contentContainerView.addSubview(guestEmptyStateView)
+                guestEmptyStateView.snp.makeConstraints {
+                    $0.top.equalToSuperview().offset(60)
+                    $0.leading.trailing.equalToSuperview()
+                    $0.height.equalTo(250)
+                }
+            }
+            return
+        }
 
         switch tab {
         case .activities:
@@ -468,9 +503,29 @@ extension MyPageViewController {
 
 extension MyPageViewController: GuestLoginBottomSheetDelegate {
     func guestLoginBottomSheetDidLoginSuccess(_ controller: GuestLoginBottomSheetViewController, authToken: AuthToken) {
+        // 게스트 Empty State View 제거
+        guestEmptyStateView?.removeFromSuperview()
+        guestEmptyStateView = nil
+
+        // 탭 활성화
+        myPageView.segmentedControlView.setGuestMode(false)
+
+        // Child ViewController 재설정 (isFirstLoad를 true로 설정하여 setupChildViewControllers 다시 호출)
+        isFirstLoad = true
+
         // 로그인 성공 후 데이터 새로고침
         Task { [weak self] in
             await self?.viewModel.fetchInitialData()
+
+            await MainActor.run { [weak self] in
+                guard let self = self else { return }
+                self.myPageView.hideSkeleton()
+
+                // Child ViewController 재설정
+                self.setupChildViewControllers()
+                self.switchToTab(.activities)
+                self.isFirstLoad = false
+            }
         }
 
         // 토스트 메시지 표시
@@ -478,8 +533,8 @@ extension MyPageViewController: GuestLoginBottomSheetDelegate {
     }
 
     func guestLoginBottomSheetDidDismiss(_ controller: GuestLoginBottomSheetViewController) {
-        // 바텀시트가 로그인 없이 닫힌 경우 홈 탭으로 이동
-        coordinator?.switchToHomeTab()
+        // 마이페이지에서는 바텀시트를 닫아도 홈 탭으로 이동하지 않음
+        // (Empty State에서 버튼을 눌러서 띄운 바텀시트이므로)
     }
 }
 

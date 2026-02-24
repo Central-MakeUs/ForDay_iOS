@@ -97,6 +97,24 @@ final class EmptyStateView: UIView {
         actionButton.isHidden = true
         self.onActionTapped = nil
     }
+
+    /// Configure for guest activity empty state (로그인 유도)
+    func configureForGuestActivity(onActionTapped: (() -> Void)? = nil) {
+        iconImageView.image = .Icon.sorryBubble
+        iconImageView.alpha = 1.0
+        titleLabel.setTextWithTypography("활동 기록은 로그인 이후에\n확인이 가능해요.", style: .header16)
+        subtitleLabel.setTextWithTypography("SNS로 시작해보세요!", style: .label14)
+        subtitleLabel.isHidden = false
+
+        var config = actionButton.configuration
+        var attributedTitle = AttributedString("SNS로 시작하기")
+        attributedTitle.font = TypographyStyle.label12.font
+        config?.attributedTitle = attributedTitle
+        actionButton.configuration = config
+        actionButton.isHidden = false
+
+        self.onActionTapped = onActionTapped
+    }
 }
 
 // MARK: - Setup
