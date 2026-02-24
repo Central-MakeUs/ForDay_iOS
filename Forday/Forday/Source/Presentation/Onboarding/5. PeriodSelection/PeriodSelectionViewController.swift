@@ -119,22 +119,23 @@ class PeriodSelectionViewController: BaseOnboardingViewController {
             isDurationSet = true
         }
 
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                _ = try await updateGoalDaysUseCase.execute(hobbyId: hobbyId, isDurationSet: isDurationSet)
+                _ = try await self.updateGoalDaysUseCase.execute(hobbyId: hobbyId, isDurationSet: isDurationSet)
 
-                await MainActor.run {
-                    self.dismiss(animated: true) {
-                        self.onChangeComplete?()
+                await MainActor.run { [weak self] in
+                    self?.dismiss(animated: true) {
+                        self?.onChangeComplete?()
                     }
                 }
             } catch let appError as AppError {
-                await MainActor.run {
-                    self.showError(appError.userMessage)
+                await MainActor.run { [weak self] in
+                    self?.showError(appError.userMessage)
                 }
             } catch {
-                await MainActor.run {
-                    self.showError(error.localizedDescription)
+                await MainActor.run { [weak self] in
+                    self?.showError(error.localizedDescription)
                 }
             }
         }
@@ -181,11 +182,12 @@ extension PeriodSelectionViewController {
     }
 
     private func bind() {
-        // 취미 생성 성공 시 처리
+        // 취미 생성 성공 시 transition 상태 초기화
+        // 실제 화면 이동은 OnboardingCoordinator에서 설정한 onHobbyCreated 클로저에서 처리
+        let originalOnHobbyCreated = viewModel.onHobbyCreated
         viewModel.onHobbyCreated = { [weak self] hobbyId in
-            guard let self else { return }
-            self.resetTransition()
-            self.coordinator?.next(from: .period)
+            self?.resetTransition()
+            originalOnHobbyCreated?(hobbyId)
         }
 
         // 선택된 기간 변경 시 CollectionView 업데이트

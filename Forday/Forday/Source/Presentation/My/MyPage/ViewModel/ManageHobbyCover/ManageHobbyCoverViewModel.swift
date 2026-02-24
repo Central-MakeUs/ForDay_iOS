@@ -89,8 +89,8 @@ class ManageHobbyCoverViewModel {
     /// 취미 선택 (카메라 아이콘이 아닌 취미 자체 선택)
     func selectHobby(_ hobbyId: Int) {
         self.selectedHobbyId = hobbyId
-        Task {
-            await fetchFeeds(hobbyIds: [hobbyId])
+        Task { [weak self] in
+            await self?.fetchFeeds(hobbyIds: [hobbyId])
         }
     }
 
@@ -101,8 +101,8 @@ class ManageHobbyCoverViewModel {
         self.selectedRecordId = nil
 
         // 해당 취미의 피드만 로드
-        Task {
-            await fetchFeeds(hobbyIds: [hobbyId])
+        Task { [weak self] in
+            await self?.fetchFeeds(hobbyIds: [hobbyId])
         }
     }
 
@@ -113,8 +113,8 @@ class ManageHobbyCoverViewModel {
         self.selectedHobbyId = nil
 
         // 전체 피드 다시 로드
-        Task {
-            await fetchAllFeeds()
+        Task { [weak self] in
+            await self?.fetchAllFeeds()
         }
     }
 

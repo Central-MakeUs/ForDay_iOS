@@ -85,27 +85,29 @@ extension GuestLoginBottomSheetViewController {
     @objc private func kakaoLoginButtonTapped() {
         isModalInPresentation = true // 로그인 중 드래그 dismiss 차단
 
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             defer {
-                Task { @MainActor in
-                    self.isModalInPresentation = false
+                Task { @MainActor [weak self] in
+                    self?.isModalInPresentation = false
                 }
             }
 
             do {
-                let authToken = try await switchToKakaoUseCase.execute()
-                await MainActor.run {
-                    didLoginSuccessfully = true
-                    dismiss(animated: true) { [weak self] in
+                let authToken = try await self.switchToKakaoUseCase.execute()
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+                    self.didLoginSuccessfully = true
+                    self.dismiss(animated: true) { [weak self] in
                         guard let self = self else { return }
                         self.delegate?.guestLoginBottomSheetDidLoginSuccess(self, authToken: authToken)
                     }
                 }
             } catch {
                 // 사용자 취소 시 에러 알림 표시하지 않음
-                if isUserCancellationError(error) { return }
-                await MainActor.run {
-                    showError(error)
+                if self.isUserCancellationError(error) { return }
+                await MainActor.run { [weak self] in
+                    self?.showError(error)
                 }
             }
         }
@@ -114,27 +116,29 @@ extension GuestLoginBottomSheetViewController {
     @objc private func appleLoginButtonTapped() {
         isModalInPresentation = true // 로그인 중 드래그 dismiss 차단
 
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             defer {
-                Task { @MainActor in
-                    self.isModalInPresentation = false
+                Task { @MainActor [weak self] in
+                    self?.isModalInPresentation = false
                 }
             }
 
             do {
-                let authToken = try await switchToAppleUseCase.execute()
-                await MainActor.run {
-                    didLoginSuccessfully = true
-                    dismiss(animated: true) { [weak self] in
+                let authToken = try await self.switchToAppleUseCase.execute()
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+                    self.didLoginSuccessfully = true
+                    self.dismiss(animated: true) { [weak self] in
                         guard let self = self else { return }
                         self.delegate?.guestLoginBottomSheetDidLoginSuccess(self, authToken: authToken)
                     }
                 }
             } catch {
                 // 사용자 취소 시 에러 알림 표시하지 않음
-                if isUserCancellationError(error) { return }
-                await MainActor.run {
-                    showError(error)
+                if self.isUserCancellationError(error) { return }
+                await MainActor.run { [weak self] in
+                    self?.showError(error)
                 }
             }
         }

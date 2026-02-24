@@ -104,22 +104,23 @@ class FrequencySelectionViewController: BaseOnboardingViewController {
         guard let hobbyId = hobbyId,
               let selectedFrequency = viewModel.selectedFrequency else { return }
 
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                _ = try await updateExecutionCountUseCase.execute(hobbyId: hobbyId, executionCount: selectedFrequency.count)
+                _ = try await self.updateExecutionCountUseCase.execute(hobbyId: hobbyId, executionCount: selectedFrequency.count)
 
-                await MainActor.run {
-                    self.dismiss(animated: true) {
-                        self.onChangeComplete?()
+                await MainActor.run { [weak self] in
+                    self?.dismiss(animated: true) {
+                        self?.onChangeComplete?()
                     }
                 }
             } catch let appError as AppError {
-                await MainActor.run {
-                    self.showError(appError.userMessage)
+                await MainActor.run { [weak self] in
+                    self?.showError(appError.userMessage)
                 }
             } catch {
-                await MainActor.run {
-                    self.showError(error.localizedDescription)
+                await MainActor.run { [weak self] in
+                    self?.showError(error.localizedDescription)
                 }
             }
         }

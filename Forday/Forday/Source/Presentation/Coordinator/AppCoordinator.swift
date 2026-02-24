@@ -41,17 +41,17 @@ class AppCoordinator: Coordinator {
     private func checkAutoLogin() {
         let autoLoginUseCase = AuthUseCaseFactory().makeAutoLoginUseCase()
 
-        Task {
+        Task { [weak self] in
             let result = await autoLoginUseCase.execute()
 
-            await MainActor.run {
+            await MainActor.run { [weak self] in
                 switch result {
                 case .success:
                     print("🟢 AppCoordinator - 자동 로그인 성공")
-                    self.performAutoLogin()
+                    self?.performAutoLogin()
                 case .needsLogin:
                     print("🔴 AppCoordinator - 로그인 필요")
-                    self.showAuth()
+                    self?.showAuth()
                 }
             }
         }

@@ -133,7 +133,7 @@ extension ActivityGridViewController {
 
     private func setupHobbyFilter() {
         hobbyFilterView.onHobbiesSelected = { [weak self] hobbyIds in
-            Task {
+            Task { [weak self] in
                 await self?.viewModel.filterByHobbies(hobbyIds: hobbyIds)
             }
         }
@@ -253,8 +253,8 @@ extension ActivityGridViewController: UICollectionViewDelegate {
         // Load more when scrolled to 80% of content
         // Prevent duplicate calls by checking isLoadingMore
         if offsetY > contentHeight - height * 1.2 && !viewModel.isLoadingMore {
-            Task {
-                await viewModel.loadMoreActivities()
+            Task { [weak self] in
+                await self?.viewModel.loadMoreActivities()
             }
         }
     }

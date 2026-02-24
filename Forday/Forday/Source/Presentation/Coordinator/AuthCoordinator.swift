@@ -126,7 +126,8 @@ class AuthCoordinator: Coordinator {
     // 자동 로그인 (앱 시작 시, 토큰 valid할 때)
     func autoLogin() {
         print("🔵 autoLogin() 시작")
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
                 // 1. guestUserId가 있는지 확인
                 let tokenStorage = TokenStorage.shared
@@ -143,8 +144,8 @@ class AuthCoordinator: Coordinator {
                     let authToken = try await guestLoginUseCase.execute()
 
                     // 로그인 성공 처리
-                    await MainActor.run {
-                        handleLoginSuccess(authToken: authToken)
+                    await MainActor.run { [weak self] in
+                        self?.handleLoginSuccess(authToken: authToken)
                     }
                     return
                 }
@@ -154,24 +155,24 @@ class AuthCoordinator: Coordinator {
                 let usersService = UsersService()
                 let userInfo = try await usersService.fetchUserInfo(userId: nil)
 
-                await MainActor.run {
+                await MainActor.run { [weak self] in
                     // nickname이 비어있으면 닉네임 설정 화면으로
                     if userInfo.data.nickname.isEmpty {
                         print("   ➡️ 닉네임 설정 화면으로 이동")
-                        showNicknameSetup()
+                        self?.showNicknameSetup()
                     } else {
                         // nickname이 있으면 홈으로
                         print("   ➡️ 홈으로 이동")
-                        showHome()
+                        self?.showHome()
                     }
                 }
 
             } catch {
                 // 자동 로그인 실패 - 로그인 화면으로
-                await MainActor.run {
+                await MainActor.run { [weak self] in
                     print("⚠️ 자동 로그인 실패: \(error)")
                     print("   ➡️ 로그인 화면으로 이동")
-                    showLogin()
+                    self?.showLogin()
                 }
             }
         }

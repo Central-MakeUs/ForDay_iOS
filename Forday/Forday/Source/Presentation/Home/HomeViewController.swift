@@ -66,12 +66,13 @@ class HomeViewController: UIViewController {
     }
 
     private func loadHomeData(hobbyId: Int? = nil, selectFirstActivity: Bool = false) {
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             // hobbyId가 전달되면 해당 취미로, 아니면 서버가 결정하도록 함
             // (취미설정에서 보관/꺼내기 후 돌아왔을 때 정확한 상태 반영)
-            await viewModel.fetchHomeInfo(hobbyId: hobbyId)
+            await self.viewModel.fetchHomeInfo(hobbyId: hobbyId)
             // fetchHomeInfo 완료 후 업데이트된 currentHobbyId 사용
-            await stickerBoardViewModel.loadInitialStickerBoard(hobbyId: viewModel.currentHobbyId)
+            await self.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: self.viewModel.currentHobbyId)
 
             // 활동 생성 후 돌아왔을 때 드롭다운 첫번째 항목 선택
             if selectFirstActivity {
@@ -273,12 +274,12 @@ extension HomeViewController {
                 self.homeView.stickerBoardView.configure(
                     with: board,
                     onPreviousPage: { [weak self] in
-                        Task {
+                        Task { [weak self] in
                             await self?.stickerBoardViewModel.loadPreviousPage()
                         }
                     },
                     onNextPage: { [weak self] in
-                        Task {
+                        Task { [weak self] in
                             await self?.stickerBoardViewModel.loadNextPage()
                         }
                     },
@@ -382,11 +383,12 @@ extension HomeViewController {
 
 extension HomeViewController {
     @objc private func refreshHomeData() {
-        Task {
-            await viewModel.fetchHomeInfo(hobbyId: viewModel.currentHobbyId)
-            await stickerBoardViewModel.loadInitialStickerBoard(hobbyId: viewModel.currentHobbyId)
-            await MainActor.run {
-                homeView.refreshControl.endRefreshing()
+        Task { [weak self] in
+            guard let self = self else { return }
+            await self.viewModel.fetchHomeInfo(hobbyId: self.viewModel.currentHobbyId)
+            await self.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: self.viewModel.currentHobbyId)
+            await MainActor.run { [weak self] in
+                self?.homeView.refreshControl.endRefreshing()
             }
         }
     }
@@ -410,9 +412,10 @@ extension HomeViewController {
         }
 
         // 취미 선택
-        Task {
-            await viewModel.selectHobby(hobbyId: firstHobby.hobbyId)
-            await stickerBoardViewModel.loadInitialStickerBoard(hobbyId: firstHobby.hobbyId)
+        Task { [weak self] in
+            guard let self = self else { return }
+            await self.viewModel.selectHobby(hobbyId: firstHobby.hobbyId)
+            await self.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: firstHobby.hobbyId)
         }
     }
 
@@ -430,9 +433,10 @@ extension HomeViewController {
         }
 
         // 취미 선택
-        Task {
-            await viewModel.selectHobby(hobbyId: secondHobby.hobbyId)
-            await stickerBoardViewModel.loadInitialStickerBoard(hobbyId: secondHobby.hobbyId)
+        Task { [weak self] in
+            guard let self = self else { return }
+            await self.viewModel.selectHobby(hobbyId: secondHobby.hobbyId)
+            await self.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: secondHobby.hobbyId)
         }
     }
 
@@ -527,12 +531,13 @@ extension HomeViewController {
         // 기존 드롭다운이 있으면 먼저 제거
         dismissActivityDropdown()
 
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                let activities = try await viewModel.fetchActivityList()
+                let activities = try await self.viewModel.fetchActivityList()
 
-                await MainActor.run {
-                    self.presentActivityDropdown(activities: activities)
+                await MainActor.run { [weak self] in
+                    self?.presentActivityDropdown(activities: activities)
                 }
             } catch {
                 await MainActor.run {

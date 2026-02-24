@@ -70,9 +70,10 @@ class ActivityRecordViewController: UIViewController {
         // 업로드된 이미지가 있으면 삭제
         guard viewModel.uploadedImageUrl != nil else { return }
 
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                try await viewModel.deleteImage()
+                try await self.viewModel.deleteImage()
                 print("✅ 페이지 이탈로 인해 업로드된 이미지 삭제 완료")
             } catch {
                 print("❌ 이미지 삭제 실패: \(error)")
@@ -215,9 +216,10 @@ extension ActivityRecordViewController {
     }
 
     private func fetchActivities() {
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                try await viewModel.fetchActivityList()
+                try await self.viewModel.fetchActivityList()
             } catch {
                 print("❌ 활동 목록 로드 실패: \(error)")
             }
@@ -356,26 +358,28 @@ extension ActivityRecordViewController {
     }
 
     @objc private func submitButtonTapped() {
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                let result = try await viewModel.submitActivityRecord()
-                await MainActor.run {
-                    let actionType = viewModel.isEditMode ? "수정" : "작성"
+                let result = try await self.viewModel.submitActivityRecord()
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+                    let actionType = self.viewModel.isEditMode ? "수정" : "작성"
                     print("✅ 활동 기록 \(actionType) 성공: \(result.message)")
 
                     // 제출 성공 플래그 설정 (이미지 삭제 방지)
                     self.didSubmitSuccessfully = true
 
                     // Notify HomeViewController to refresh sticker board
-                    AppEventBus.shared.activityRecordCreated.send(viewModel.currentHobbyId)
+                    AppEventBus.shared.activityRecordCreated.send(self.viewModel.currentHobbyId)
 
                     // 수정 모드면 기존대로 dismiss, 생성 모드면 상세 화면으로 전환
-                    if viewModel.isEditMode {
-                        dismiss(animated: true)
+                    if self.viewModel.isEditMode {
+                        self.dismiss(animated: true)
                     } else {
                         // 기록 완료 후 상세 화면으로 전환
-                        let nickname = coordinator?.getCurrentNickname() ?? "회원"
-                        coordinator?.showActivityDetailAfterRecord(
+                        let nickname = self.coordinator?.getCurrentNickname() ?? "회원"
+                        self.coordinator?.showActivityDetailAfterRecord(
                             activityRecordId: result.activityRecordId,
                             nickname: nickname,
                             from: self
@@ -383,23 +387,25 @@ extension ActivityRecordViewController {
                     }
                 }
             } catch ActivityRecordError.missingRequiredFields {
-                await MainActor.run {
+                await MainActor.run { [weak self] in
                     print("❌ 필수 항목이 누락되었습니다")
-                    showErrorAlert(
+                    self?.showErrorAlert(
                         title: "입력 오류",
                         message: "활동과 스티커를 모두 선택해주세요."
                     )
                 }
             } catch let appError as AppError {
-                await MainActor.run {
-                    let actionType = viewModel.isEditMode ? "수정" : "작성"
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+                    let actionType = self.viewModel.isEditMode ? "수정" : "작성"
                     print("❌ 활동 기록 \(actionType) 실패: \(appError)")
                     // Use common error handler
                     self.handleActivityRecordError(appError)
                 }
             } catch {
-                await MainActor.run {
-                    let actionType = viewModel.isEditMode ? "수정" : "작성"
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+                    let actionType = self.viewModel.isEditMode ? "수정" : "작성"
                     print("❌ 활동 기록 \(actionType) 실패: \(error)")
                     self.handleActivityRecordError(.unknown(error))
                 }
@@ -467,13 +473,14 @@ extension ActivityRecordViewController {
     }
 
     private func deletePhoto() {
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                try await viewModel.deleteImage()
+                try await self.viewModel.deleteImage()
             } catch {
-                await MainActor.run {
+                await MainActor.run { [weak self] in
                     print("❌ 이미지 삭제 실패: \(error)")
-                    showErrorAlert(
+                    self?.showErrorAlert(
                         title: "삭제 실패",
                         message: "이미지 삭제에 실패했습니다.\n다시 시도해주세요."
                     )
@@ -536,7 +543,8 @@ extension ActivityRecordViewController: PHPickerViewControllerDelegate, UIImageP
             }
 
             // 이미지 업로드
-            Task {
+            Task { [weak self] in
+                guard let self = self else { return }
                 do {
                     try await self.viewModel.uploadImage(image)
                     print("✅ 이미지 업로드 성공")
@@ -560,9 +568,10 @@ extension ActivityRecordViewController: PHPickerViewControllerDelegate, UIImageP
         }
 
         // 이미지 업로드
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                try await viewModel.uploadImage(image)
+                try await self.viewModel.uploadImage(image)
                 print("✅ 카메라 이미지 업로드 성공")
             } catch {
                 print("❌ 카메라 이미지 업로드 실패: \(error)")

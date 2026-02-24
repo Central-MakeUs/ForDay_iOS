@@ -52,8 +52,9 @@ class HobbyActivityInputViewController: UIViewController {
         bind()
 
         // 추천 활동 조회
-        Task {
-            await viewModel.fetchOthersActivities(hobbyId: hobbyId)
+        Task { [weak self] in
+            guard let self = self else { return }
+            await self.viewModel.fetchOthersActivities(hobbyId: self.hobbyId)
         }
     }
 
@@ -173,24 +174,26 @@ extension HobbyActivityInputViewController {
     private func saveActivities() {
         let activities = activityInputView.getActivities()
 
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                try await viewModel.createActivities(hobbyId: hobbyId, activities: activities)
+                try await self.viewModel.createActivities(hobbyId: self.hobbyId, activities: activities)
 
-                await MainActor.run {
-                    print("✅ 활동 생성 완료! hobbyId: \(hobbyId)")
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+                    print("✅ 활동 생성 완료! hobbyId: \(self.hobbyId)")
 
                     // Call callback without dismissing
                     // Parent view controller will handle dismiss and navigation
-                    onActivityCreated?()
+                    self.onActivityCreated?()
                 }
             } catch let appError as AppError {
-                await MainActor.run {
-                    showError(appError.userMessage)
+                await MainActor.run { [weak self] in
+                    self?.showError(appError.userMessage)
                 }
             } catch {
-                await MainActor.run {
-                    showError(error.localizedDescription)
+                await MainActor.run { [weak self] in
+                    self?.showError(error.localizedDescription)
                 }
             }
         }

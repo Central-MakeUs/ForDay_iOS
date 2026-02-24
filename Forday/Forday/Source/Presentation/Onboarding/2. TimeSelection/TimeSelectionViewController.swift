@@ -118,22 +118,23 @@ class TimeSelectionViewController: BaseOnboardingViewController {
         // Get selected minutes from slider
         let selectedMinutes = timeView.timeSlider.timeOptions[timeView.timeSlider.selectedIndex]
 
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                _ = try await updateHobbyTimeUseCase.execute(hobbyId: hobbyId, minutes: selectedMinutes)
+                _ = try await self.updateHobbyTimeUseCase.execute(hobbyId: hobbyId, minutes: selectedMinutes)
 
-                await MainActor.run {
-                    self.dismiss(animated: true) {
-                        self.onChangeComplete?()
+                await MainActor.run { [weak self] in
+                    self?.dismiss(animated: true) {
+                        self?.onChangeComplete?()
                     }
                 }
             } catch let appError as AppError {
-                await MainActor.run {
-                    self.showError(appError.userMessage)
+                await MainActor.run { [weak self] in
+                    self?.showError(appError.userMessage)
                 }
             } catch {
-                await MainActor.run {
-                    self.showError(error.localizedDescription)
+                await MainActor.run { [weak self] in
+                    self?.showError(error.localizedDescription)
                 }
             }
         }

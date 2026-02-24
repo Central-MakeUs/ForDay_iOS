@@ -194,11 +194,16 @@ final class MyPageViewModel: ProfileViewModelProtocol {
     }
 
     func loadMoreActivities() async {
-        guard !isGuestUser, !isLoadingMore && hasMoreActivities else { return }
+        guard !isGuestUser else { return }
 
-        await MainActor.run {
+        // Atomic check-and-set on MainActor to prevent race conditions
+        let shouldProceed = await MainActor.run {
+            guard !isLoadingMore && hasMoreActivities else { return false }
             isLoadingMore = true
+            return true
         }
+
+        guard shouldProceed else { return }
 
         do {
             let result = try await fetchMyActivitiesUseCase.execute(
@@ -290,11 +295,16 @@ final class MyPageViewModel: ProfileViewModelProtocol {
     }
 
     func loadMoreScraps() async {
-        guard !isGuestUser, !isLoadingMore && hasMoreScraps else { return }
+        guard !isGuestUser else { return }
 
-        await MainActor.run {
+        // Atomic check-and-set on MainActor to prevent race conditions
+        let shouldProceed = await MainActor.run {
+            guard !isLoadingMore && hasMoreScraps else { return false }
             isLoadingMore = true
+            return true
         }
+
+        guard shouldProceed else { return }
 
         do {
             let result = try await fetchScrapsUseCase.execute(lastRecordId: lastScrapRecordId)

@@ -100,21 +100,22 @@ extension ReportViewController {
     }
 
     private func submitReport(reason: ReportReasonType, shouldBlock: Bool) {
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
                 // Submit report
                 let recordsService = RecordsService()
-                _ = try await recordsService.reportRecord(recordId: recordId, reason: reason)
+                _ = try await recordsService.reportRecord(recordId: self.recordId, reason: reason)
 
                 // Block user if requested
                 if shouldBlock {
                     let friendsService = FriendsService()
-                    _ = try await friendsService.blockUser(userId: authorUserId)
+                    _ = try await friendsService.blockUser(userId: self.authorUserId)
                 }
 
-                await MainActor.run {
+                await MainActor.run { [weak self] in
                     ToastView.showSuccess(message: "신고가 접수되었습니다.")
-                    dismiss(animated: true) { [weak self] in
+                    self?.dismiss(animated: true) {
                         self?.onReportCompleted?(shouldBlock)
                     }
                 }

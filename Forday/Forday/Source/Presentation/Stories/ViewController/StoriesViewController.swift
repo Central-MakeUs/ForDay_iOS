@@ -59,8 +59,8 @@ final class StoriesViewController: UIViewController {
     // MARK: - Private Methods
 
     private func loadInitialData() {
-        Task {
-            await viewModel.loadInitialData()
+        Task { [weak self] in
+            await self?.viewModel.loadInitialData()
         }
     }
 }
@@ -88,8 +88,8 @@ extension StoriesViewController {
                 CGPoint(x: 0, y: -self.storiesView.collectionView.contentInset.top),
                 animated: false
             )
-            Task {
-                await self.viewModel.selectTab(at: index)
+            Task { [weak self] in
+                await self?.viewModel.selectTab(at: index)
             }
         }
 
@@ -198,8 +198,8 @@ extension StoriesViewController {
 
 extension StoriesViewController {
     @objc private func handleRefresh() {
-        Task {
-            await viewModel.loadStories(reset: true)
+        Task { [weak self] in
+            await self?.viewModel.loadStories(reset: true)
         }
     }
 }
@@ -232,8 +232,8 @@ extension StoriesViewController: UICollectionViewDataSource {
 extension StoriesViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         // Pagination: Load more when approaching the end
-        Task {
-            await viewModel.loadMoreStoriesIfNeeded(currentIndex: indexPath.item)
+        Task { [weak self] in
+            await self?.viewModel.loadMoreStoriesIfNeeded(currentIndex: indexPath.item)
         }
     }
 }
@@ -289,8 +289,8 @@ extension StoriesViewController: StoriesPinterestLayoutDelegate {
 
 extension StoriesViewController: StoryCellDelegate {
     func storyCellDidTapGreatButton(_ cell: StoryCell, recordId: Int) {
-        Task {
-            await viewModel.toggleGreat(for: recordId)
+        Task { [weak self] in
+            await self?.viewModel.toggleGreat(for: recordId)
         }
     }
 

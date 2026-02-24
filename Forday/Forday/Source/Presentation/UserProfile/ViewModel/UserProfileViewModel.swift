@@ -69,102 +69,62 @@ final class UserProfileViewModel: ProfileViewModelProtocol {
             isLoading = true
         }
 
-        var fetchErrors: [Error] = []
+        // 병렬로 모든 데이터 fetch (각각 독립적으로 실패 가능)
+        async let profile = try? await fetchUserProfileUseCase.execute(userId: userId)
+        async let hobbiesResult = try? await fetchMyHobbiesUseCase.execute(userId: userId)
+        async let activitiesResult = try? await fetchMyActivitiesUseCase.execute(
+            hobbyIds: [],
+            lastRecordId: nil,
+            userId: userId
+        )
+        async let cardsResult = try? await fetchHobbyCardsUseCase.execute(
+            lastHobbyCardId: nil,
+            size: 20,
+            userId: userId
+        )
+        async let scrapsResult = try? await fetchScrapsUseCase.execute(
+            lastRecordId: nil,
+            userId: userId
+        )
 
-        // Profile fetch with error tracking
-        let profileResult: UserInfo?
-        do {
-            profileResult = try await fetchUserProfileUseCase.execute(userId: userId)
-        } catch {
-            profileResult = nil
-            fetchErrors.append(error)
-        }
-
-        // Hobbies fetch with error tracking
-        let hobbiesResult: MyHobbiesResult?
-        do {
-            hobbiesResult = try await fetchMyHobbiesUseCase.execute(userId: userId)
-        } catch {
-            hobbiesResult = nil
-            fetchErrors.append(error)
-        }
-
-        // Activities fetch with error tracking
-        let activitiesResult: FeedResult?
-        do {
-            activitiesResult = try await fetchMyActivitiesUseCase.execute(
-                hobbyIds: [],
-                lastRecordId: nil,
-                userId: userId
-            )
-        } catch {
-            activitiesResult = nil
-            fetchErrors.append(error)
-        }
-
-        // Cards fetch with error tracking
-        let cardsResult: HobbyCardsResult?
-        do {
-            cardsResult = try await fetchHobbyCardsUseCase.execute(
-                lastHobbyCardId: nil,
-                size: 20,
-                userId: userId
-            )
-        } catch {
-            cardsResult = nil
-            fetchErrors.append(error)
-        }
-
-        // Scraps fetch with error tracking
-        let scrapsResult: FeedResult?
-        do {
-            scrapsResult = try await fetchScrapsUseCase.execute(
-                lastRecordId: nil,
-                userId: userId
-            )
-        } catch {
-            scrapsResult = nil
-            fetchErrors.append(error)
-        }
+        let (profileOpt, hobbiesOpt, activitiesOpt, cardsOpt, scrapsOpt) = await (
+            profile,
+            hobbiesResult,
+            activitiesResult,
+            cardsResult,
+            scrapsResult
+        )
 
         await MainActor.run {
-            if let profile = profileResult {
+            // 성공한 결과만 업데이트
+            if let profile = profileOpt {
                 self.userProfile = profile
             }
 
-            if let hobbies = hobbiesResult {
+            if let hobbies = hobbiesOpt {
                 self.myHobbies = hobbies.hobbies
                 self.inProgressHobbyCount = hobbies.inProgressHobbyCount
                 self.hobbyCardCount = hobbies.hobbyCardCount
             }
 
-            if let activities = activitiesResult {
+            if let activities = activitiesOpt {
                 self.activities = activities.feedList
                 self.totalActivityCount = activities.totalFeedCount ?? 0
                 self.hasMoreActivities = activities.hasNext
                 self.lastRecordId = activities.lastRecordId
             }
 
-            if let cards = cardsResult {
+            if let cards = cardsOpt {
                 self.hobbyCards = cards.cards
                 self.hasMoreHobbyCards = cards.hasNext
                 self.lastHobbyCardId = cards.lastCardId
             }
 
-            if let scraps = scrapsResult {
+            if let scraps = scrapsOpt {
                 self.scraps = scraps.feedList
                 self.totalScrapCount = scraps.totalFeedCount ?? 0
                 self.hasMoreScraps = scraps.hasNext
                 self.lastScrapRecordId = scraps.lastRecordId
-            }
-
-            // Profile fetch failure is critical - show error to user
-            if profileResult == nil, let firstError = fetchErrors.first {
-                if let appError = firstError as? AppError {
-                    self.error = appError
-                } else {
-                    self.error = .unknown(firstError)
-                }
             }
 
             self.isLoading = false

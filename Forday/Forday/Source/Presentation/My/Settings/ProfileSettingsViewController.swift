@@ -160,24 +160,25 @@ extension ProfileSettingsViewController {
     }
 
     private func loadUserInfo() {
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
                 let usersRepository = UsersRepository()
                 let userInfo = try await usersRepository.fetchUserInfo(userId: nil)
 
-                await MainActor.run {
-                    self.viewModel.setInitialProfile(
+                await MainActor.run { [weak self] in
+                    self?.viewModel.setInitialProfile(
                         nickname: userInfo.nickname,
                         profileImageUrl: userInfo.profileImageUrl
                     )
                 }
             } catch let appError as AppError {
-                await MainActor.run {
-                    self.showError(appError)
+                await MainActor.run { [weak self] in
+                    self?.showError(appError)
                 }
             } catch {
-                await MainActor.run {
-                    self.showError(.unknown(error))
+                await MainActor.run { [weak self] in
+                    self?.showError(.unknown(error))
                 }
             }
         }
@@ -192,21 +193,22 @@ extension ProfileSettingsViewController {
     }
 
     @objc private func completeButtonTapped() {
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                try await viewModel.saveProfile()
+                try await self.viewModel.saveProfile()
 
-                await MainActor.run {
+                await MainActor.run { [weak self] in
                     ToastView.show(message: "프로필 수정 완료!")
-                    self.navigationController?.popViewController(animated: true)
+                    self?.navigationController?.popViewController(animated: true)
                 }
             } catch let appError as AppError {
-                await MainActor.run {
-                    self.showError(appError)
+                await MainActor.run { [weak self] in
+                    self?.showError(appError)
                 }
             } catch {
-                await MainActor.run {
-                    self.showError(.unknown(error))
+                await MainActor.run { [weak self] in
+                    self?.showError(.unknown(error))
                 }
             }
         }
@@ -221,8 +223,8 @@ extension ProfileSettingsViewController {
     }
 
     @objc private func duplicateCheckButtonTapped() {
-        Task {
-            await viewModel.checkDuplicate()
+        Task { [weak self] in
+            await self?.viewModel.checkDuplicate()
         }
     }
 
@@ -275,7 +277,7 @@ extension ProfileSettingsViewController {
         // UI 먼저 업데이트
         profileSettingsView.updateProfileImage(nil)
 
-        Task {
+        Task { [weak self] in
             do {
                 let repository = UsersRepository()
                 _ = try await repository.updateProfileImage(profileImageUrl: nil)
@@ -284,12 +286,12 @@ extension ProfileSettingsViewController {
                     ToastView.show(message: "기본 이미지로 변경되었습니다.")
                 }
             } catch let appError as AppError {
-                await MainActor.run {
-                    self.showError(appError)
+                await MainActor.run { [weak self] in
+                    self?.showError(appError)
                 }
             } catch {
-                await MainActor.run {
-                    self.showError(.unknown(error))
+                await MainActor.run { [weak self] in
+                    self?.showError(.unknown(error))
                 }
             }
         }
@@ -317,7 +319,7 @@ extension ProfileSettingsViewController: PHPickerViewControllerDelegate {
         // UI 먼저 업데이트
         profileSettingsView.updateProfileImage(image)
 
-        Task {
+        Task { [weak self] in
             do {
                 let useCase = UpdateProfileImageUseCase()
                 _ = try await useCase.execute(image: image)
@@ -326,15 +328,15 @@ extension ProfileSettingsViewController: PHPickerViewControllerDelegate {
                     ToastView.show(message: "프로필 사진이 변경되었습니다.")
                 }
             } catch let appError as AppError {
-                await MainActor.run {
+                await MainActor.run { [weak self] in
                     // 실패 시 원래 이미지로 복구
-                    self.profileSettingsView.updateProfileImage(nil)
-                    self.showError(appError)
+                    self?.profileSettingsView.updateProfileImage(nil)
+                    self?.showError(appError)
                 }
             } catch {
-                await MainActor.run {
-                    self.profileSettingsView.updateProfileImage(nil)
-                    self.showError(.unknown(error))
+                await MainActor.run { [weak self] in
+                    self?.profileSettingsView.updateProfileImage(nil)
+                    self?.showError(.unknown(error))
                 }
             }
         }

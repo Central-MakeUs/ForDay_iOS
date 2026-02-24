@@ -123,29 +123,30 @@ class ManageHobbyCoverViewController: UIViewController {
     }
 
     private func loadInitialData() {
-        Task {
-            await viewModel.fetchAllFeeds()
+        Task { [weak self] in
+            await self?.viewModel.fetchAllFeeds()
         }
     }
 
     // MARK: - Actions
 
     @objc private func doneButtonTapped() {
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             do {
-                let message = try await viewModel.updateCoverImageWithRecord()
+                let message = try await self.viewModel.updateCoverImageWithRecord()
 
-                await MainActor.run {
+                await MainActor.run { [weak self] in
                     ToastView.show(message: message)
-                    self.navigationController?.popViewController(animated: true)
+                    self?.navigationController?.popViewController(animated: true)
                 }
             } catch let appError as AppError {
-                await MainActor.run {
-                    self.handleAppError(appError)
+                await MainActor.run { [weak self] in
+                    self?.handleAppError(appError)
                 }
             } catch {
-                await MainActor.run {
-                    self.handleAppError(.unknown(error))
+                await MainActor.run { [weak self] in
+                    self?.handleAppError(.unknown(error))
                 }
             }
         }
@@ -331,25 +332,26 @@ extension ManageHobbyCoverViewController: PHPickerViewControllerDelegate {
             }
             guard let hobbyId = self.pendingGalleryHobbyId else { return }
             
-            Task {
+            Task { [weak self] in
+                guard let self = self else { return }
                 do {
                     let message = try await self.viewModel.updateCoverImageWithGallery(hobbyId: hobbyId, image: image)
-                    await MainActor.run {
+                    await MainActor.run { [weak self] in
                         // Clear pending state
-                        self.pendingGalleryHobbyId = nil
+                        self?.pendingGalleryHobbyId = nil
 
                         ToastView.show(message: message)
-                        self.navigationController?.popViewController(animated: true)
+                        self?.navigationController?.popViewController(animated: true)
                     }
                 } catch let appError as AppError {
-                    await MainActor.run {
-                        self.pendingGalleryHobbyId = nil
-                        self.handleAppError(appError)
+                    await MainActor.run { [weak self] in
+                        self?.pendingGalleryHobbyId = nil
+                        self?.handleAppError(appError)
                     }
                 } catch {
-                    await MainActor.run {
-                        self.pendingGalleryHobbyId = nil
-                        self.handleAppError(.unknown(error))
+                    await MainActor.run { [weak self] in
+                        self?.pendingGalleryHobbyId = nil
+                        self?.handleAppError(.unknown(error))
                     }
                 }
             }

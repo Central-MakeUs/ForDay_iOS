@@ -290,9 +290,9 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         // Set completion handler to dismiss and refresh home
         onboardingCoordinator?.onHobbyCreationCompleted = { [weak self] in
             // Dismiss onboarding
-            onboardingNav.dismiss(animated: true) {
+            onboardingNav.dismiss(animated: true) { [weak self] in
                 // Refresh home view
-                Task {
+                Task { [weak self] in
                     await self?.homeViewController?.viewModel.fetchHomeInfo()
                 }
                 // Clean up coordinator reference
