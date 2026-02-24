@@ -280,6 +280,7 @@ extension StoriesView {
         emptyStateView.snp.makeConstraints {
             $0.top.equalTo(tabSegmentControl.snp.bottom).offset(136)
             $0.centerX.equalToSuperview()
+            $0.leading.trailing.equalToSuperview().inset(20)
         }
 
         // Skeleton layout

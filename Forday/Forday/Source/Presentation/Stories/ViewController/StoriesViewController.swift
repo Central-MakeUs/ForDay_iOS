@@ -220,11 +220,11 @@ extension StoriesViewController {
         // 이미 바텀시트가 표시 중이면 무시
         guard !isGuestBottomSheetPresented else { return }
 
-        isGuestBottomSheetPresented = true
-
         // 약간의 딜레이 후 바텀시트 표시 (화면 전환 애니메이션 완료 대기)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
             guard let self = self else { return }
+            guard self.view.window != nil else { return }
+            self.isGuestBottomSheetPresented = true
             GuestLoginBottomSheetViewController.present(from: self, delegate: self)
         }
     }

@@ -258,6 +258,7 @@ extension MyPageViewController {
     }
 
     private func showGuestLoginBottomSheet() {
+        hasShownGuestLoginSheet = true
         GuestLoginBottomSheetViewController.present(from: self, delegate: self)
     }
 

@@ -127,6 +127,7 @@ final class EmptyStateView: UIView {
 
     /// Configure for guest activity empty state (로그인 유도)
     func configureForGuestActivity(onActionTapped: (() -> Void)? = nil) {
+        resetToDefaultLayout()
         isGuestLayout = true
         updateLayoutForGuestMode()
 
