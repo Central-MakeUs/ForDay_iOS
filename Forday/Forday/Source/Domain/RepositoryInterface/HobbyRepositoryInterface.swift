@@ -17,6 +17,17 @@ protocol HobbyRepositoryInterface {
         isDurationSet: Bool
     ) async throws -> Int
 
+    /// 온보딩 중 취미 수정 (nicknameSet: false && onboardingCompleted: true 상태)
+    func updateHobby(
+        hobbyId: Int,
+        hobbyInfoId: Int?,
+        hobbyName: String,
+        hobbyTimeMinutes: Int,
+        hobbyPurpose: String,
+        executionCount: Int,
+        isDurationSet: Bool
+    ) async throws -> Int
+
     func fetchHomeInfo(hobbyId: Int?) async throws -> HomeInfo?
 
     // Hobby Management
