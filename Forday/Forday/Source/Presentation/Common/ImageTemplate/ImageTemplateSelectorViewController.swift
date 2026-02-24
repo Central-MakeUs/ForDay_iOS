@@ -80,6 +80,9 @@ extension ImageTemplateSelectorViewController {
         viewModel.$isLoading
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isLoading in
+                // 중복 탭 방지: 로딩 중 저장 버튼 비활성화
+                self?.selectorView.saveButton.isEnabled = !isLoading
+
                 if isLoading {
                     self?.showLoadingIndicator()
                 } else {
