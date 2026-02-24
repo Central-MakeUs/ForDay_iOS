@@ -44,6 +44,9 @@ final class ActivityDetailView: UIView {
     private let scrollView = UIScrollView()
     private let contentView = UIView()
 
+    // User info (profile + nickname)
+    let userInfoView = UserInfoView()
+
     // Title at top (activity content)
     let titleLabel = UILabel()
 
@@ -94,6 +97,14 @@ final class ActivityDetailView: UIView {
             currentLayoutType = .withoutImageAndMemo
         }
 
+        // Configure user info (only show if userInfo exists and not owner's own record)
+        if let userInfo = detail.userInfo, !detail.recordOwner {
+            userInfoView.isHidden = false
+            userInfoView.configure(profileImageUrl: userInfo.profileImageUrl, nickname: userInfo.nickname)
+        } else {
+            userInfoView.isHidden = true
+        }
+
         // Load sticker image
         if let stickerType = StickerType(fileName: detail.sticker) {
             stickerImageView.image = stickerType.image
@@ -101,7 +112,7 @@ final class ActivityDetailView: UIView {
         }
 
         // Configure title (at top) and date
-        titleLabel.setTextWithTypography(detail.activityContent, style: .header18)
+        titleLabel.setTextWithTypography(detail.activityContent, style: .header20)
         dateLabel.setTextWithTypography(detail.createdAt, style: .label14)
 
         // Configure memo
@@ -134,6 +145,25 @@ final class ActivityDetailView: UIView {
 
         // Update layout based on type
         updateLayoutForType()
+
+        // Update title position based on userInfoView visibility
+        updateTitlePosition()
+    }
+
+    private func updateTitlePosition() {
+        if userInfoView.isHidden {
+            titleLabel.snp.remakeConstraints {
+                $0.top.equalToSuperview().offset(16)
+                $0.leading.equalToSuperview().offset(20)
+                $0.trailing.equalToSuperview().offset(-20)
+            }
+        } else {
+            titleLabel.snp.remakeConstraints {
+                $0.top.equalTo(userInfoView.snp.bottom).offset(8)
+                $0.leading.equalToSuperview().offset(20)
+                $0.trailing.equalToSuperview().offset(-20)
+            }
+        }
     }
 
     private func loadImage(from urlString: String) {
@@ -267,6 +297,10 @@ extension ActivityDetailView {
             $0.backgroundColor = .systemBackground
         }
 
+        userInfoView.do {
+            $0.isHidden = true  // 기본적으로 숨김 (userInfo가 있을 때만 표시)
+        }
+
         titleLabel.do {
             $0.textColor = .neutral900
             $0.numberOfLines = 0
@@ -385,6 +419,7 @@ extension ActivityDetailView {
         }
 
         // Add subviews to content view
+        contentView.addSubview(userInfoView)
         contentView.addSubview(titleLabel)
         contentView.addSubview(imageContainerView)
         contentView.addSubview(dateLabel)
@@ -398,9 +433,17 @@ extension ActivityDetailView {
         // Initially hide reaction users scroll view
         reactionUsersScrollView.isHidden = true
 
-        // Title at top left
-        titleLabel.snp.makeConstraints {
+        // User info view (profile + nickname)
+        userInfoView.snp.makeConstraints {
             $0.top.equalToSuperview().offset(16)
+            $0.leading.equalToSuperview().offset(20)
+            $0.trailing.lessThanOrEqualToSuperview().offset(-20)
+            $0.height.equalTo(24)
+        }
+
+        // Title at top left (below userInfoView if visible)
+        titleLabel.snp.makeConstraints {
+            $0.top.equalTo(userInfoView.snp.bottom).offset(8)
             $0.leading.equalToSuperview().offset(20)
             $0.trailing.equalToSuperview().offset(-20)
         }

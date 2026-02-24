@@ -152,6 +152,7 @@ extension ActivityDetailViewController {
             .sink { [weak self] detail in
                 guard let detail = detail else { return }
                 self?.detailView.configure(with: detail)
+                self?.setupUserInfoTap(with: detail)
             }
             .store(in: &cancellables)
 
@@ -235,6 +236,14 @@ extension ActivityDetailViewController {
     private func loadData() {
         Task {
             await viewModel.fetchDetail()
+        }
+    }
+
+    private func setupUserInfoTap(with detail: ActivityDetail) {
+        guard let userInfo = detail.userInfo, !detail.recordOwner else { return }
+
+        detailView.userInfoView.onTap = { [weak self] in
+            self?.coordinator?.showUserProfile(userId: userInfo.userId)
         }
     }
 }

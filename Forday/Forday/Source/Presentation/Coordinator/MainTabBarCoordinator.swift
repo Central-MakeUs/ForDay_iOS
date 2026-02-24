@@ -317,13 +317,9 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         let profileVC = UserProfileViewController(userId: userId)
         profileVC.coordinator = self
 
-        // Present as fullScreen modal with navigation controller
-        let nav = UINavigationController(rootViewController: profileVC)
-        nav.modalPresentationStyle = .fullScreen
-        nav.setNavigationBarHidden(true, animated: false)
-
+        // Push to current navigation stack (enables swipe back gesture)
         if let currentNav = tabBarController.selectedViewController as? UINavigationController {
-            currentNav.present(nav, animated: true)
+            currentNav.pushViewController(profileVC, animated: true)
         }
     }
 

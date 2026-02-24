@@ -10,7 +10,7 @@ import SnapKit
 import Then
 import Combine
 
-final class UserProfileViewController: UIViewController {
+final class UserProfileViewController: UIViewController, UIGestureRecognizerDelegate {
 
     // MARK: - Properties
 
@@ -40,6 +40,7 @@ final class UserProfileViewController: UIViewController {
     init(userId: String) {
         self.viewModel = UserProfileViewModel(userId: userId)
         super.init(nibName: nil, bundle: nil)
+        hidesBottomBarWhenPushed = true
     }
 
     required init?(coder: NSCoder) {
@@ -65,6 +66,14 @@ final class UserProfileViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        navigationController?.interactivePopGestureRecognizer?.delegate = self
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+    }
+
+    // MARK: - UIGestureRecognizerDelegate
+
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        return navigationController?.viewControllers.count ?? 0 > 1
     }
 
     // MARK: - Private Methods
@@ -223,7 +232,7 @@ extension UserProfileViewController {
 
 extension UserProfileViewController {
     @objc private func backButtonTapped() {
-        dismiss(animated: true)
+        navigationController?.popViewController(animated: true)
     }
 
     @objc private func moreButtonTapped() {
@@ -306,7 +315,7 @@ extension UserProfileViewController {
     private func performBlock() {
         // TODO: 차단 API 호출
         ToastView.show(message: "사용자를 차단했습니다")
-        dismiss(animated: true)
+        navigationController?.popViewController(animated: true)
     }
 
     private func showReportOptions() {
