@@ -797,6 +797,12 @@ extension HomeViewController {
         }
         return nil
     }
+
+    /// 계정 전환 시 홈 상태 초기화 (이전 사용자의 hobbyId 제거 후 새로고침)
+    func resetForAccountSwitch() {
+        viewModel.currentHobbyId = nil
+        loadHomeData(hobbyId: nil)
+    }
 }
 
 #Preview {

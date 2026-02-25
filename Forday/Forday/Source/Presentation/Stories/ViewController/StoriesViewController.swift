@@ -23,6 +23,9 @@ final class StoriesViewController: UIViewController {
 
     weak var coordinator: MainTabBarCoordinator?
 
+    // 게스트 로그인 바텀시트 표시 여부
+    private var isGuestBottomSheetPresented = false
+
     // MARK: - Initialization
 
     init(viewModel: StoriesViewModel = StoriesViewModel()) {
@@ -51,6 +54,12 @@ final class StoriesViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+
+        // 게스트 유저인 경우 바텀시트 표시
+        if TokenStorage.shared.loadGuestUserId() != nil {
+            showGuestLoginBottomSheetIfNeeded()
+            return
+        }
 
         // 탭 진입 시 항상 새로고침 (탭 정보 + 스토리)
         loadInitialData()
@@ -201,6 +210,47 @@ extension StoriesViewController {
         Task { [weak self] in
             await self?.viewModel.loadStories(reset: true)
         }
+    }
+}
+
+// MARK: - Guest Login
+
+extension StoriesViewController {
+    private func showGuestLoginBottomSheetIfNeeded() {
+        // 이미 바텀시트가 표시 중이면 무시
+        guard !isGuestBottomSheetPresented else { return }
+
+        // 약간의 딜레이 후 바텀시트 표시 (화면 전환 애니메이션 완료 대기)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            guard let self = self else { return }
+            guard self.view.window != nil else { return }
+            self.isGuestBottomSheetPresented = true
+            GuestLoginBottomSheetViewController.present(from: self, delegate: self)
+        }
+    }
+}
+
+// MARK: - GuestLoginBottomSheetDelegate
+
+extension StoriesViewController: GuestLoginBottomSheetDelegate {
+    func guestLoginBottomSheetDidLoginSuccess(_ controller: GuestLoginBottomSheetViewController, authToken: AuthToken) {
+        isGuestBottomSheetPresented = false
+
+        // 홈 상태 초기화 (이전 사용자의 hobbyId 제거)
+        coordinator?.resetHomeState()
+
+        // 로그인 성공 후 데이터 로드
+        loadInitialData()
+
+        // 토스트 메시지 표시
+        ToastView.show(message: "로그인되었습니다")
+    }
+
+    func guestLoginBottomSheetDidDismiss(_ controller: GuestLoginBottomSheetViewController) {
+        isGuestBottomSheetPresented = false
+
+        // 바텀시트가 로그인 없이 닫힌 경우 홈 탭으로 이동
+        coordinator?.switchToHomeTab()
     }
 }
 

@@ -72,8 +72,8 @@ final class StoriesView: UIView {
         return refreshControl.isRefreshing
     }
 
-    func showEmptyState(message: String = "아직 등록된 소식이 없어요") {
-        emptyStateView.configure(icon: .Icon.emptyBox, message: message, actionTitle: nil)
+    func showEmptyState() {
+        emptyStateView.configureForStories()
         emptyStateView.isHidden = false
         collectionView.isHidden = true
     }
@@ -278,8 +278,9 @@ extension StoriesView {
         }
 
         emptyStateView.snp.makeConstraints {
-            $0.center.equalTo(collectionView)
-            $0.leading.trailing.equalToSuperview().inset(40)
+            $0.top.equalTo(tabSegmentControl.snp.bottom).offset(136)
+            $0.centerX.equalToSuperview()
+            $0.leading.trailing.equalToSuperview().inset(20)
         }
 
         // Skeleton layout

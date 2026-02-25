@@ -21,6 +21,9 @@ final class ProfileSegmentedControlView: UIView {
     var onSegmentChanged: ((MyPageTab) -> Void)?
     private var selectedSegment: MyPageTab = .activities
 
+    /// 게스트 모드 여부 (취미카드, 스크랩 탭 비활성화)
+    private var isGuestMode: Bool = false
+
     // MARK: - Initialization
 
     override init(frame: CGRect) {
@@ -45,6 +48,26 @@ final class ProfileSegmentedControlView: UIView {
         selectedSegment = segment
 
         updateSegmentAppearance(animated: animated)
+    }
+
+    /// 게스트 모드 설정 (취미카드, 스크랩 탭 비활성화)
+    func setGuestMode(_ isGuest: Bool) {
+        isGuestMode = isGuest
+
+        // 게스트 모드일 때 취미카드, 스크랩 버튼 비활성화
+        hobbyCardsButton.isEnabled = !isGuest
+        scrapsButton.isEnabled = !isGuest
+
+        // 비활성화 시 색상 변경
+        if isGuest {
+            hobbyCardsButton.setTitleColor(.neutral400, for: .normal)
+            hobbyCardsButton.setTitleColor(.neutral400, for: .disabled)
+            scrapsButton.setTitleColor(.neutral400, for: .normal)
+            scrapsButton.setTitleColor(.neutral400, for: .disabled)
+        } else {
+            // 정상 모드로 복구
+            updateSegmentAppearance(animated: false)
+        }
     }
 
     // MARK: - Private Methods

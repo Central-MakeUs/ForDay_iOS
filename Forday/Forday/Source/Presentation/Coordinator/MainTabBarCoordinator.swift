@@ -340,4 +340,9 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
     func getCurrentNickname() -> String? {
         return homeViewController?.getCurrentNickname()
     }
+
+    /// 계정 전환 시 홈 상태 초기화 (이전 사용자의 hobbyId 제거)
+    func resetHomeState() {
+        homeViewController?.resetForAccountSwitch()
+    }
 }

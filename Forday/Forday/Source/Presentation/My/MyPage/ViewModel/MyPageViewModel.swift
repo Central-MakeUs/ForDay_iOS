@@ -73,16 +73,21 @@ final class MyPageViewModel: ProfileViewModelProtocol {
     }
 
     func fetchInitialData() async {
-        // 게스트 유저는 API 호출 스킵 (마이페이지 데이터 불필요)
-        guard !isGuestUser else {
+        await MainActor.run {
+            isLoading = true
+        }
+
+        // 게스트 유저는 프로필 정보만 가져옴 (닉네임, 스티커 개수)
+        if isGuestUser {
+            let profile = try? await fetchUserProfileUseCase.execute()
+
             await MainActor.run {
+                if let profile = profile {
+                    self.userProfile = profile
+                }
                 self.isLoading = false
             }
             return
-        }
-
-        await MainActor.run {
-            isLoading = true
         }
 
         // Fetch all data in parallel, each can fail independently
