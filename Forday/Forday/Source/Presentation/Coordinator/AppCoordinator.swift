@@ -32,9 +32,80 @@ class AppCoordinator: Coordinator {
     private func showSplash() {
         let splashVC = SplashViewController()
         splashVC.onSplashComplete = { [weak self] in
-            self?.checkAutoLogin()
+            self?.checkVersionPolicy()
         }
         window.rootViewController = splashVC
+    }
+
+    // 버전 정책 체크
+    private func checkVersionPolicy() {
+        let useCase = CheckVersionPolicyUseCase()
+
+        Task { [weak self] in
+            let policy = await useCase.execute()
+
+            await MainActor.run { [weak self] in
+                guard let self = self else { return }
+
+                // API 실패 또는 업데이트 불필요 시 정상 진행
+                guard let policy = policy else {
+                    self.checkAutoLogin()
+                    return
+                }
+
+                switch policy.updateType {
+                case .none:
+                    print("🟢 업데이트 불필요 - 정상 진행")
+                    self.checkAutoLogin()
+
+                case .recommend:
+                    print("🟡 권장 업데이트 - 팝업 표시")
+                    self.showUpdatePopup(
+                        type: .recommend(storeUrl: policy.storeUrl, message: policy.message)
+                    )
+
+                case .force:
+                    print("🔴 강제 업데이트 - 팝업 표시")
+                    self.showUpdatePopup(
+                        type: .force(storeUrl: policy.storeUrl, message: policy.message)
+                    )
+
+                case .block:
+                    print("🔴 서비스 점검 - 팝업 표시")
+                    self.showUpdatePopup(
+                        type: .block(message: policy.message)
+                    )
+                }
+            }
+        }
+    }
+
+    // 업데이트 팝업 표시
+    private func showUpdatePopup(type: VersionUpdatePopupViewController.UpdateType) {
+        let popup = VersionUpdatePopupViewController(updateType: type)
+
+        switch type {
+        case .recommend:
+            popup.onLaterTapped = { [weak self] in
+                self?.checkAutoLogin()
+            }
+            popup.onUpdateTapped = {
+                // 앱스토어로 이동 후 앱 유지
+            }
+
+        case .force:
+            popup.onUpdateTapped = {
+                // 앱스토어로 이동 후 앱 유지
+            }
+
+        case .block:
+            popup.onConfirmTapped = {
+                // 앱 종료
+                exit(0)
+            }
+        }
+
+        window.rootViewController?.present(popup, animated: true)
     }
 
     // 자동 로그인 체크

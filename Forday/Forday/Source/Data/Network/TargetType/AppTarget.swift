@@ -13,6 +13,7 @@ enum AppTarget {
     case fetchAppMetadata
     case fetchPresignedUrl(request: DTO.PresignedUrlRequest)
     case deleteImage(request: DTO.DeleteImageRequest)
+    case fetchVersionPolicy(platform: String, appVersion: String, build: Int)
 }
 
 extension AppTarget: BaseTargetType {
@@ -29,6 +30,8 @@ extension AppTarget: BaseTargetType {
             return AppAPI.fetchPresignedUrl.endpoint
         case .deleteImage:
             return AppAPI.deleteImage.endpoint
+        case .fetchVersionPolicy:
+            return AppAPI.fetchVersionPolicy.endpoint
         }
     }
     
@@ -40,6 +43,8 @@ extension AppTarget: BaseTargetType {
             return .post
         case .deleteImage:
             return .delete
+        case .fetchVersionPolicy:
+            return .get
         }
     }
     
@@ -53,6 +58,15 @@ extension AppTarget: BaseTargetType {
             let encoder = JSONEncoder()
             encoder.outputFormatting = .withoutEscapingSlashes
             return .requestCustomJSONEncodable(request, encoder: encoder)
+        case .fetchVersionPolicy(let platform, let appVersion, let build):
+            return .requestParameters(
+                parameters: [
+                    "platform": platform,
+                    "appVersion": appVersion,
+                    "build": build
+                ],
+                encoding: URLEncoding.queryString
+            )
         }
     }
 }

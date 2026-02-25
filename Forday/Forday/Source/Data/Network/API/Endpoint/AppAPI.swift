@@ -12,6 +12,7 @@ enum AppAPI {
     case fetchPresignedUrl        /// presigned url 발급
     case deleteImage              /// S3 임시 이미지 삭제
     case fetchAlarm               /// 알림 모아보기
+    case fetchVersionPolicy       /// 앱 버전 정책 조회
 
     var endpoint: String {
         switch self {
@@ -26,6 +27,9 @@ enum AppAPI {
 
         case .fetchAlarm:
             return ""
+
+        case .fetchVersionPolicy:
+            return "/app/version-policy"
         }
     }
 }
