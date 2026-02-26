@@ -94,11 +94,6 @@ final class ActivityDetailViewController: UIViewController, UIGestureRecognizerD
         }
     }
 
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        // 다른 화면으로 이동 시 기본 내비게이션 복원
-        navigationController?.setNavigationBarHidden(false, animated: animated)
-    }
 
     private func showSuccessOverlay() {
         let overlay = ActivityRecordSuccessOverlayView()
@@ -441,14 +436,13 @@ extension ActivityDetailViewController {
             authorUserId: userInfo.userId,
             authorNickname: userInfo.nickname
         )
-        reportVC.modalPresentationStyle = .fullScreen
         reportVC.onReportCompleted = { [weak self] _ in
             // 신고 완료 후 Stories 탭으로 이동
             self?.coordinator?.switchToStoriesTab()
             self?.navigationController?.popToRootViewController(animated: false)
         }
 
-        present(reportVC, animated: true)
+        navigationController?.pushViewController(reportVC, animated: true)
     }
 }
 
