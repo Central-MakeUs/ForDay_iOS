@@ -22,7 +22,7 @@ extension DTO {
     struct ScrapItem: Codable {
         let scrapId: Int
         let recordId: Int
-        let thumbnailImageUrl: String
+        let thumbnailImageUrl: String?
         let sticker: String
         let memo: String?
         let createdAt: String

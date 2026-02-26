@@ -77,9 +77,9 @@ final class ActivityPhotoCell: UICollectionViewCell {
         }
 
         // Branch based on thumbnailImageUrl
-        if !activity.thumbnailImageUrl.isEmpty {
+        if let imageUrl = activity.thumbnailImageUrl, !imageUrl.isEmpty {
             // Image mode: Show image
-            showImageMode(imageUrl: activity.thumbnailImageUrl)
+            showImageMode(imageUrl: imageUrl)
         } else {
             // Gradient mode: Show gradient + memo
             showGradientMode(

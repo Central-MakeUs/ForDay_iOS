@@ -132,6 +132,25 @@ extension ActivityGridViewController {
         onContentHeightChanged?(totalHeight)
     }
 
+    /// Force recalculate and notify content height (called when view is re-added to parent)
+    func refreshContentHeight() {
+        view.layoutIfNeeded()
+        activityCollectionView.layoutIfNeeded()
+
+        let height = activityCollectionView.contentSize.height
+        if height > 0 {
+            updateCollectionViewHeight(height)
+        } else {
+            // If contentSize is 0, try to recalculate
+            activityCollectionView.reloadData()
+            activityCollectionView.layoutIfNeeded()
+            let recalculatedHeight = activityCollectionView.contentSize.height
+            if recalculatedHeight > 0 {
+                updateCollectionViewHeight(recalculatedHeight)
+            }
+        }
+    }
+
     private func setupHobbyFilter() {
         hobbyFilterView.onHobbiesSelected = { [weak self] hobbyIds in
             Task { [weak self] in
