@@ -311,6 +311,23 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         }
     }
 
+    /// MyPage에서 특정 취미로 활동 기록 화면 표시
+    func showActivityRecord(hobbyId: Int, hobbyName: String) {
+        let recordVC = ActivityRecordViewController(
+            hobbyId: hobbyId,
+            hobbyName: hobbyName,
+            preselectedActivityId: nil
+        )
+        recordVC.coordinator = self
+        let nav = BaseNavigationController(rootViewController: recordVC)
+        nav.modalPresentationStyle = .fullScreen
+
+        // Present from current selected tab
+        if let selectedVC = tabBarController.selectedViewController {
+            selectedVC.present(nav, animated: true)
+        }
+    }
+
     func showAddHobbyOnboarding() {
         // Get home navigation controller
         guard let homeNav = tabBarController.viewControllers?.first as? UINavigationController else {

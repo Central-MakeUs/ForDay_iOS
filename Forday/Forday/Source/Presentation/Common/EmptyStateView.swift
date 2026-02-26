@@ -75,14 +75,19 @@ final class EmptyStateView: UIView {
         subtitleLabel.setTextWithTypography("당신의 활동기록이 궁금해요.", style: .label14)
         subtitleLabel.isHidden = false
 
-        var config = actionButton.configuration
-        var attributedTitle = AttributedString("활동 기록하러가기")
-        attributedTitle.font = TypographyStyle.label12.font
-        config?.attributedTitle = attributedTitle
-        actionButton.configuration = config
-        actionButton.isHidden = false
-
-        self.onActionTapped = onActionTapped
+        // onActionTapped가 nil이면 버튼 숨김 (IN_PROGRESS 취미가 없는 경우)
+        if let onActionTapped = onActionTapped {
+            var config = actionButton.configuration
+            var attributedTitle = AttributedString("활동 기록하기")
+            attributedTitle.font = TypographyStyle.label12.font
+            config?.attributedTitle = attributedTitle
+            actionButton.configuration = config
+            actionButton.isHidden = false
+            self.onActionTapped = onActionTapped
+        } else {
+            actionButton.isHidden = true
+            self.onActionTapped = nil
+        }
     }
 
     /// Configure for hobby cards empty state

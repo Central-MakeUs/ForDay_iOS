@@ -190,14 +190,38 @@ extension ActivityGridViewController {
                 $0.leading.trailing.bottom.equalToSuperview()
             }
 
-            emptyStateView.configureForActivities { [weak self] in
-                self?.navigateToActivityRecord()
+            // IN_PROGRESS 상태인 취미가 있는 경우에만 버튼 표시
+            let hasInProgressHobby = viewModel.myHobbies.contains { $0.status == .inProgress }
+            if hasInProgressHobby {
+                emptyStateView.configureForActivities { [weak self] in
+                    self?.navigateToActivityRecord()
+                }
+            } else {
+                emptyStateView.configureForActivities(onActionTapped: nil)
             }
         }
     }
 
     private func navigateToActivityRecord() {
-        coordinator?.showActivityRecord()
+        // IN_PROGRESS 상태인 취미만 활동 기록 가능
+        let selectedIds = viewModel.selectedHobbyIds
+        let inProgressHobbies = viewModel.myHobbies.filter { $0.status == .inProgress }
+
+        let targetHobby: MyPageHobby?
+        if !selectedIds.isEmpty {
+            // 선택된 취미 중 IN_PROGRESS인 첫 번째 것
+            targetHobby = inProgressHobbies.first { selectedIds.contains($0.hobbyId) }
+        } else {
+            // 전체 선택 상태 -> IN_PROGRESS인 첫 번째 취미
+            targetHobby = inProgressHobbies.first
+        }
+
+        guard let hobby = targetHobby else {
+            print("❌ IN_PROGRESS 취미 없음 - ActivityRecordViewController를 표시할 수 없습니다")
+            return
+        }
+
+        coordinator?.showActivityRecord(hobbyId: hobby.hobbyId, hobbyName: hobby.hobbyName)
     }
 }
 
