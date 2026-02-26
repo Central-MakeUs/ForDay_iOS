@@ -33,7 +33,7 @@ enum ActivityDetailDropdownOption: CaseIterable {
         case .delete:
             return .Icon.trash
         case .report:
-            return .Icon.sorry
+            return .Icon.report
         }
     }
 
