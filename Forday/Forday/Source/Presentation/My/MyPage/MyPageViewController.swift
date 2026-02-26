@@ -303,7 +303,8 @@ extension MyPageViewController {
             if let scrapGridVC = scrapGridVC {
                 myPageView.contentContainerView.addSubview(scrapGridVC.view)
                 scrapGridVC.view.snp.makeConstraints {
-                    $0.edges.equalToSuperview()
+                    $0.top.equalToSuperview().offset(20)
+                    $0.leading.trailing.bottom.equalToSuperview()
                 }
                 scrapGridVC.didMove(toParent: self)
 
