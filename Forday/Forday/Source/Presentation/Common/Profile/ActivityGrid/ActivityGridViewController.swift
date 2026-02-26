@@ -123,7 +123,6 @@ extension ActivityGridViewController {
     }
 
     private func updateCollectionViewHeight(_ height: CGFloat) {
-        guard height > 0 else { return }
         collectionViewHeightConstraint?.update(offset: height)
 
         // Notify parent about height change

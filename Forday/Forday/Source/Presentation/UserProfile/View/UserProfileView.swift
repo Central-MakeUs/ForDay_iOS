@@ -351,8 +351,9 @@ extension UserProfileView {
         // Ensure minimum height to fill screen
         let screenHeight = UIScreen.main.bounds.height
         // UserProfile은 hidesBottomBarWhenPushed = true로 탭바가 숨겨지므로
-        // nav(44) + header(80) + segment(44) + safeAreaBottom(34)
-        let minHeight = screenHeight - 44 - 80 - 44 - 34
+        // nav(44) + header(80) + segment(44) + safeAreaBottom
+        let safeAreaBottom = safeAreaInsets.bottom
+        let minHeight = screenHeight - 44 - 80 - 44 - safeAreaBottom
         let finalHeight = max(height, minHeight)
         contentHeightConstraint?.update(offset: finalHeight)
     }
