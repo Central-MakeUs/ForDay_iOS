@@ -248,7 +248,7 @@ class ActivityRecordViewModel {
         }
 
         _ = try await deleteImageUseCase.execute(imageUrl: originalUrl)
-        print("✅ 기존 이미지 S3에서 삭제 완료: \(originalUrl)")
+        print("✅ 기존 이미지 S3에서 삭제 완료")
     }
 
     /// 새로 업로드한 이미지 S3 삭제 (수정 취소 시 호출)
@@ -259,7 +259,7 @@ class ActivityRecordViewModel {
         await MainActor.run {
             self.newlyUploadedImageUrl = nil
         }
-        print("✅ 새로 업로드한 이미지 S3에서 삭제 완료: \(newImageUrl)")
+        print("✅ 새로 업로드한 이미지 S3에서 삭제 완료")
     }
 
     /// 기존 deleteImage 메서드 (호환성 유지)
@@ -292,8 +292,15 @@ class ActivityRecordViewModel {
                 visibility: privacy
             )
 
+
             // 수정 완료 후 기존 이미지가 변경/삭제되었으면 S3에서 삭제
             try await deleteOriginalImageIfNeeded()
+            // 수정 완료 후 기존 이미지 정리(비치명 처리)
+            do {
+                try await deleteOriginalImageIfNeeded()
+            } catch {
+                // cleanup 실패는 제출 성공을 뒤집지 않음 (로깅/모니터링만)
+            }
 
             // Convert UpdateRecordResult to ActivityRecord for compatibility
             return ActivityRecord(
