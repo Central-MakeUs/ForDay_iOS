@@ -126,8 +126,9 @@ extension ActivityGridViewController {
         guard height > 0 else { return }
         collectionViewHeightConstraint?.update(offset: height)
 
-        // Notify parent about height change (hobbyFilter 90 + spacing 16 + countLabel ~17 + spacing 8 + collectionView)
-        let totalHeight = 90 + 16 + 17 + 8 + height
+        // Notify parent about height change
+        // top offset(20) + hobbyFilter(90) + spacing(16) + countLabel(17) + spacing(8) + collectionView + bottomPadding(20)
+        let totalHeight = 20 + 90 + 16 + 17 + 8 + height + 20
         onContentHeightChanged?(totalHeight)
     }
 
