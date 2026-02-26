@@ -24,8 +24,8 @@ final class HobbyFilterView: UIView {
     override init(frame: CGRect) {
         let flowLayout = UICollectionViewFlowLayout()
         flowLayout.scrollDirection = .horizontal
-        flowLayout.minimumLineSpacing = 12
-        flowLayout.minimumInteritemSpacing = 12
+        flowLayout.minimumLineSpacing = 16
+        flowLayout.minimumInteritemSpacing = 16
 
         self.collectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
 
@@ -84,7 +84,7 @@ extension HobbyFilterView {
         addSubview(collectionView)
 
         collectionView.snp.makeConstraints {
-            $0.edges.equalToSuperview().inset(UIEdgeInsets(top: 8, left: 20, bottom: 8, right: 20))
+            $0.edges.equalToSuperview().inset(UIEdgeInsets(top: 0, left: 20, bottom: 8, right: 20))
         }
     }
 
@@ -152,8 +152,8 @@ extension HobbyFilterView: UICollectionViewDelegate {
 
 extension HobbyFilterView: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        // Icon container (48pt) + spacing (4pt) + label height (~14pt)
-        return CGSize(width: 48, height: 66)
+        // Icon (48pt) + spacing (4pt) + label lineHeight (~17pt)
+        return CGSize(width: 48, height: 69)
     }
 }
 

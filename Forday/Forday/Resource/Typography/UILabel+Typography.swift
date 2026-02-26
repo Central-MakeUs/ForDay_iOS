@@ -24,10 +24,22 @@ extension UILabel {
     /// - Parameters:
     ///   - text: 표시할 텍스트
     ///   - style: 적용할 TypographyStyle
-    func setTextWithTypography(_ text: String, style: TypographyStyle) {
+    ///   - alignment: 텍스트 정렬 (기본값: .natural)
+    func setTextWithTypography(_ text: String, style: TypographyStyle, alignment: NSTextAlignment = .natural) {
         let attributedString = NSMutableAttributedString(string: text)
+        var attributes = style.attributes
+
+        // alignment가 지정된 경우 paragraphStyle에 적용
+        if let paragraphStyle = attributes[.paragraphStyle] as? NSMutableParagraphStyle {
+            paragraphStyle.alignment = alignment
+        } else {
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.alignment = alignment
+            attributes[.paragraphStyle] = paragraphStyle
+        }
+
         attributedString.addAttributes(
-            style.attributes,
+            attributes,
             range: NSRange(location: 0, length: text.utf16.count)
         )
         self.attributedText = attributedString
