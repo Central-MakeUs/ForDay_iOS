@@ -67,14 +67,14 @@ class ActivityRecordViewController: UIViewController {
         // 제출 성공한 경우 이미지 삭제하지 않음
         guard !didSubmitSuccessfully else { return }
 
-        // 업로드된 이미지가 있으면 삭제
+        // 새로 업로드된 이미지가 있으면 삭제 (수정 취소 시)
         guard viewModel.uploadedImageUrl != nil else { return }
 
         Task { [weak self] in
             guard let self = self else { return }
             do {
-                try await self.viewModel.deleteImage()
-                print("✅ 페이지 이탈로 인해 업로드된 이미지 삭제 완료")
+                try await self.viewModel.deleteNewlyUploadedImageIfNeeded()
+                print("✅ 페이지 이탈로 인해 새로 업로드된 이미지 삭제 완료")
             } catch {
                 print("❌ 이미지 삭제 실패: \(error)")
             }
@@ -88,26 +88,15 @@ extension ActivityRecordViewController {
     private func setupNavigationBar() {
         title = viewModel.isEditMode ? "내 활동 수정하기" : "내 활동 남기기"
 
-        // 뒤로 가기 버튼 (수정 모드) 또는 X 버튼 (생성 모드)
-        if viewModel.isEditMode {
-            let backButton = UIBarButtonItem(
-                image: .Icon.chevronLeft,
-                style: .plain,
-                target: self,
-                action: #selector(closeButtonTapped)
-            )
-            backButton.tintColor = .neutral900
-            navigationItem.leftBarButtonItem = backButton
-        } else {
-            let closeButton = UIBarButtonItem(
-                image: .Icon.xmark,
-                style: .plain,
-                target: self,
-                action: #selector(closeButtonTapped)
-            )
-            closeButton.tintColor = .neutral900
-            navigationItem.leftBarButtonItem = closeButton
-        }
+        // X 버튼 (생성/수정 모드 공통)
+        let closeButton = UIBarButtonItem(
+            image: .Icon.xmark,
+            style: .plain,
+            target: self,
+            action: #selector(closeButtonTapped)
+        )
+        closeButton.tintColor = .neutral900
+        navigationItem.leftBarButtonItem = closeButton
     }
     
     private func setupActions() {
@@ -201,6 +190,14 @@ extension ActivityRecordViewController {
                 self?.recordView.showAddActivityButton(activities.isEmpty)
             }
             .store(in: &cancellables)
+
+        // 스티커 선택 변경 시 CollectionView 업데이트
+        viewModel.$selectedSticker
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.recordView.stickerCollectionView.reloadData()
+            }
+            .store(in: &cancellables)
     }
 
     private func setupForEditMode() {
@@ -212,6 +209,19 @@ extension ActivityRecordViewController {
             recordView.memoTextView.text = viewModel.memo
             recordView.updateMemoCount(viewModel.memo.count)
             recordView.updateMemoPlaceholder(isHidden: !viewModel.memo.isEmpty)
+
+            // 공개범위 UI 설정
+            updatePrivacyButton(viewModel.privacy)
+
+            // 기존 이미지 로드
+            loadExistingImage()
+        }
+    }
+
+    private func loadExistingImage() {
+        Task { [weak self] in
+            guard let self = self else { return }
+            await self.viewModel.loadOriginalImage()
         }
     }
 
@@ -457,9 +467,8 @@ extension ActivityRecordViewController {
     }
 
     private func updatePrivacyButton(_ privacy: Privacy) {
-        var config = recordView.privacyButton.configuration
-        config?.title = privacy.title
-        recordView.privacyButton.configuration = config
+        recordView.updatePrivacyButtonTitle(privacy.title)
+        recordView.updatePrivacyDescription(privacy)
     }
 
     private func presentPhotoPicker() {
@@ -476,7 +485,7 @@ extension ActivityRecordViewController {
         Task { [weak self] in
             guard let self = self else { return }
             do {
-                try await self.viewModel.deleteImage()
+                try await self.viewModel.removeImageFromUI()
             } catch {
                 await MainActor.run { [weak self] in
                     print("❌ 이미지 삭제 실패: \(error)")

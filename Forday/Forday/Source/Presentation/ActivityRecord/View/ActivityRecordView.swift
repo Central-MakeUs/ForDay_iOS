@@ -39,6 +39,7 @@ class ActivityRecordView: UIView {
     // 기록 공개범위
     private let privacyLabel = UILabel()
     let privacyButton = UIButton()
+    private let privacyDescriptionLabel = UILabel()
     
     // 작성완료 버튼
     let submitButton = UIButton()
@@ -79,16 +80,15 @@ extension ActivityRecordView {
         activityDropdownButton.do {
             var config = UIButton.Configuration.plain()
             config.title = "미라클 모닝 야침 독서"
-            config.image = .Icon.chevronDown
+            config.image = .Icon.chevronDown.withTintColor(.neutral600, renderingMode: .alwaysOriginal)
             config.imagePlacement = .trailing
-            config.imagePadding = 8
             config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
             config.background.backgroundColor = .neutral50
             config.background.cornerRadius = 12
-            config.baseForegroundColor = .neutral900
+            config.baseForegroundColor = .neutral800
 
             $0.configuration = config
-            $0.contentHorizontalAlignment = .leading
+            $0.contentHorizontalAlignment = .fill
         }
 
         addActivityButton.do {
@@ -180,12 +180,17 @@ extension ActivityRecordView {
             config.image = .Icon.chevronDown
             config.imagePlacement = .trailing
             config.imagePadding = 8
-            config.baseForegroundColor = .neutral900
+            config.baseForegroundColor = .neutral600
 
             $0.configuration = config
             $0.contentHorizontalAlignment = .trailing
         }
-        
+
+        privacyDescriptionLabel.do {
+            $0.setTextWithTypography("모든 사람이 이 기록을 볼 수 있습니다.", style: .label12)
+            $0.textColor = .neutral500
+        }
+
         // 작성완료 버튼
         submitButton.do {
             var config = UIButton.Configuration.filled()
@@ -212,15 +217,16 @@ extension ActivityRecordView {
         contentView.addSubview(memoContainerView)
         contentView.addSubview(privacyLabel)
         contentView.addSubview(privacyButton)
+        contentView.addSubview(privacyDescriptionLabel)
         contentView.addSubview(submitButton)
         
         memoContainerView.addSubview(memoTextView)
         memoContainerView.addSubview(memoPlaceholderLabel)
         memoContainerView.addSubview(photoContainerView)
         memoContainerView.addSubview(memoCountLabel)
+        memoContainerView.addSubview(photoDeleteButton)  // 삭제 버튼을 최상단에 배치
 
         photoContainerView.addSubview(photoAddButton)
-        photoContainerView.addSubview(photoDeleteButton)
         
         // ContentView
         contentView.snp.makeConstraints {
@@ -288,8 +294,8 @@ extension ActivityRecordView {
         }
 
         photoDeleteButton.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(-4)
-            $0.trailing.equalToSuperview().offset(4)
+            $0.top.equalTo(photoContainerView.snp.top).offset(-4)
+            $0.trailing.equalTo(photoContainerView.snp.trailing).offset(4)
             $0.width.height.equalTo(16)
         }
 
@@ -303,12 +309,17 @@ extension ActivityRecordView {
             $0.top.equalTo(memoContainerView.snp.bottom).offset(24)
             $0.leading.equalToSuperview().offset(20)
         }
-        
+
         privacyButton.snp.makeConstraints {
             $0.centerY.equalTo(privacyLabel)
             $0.trailing.equalToSuperview().offset(-20)
         }
-        
+
+        privacyDescriptionLabel.snp.makeConstraints {
+            $0.top.equalTo(privacyLabel.snp.bottom).offset(8)
+            $0.leading.equalToSuperview().offset(20)
+        }
+
         // 작성완료 버튼
         submitButton.snp.makeConstraints {
             $0.leading.equalToSuperview().offset(16)
@@ -369,6 +380,25 @@ extension ActivityRecordView {
             photoAddButton.tintColor = .neutral400
             showPhotoDeleteButton(false)
         }
+    }
+
+    func updatePrivacyDescription(_ privacy: Privacy) {
+        let description: String
+        switch privacy {
+        case .public:
+            description = "모든 사람이 이 기록을 볼 수 있습니다."
+        case .friend:
+            description = "나를 친구추가한 사람들에게만 이 기록을 공개합니다."
+        case .private:
+            description = "이 기록은 나만 볼 수 있습니다."
+        }
+        privacyDescriptionLabel.setTextWithTypography(description, style: .label12)
+    }
+
+    func updatePrivacyButtonTitle(_ title: String) {
+        var config = privacyButton.configuration
+        config?.title = title
+        privacyButton.configuration = config
     }
 }
 

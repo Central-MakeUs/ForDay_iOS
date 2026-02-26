@@ -510,6 +510,16 @@ extension ActivityDetailView {
 
 extension ActivityDetailView {
 
+    /// RefreshControl 설정
+    func setRefreshControl(_ refreshControl: UIRefreshControl) {
+        scrollView.refreshControl = refreshControl
+    }
+
+    /// RefreshControl 종료
+    func endRefreshing() {
+        scrollView.refreshControl?.endRefreshing()
+    }
+
     /// 화면 표시 모드 설정
     func setDisplayMode(_ mode: DisplayMode) {
         displayMode = mode

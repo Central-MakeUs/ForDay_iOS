@@ -29,6 +29,9 @@ final class ActivityDetailViewController: UIViewController {
     private let nickname: String?
     private var successOverlayView: ActivityRecordSuccessOverlayView?
 
+    // 수정 후 재조회 플래그
+    private var needsRefreshAfterEdit = false
+
     // MARK: - Initialization
 
     init(
@@ -58,7 +61,18 @@ final class ActivityDetailViewController: UIViewController {
         setupCustomNavigationBar()
         setupGestures()
         setupDisplayMode()
+        setupRefreshControl()
         bind()
+        loadData()
+    }
+
+    private func setupRefreshControl() {
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
+        detailView.setRefreshControl(refreshControl)
+    }
+
+    @objc private func handleRefresh() {
         loadData()
     }
 
@@ -81,6 +95,12 @@ final class ActivityDetailViewController: UIViewController {
         super.viewWillAppear(animated)
         // 기본 내비게이션 숨기기 (커스텀 내비게이션 사용)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+
+        // 수정 후 돌아왔을 때 데이터 재조회
+        if needsRefreshAfterEdit {
+            needsRefreshAfterEdit = false
+            loadData()
+        }
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -146,11 +166,12 @@ extension ActivityDetailViewController {
         // Loading state
         viewModel.$isLoading
             .receive(on: DispatchQueue.main)
-            .sink { isLoading in
+            .sink { [weak self] isLoading in
                 if isLoading {
                     print("🔄 Loading activity detail...")
                 } else {
                     print("✅ Activity detail loaded")
+                    self?.detailView.endRefreshing()
                 }
             }
             .store(in: &cancellables)
@@ -331,7 +352,10 @@ extension ActivityDetailViewController {
         let nav = BaseNavigationController(rootViewController: recordVC)
         nav.modalPresentationStyle = .fullScreen
 
-        present(nav, animated: true)
+        present(nav, animated: true) { [weak self] in
+            // 수정 화면이 dismiss될 때 데이터 재조회를 위한 플래그 설정
+            self?.needsRefreshAfterEdit = true
+        }
     }
 
     private func showDeleteConfirmation() {
