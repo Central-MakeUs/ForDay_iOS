@@ -314,7 +314,7 @@ extension ActivityDetailViewController {
     private func setAsProfileImage() {
         guard let detail = viewModel.activityDetail else { return }
 
-        print("📸 대표사진 설정: \(detail.imageUrl)")
+        print("📸 대표사진 설정 시작")
 
         Task { [weak self] in
             guard let self = self else { return }
