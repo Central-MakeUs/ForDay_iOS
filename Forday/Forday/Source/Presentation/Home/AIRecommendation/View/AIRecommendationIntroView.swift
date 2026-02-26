@@ -85,12 +85,14 @@ extension AIRecommendationIntroView {
 
         // 추천 받은 활동리스트 버튼
         activityListButton.do {
-            var config = UIButton.Configuration.plain()
+            var config = UIButton.Configuration.filled()
             config.baseForegroundColor = .neutral800
             config.baseBackgroundColor = .bg003
-
+            config.background.cornerRadius = 12
+            config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 60, bottom: 12, trailing: 60)
+            
             $0.configuration = config
-            $0.setTitleWithTypography("추천 받은 활동리스트", style: .body14)
+            $0.setTitleWithTypography("추천 받은 활동리스트", style: .header14)
             $0.isHidden = true
         }
     }
@@ -113,6 +115,8 @@ extension AIRecommendationIntroView {
 
         activityListButton.snp.makeConstraints {
             $0.top.equalTo(recommendButton.snp.bottom).offset(12)
+            $0.leading.equalToSuperview().offset(60)
+            $0.trailing.equalToSuperview().offset(-60)
             $0.centerX.equalToSuperview()
         }
     }
