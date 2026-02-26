@@ -723,6 +723,11 @@ extension HomeViewController {
         return stickerBoardViewModel.stickerBoard?.activityRecordedToday == true
     }
 
+    /// 가장 최근(마지막) 스티커의 활동 기록 ID 반환
+    func getLastActivityRecordId() -> Int? {
+        return stickerBoardViewModel.stickerBoard?.stickers.last?.activityRecordId
+    }
+
     // MARK: - Floating Action Menu
 
     private func toggleFloatingMenu() {

@@ -17,7 +17,6 @@ final class PhotoAddBottomSheetView: UIView {
     private let titleLabel = UILabel()
     let albumButton = UIButton(type: .system)
     let cameraButton = UIButton(type: .system)
-    private let indicatorView = UIView()
 
     // MARK: - Initialization
 
@@ -80,11 +79,6 @@ extension PhotoAddBottomSheetView {
             $0.configuration = config
             $0.contentHorizontalAlignment = .left
         }
-
-        indicatorView.do {
-            $0.backgroundColor = UIColor(hex: "#222222")
-            $0.layer.cornerRadius = 2.5
-        }
     }
 
     private func layout() {
@@ -92,7 +86,6 @@ extension PhotoAddBottomSheetView {
         containerView.addSubview(titleLabel)
         containerView.addSubview(albumButton)
         containerView.addSubview(cameraButton)
-        containerView.addSubview(indicatorView)
 
         containerView.snp.makeConstraints {
             $0.edges.equalToSuperview()
@@ -115,14 +108,7 @@ extension PhotoAddBottomSheetView {
             $0.leading.equalToSuperview().offset(20)
             $0.trailing.equalToSuperview().offset(-20)
             $0.height.equalTo(52)
-        }
-
-        indicatorView.snp.makeConstraints {
-            $0.top.equalTo(cameraButton.snp.bottom).offset(24)
-            $0.centerX.equalToSuperview()
-            $0.width.equalTo(135)
-            $0.height.equalTo(5)
-            $0.bottom.equalTo(safeAreaLayoutGuide).offset(-8)
+            $0.bottom.equalTo(safeAreaLayoutGuide).offset(-24)
         }
     }
 }

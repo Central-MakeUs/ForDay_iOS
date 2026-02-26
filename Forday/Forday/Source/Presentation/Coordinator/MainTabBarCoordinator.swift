@@ -121,7 +121,7 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
     private func presentActivityRecord() {
         // 오늘 이미 활동 기록을 완료했는지 확인
         if homeViewController?.isActivityRecordedToday() == true {
-            ToastView.showError(message: "오늘은 활동 기록을 이미 완료했어요")
+            showAlreadyRecordedPopup()
             return
         }
 
@@ -146,6 +146,33 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         // 현재 선택된 탭의 ViewController에서 present
         if let selectedVC = tabBarController.selectedViewController {
             selectedVC.present(nav, animated: true)
+        }
+    }
+
+    /// 오늘 이미 활동 기록을 완료한 경우 팝업 표시
+    private func showAlreadyRecordedPopup() {
+        let popup = CommonPopupViewController(
+            title: "활동 기록은 하루에 1개만 가능해요",
+            message: "이미 오늘의 활동을 기록하셨어요. 다른 활동을 기록하고 싶다면, 이전 활동 기록을 삭제해야 돼요.",
+            primaryButtonTitle: "기록 보러가기",
+            secondaryButtonTitle: "닫기"
+        )
+
+        // 기록 보러가기 버튼 액션
+        popup.onPrimaryAction = { [weak self] in
+            guard let self = self,
+                  let recordId = self.homeViewController?.getLastActivityRecordId() else {
+                return
+            }
+            self.showActivityDetail(activityRecordId: recordId)
+        }
+
+        // 닫기 버튼 액션 (dismiss만 - 기본 동작)
+        popup.onSecondaryAction = nil
+
+        // 현재 선택된 탭에서 present
+        if let selectedVC = tabBarController.selectedViewController {
+            selectedVC.present(popup, animated: true)
         }
     }
 
