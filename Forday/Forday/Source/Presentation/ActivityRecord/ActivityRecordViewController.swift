@@ -368,6 +368,10 @@ extension ActivityRecordViewController {
     }
 
     @objc private func submitButtonTapped() {
+        // 버튼 연타 방지: 제출 중이면 무시
+        guard recordView.submitButton.isEnabled else { return }
+        recordView.setSubmitButtonEnabled(false)
+
         Task { [weak self] in
             guard let self = self else { return }
             do {
@@ -398,8 +402,10 @@ extension ActivityRecordViewController {
                 }
             } catch ActivityRecordError.missingRequiredFields {
                 await MainActor.run { [weak self] in
+                    guard let self = self else { return }
                     print("❌ 필수 항목이 누락되었습니다")
-                    self?.showErrorAlert(
+                    self.recordView.setSubmitButtonEnabled(true)
+                    self.showErrorAlert(
                         title: "입력 오류",
                         message: "활동과 스티커를 모두 선택해주세요."
                     )
@@ -409,6 +415,7 @@ extension ActivityRecordViewController {
                     guard let self = self else { return }
                     let actionType = self.viewModel.isEditMode ? "수정" : "작성"
                     print("❌ 활동 기록 \(actionType) 실패: \(appError)")
+                    self.recordView.setSubmitButtonEnabled(true)
                     // Use common error handler
                     self.handleActivityRecordError(appError)
                 }
@@ -417,6 +424,7 @@ extension ActivityRecordViewController {
                     guard let self = self else { return }
                     let actionType = self.viewModel.isEditMode ? "수정" : "작성"
                     print("❌ 활동 기록 \(actionType) 실패: \(error)")
+                    self.recordView.setSubmitButtonEnabled(true)
                     self.handleActivityRecordError(.unknown(error))
                 }
             }
