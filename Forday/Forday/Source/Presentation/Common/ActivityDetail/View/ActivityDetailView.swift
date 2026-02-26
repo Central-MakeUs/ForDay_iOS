@@ -137,8 +137,12 @@ final class ActivityDetailView: UIView {
             memoStickerImageView.isHidden = false
         }
 
-        // Save button: 내가 쓴 글 + 이미지 있을 때만 표시
-        saveButton.isHidden = !(detail.recordOwner && hasImage)
+        // Save button: 내가 쓴 글 + 이미지 있을 때만 표시 (afterRecord 모드에서는 숨김)
+        if displayMode == .normal {
+            saveButton.isHidden = !(detail.recordOwner && hasImage)
+        } else {
+            saveButton.isHidden = true
+        }
 
         // Configure reaction buttons
         reactionButtonsView.configure(with: detail)
