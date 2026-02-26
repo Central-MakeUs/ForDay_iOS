@@ -58,20 +58,11 @@ extension DTO {
     }
 
     struct ServiceInfo: Codable {
-        let title: String
-        let description: String
+        let title: String?
+        let description: String?
         let serviceName: String
-        let operator_: String
-        let ceoName: String
-        let address: String
+        let companyName: String
         let email: String
-        let privacyOfficer: String?
-        let effectiveDate: String
-
-        enum CodingKeys: String, CodingKey {
-            case title, description, serviceName
-            case operator_ = "operator"
-            case ceoName, address, email, privacyOfficer, effectiveDate
-        }
+        let representative: String
     }
 }

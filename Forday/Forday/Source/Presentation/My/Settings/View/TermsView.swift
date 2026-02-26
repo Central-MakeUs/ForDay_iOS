@@ -70,9 +70,6 @@ final class TermsView: UIView {
         // Add title
         addTitleLabel(data.title)
 
-        // Add version
-        addVersionLabel(data.version)
-
         // Add sections
         for section in data.sections {
             addSectionView(section)
@@ -96,9 +93,6 @@ final class TermsView: UIView {
         if let description = data.description {
             addDescriptionLabel(description)
         }
-
-        // Add version
-        addVersionLabel(data.version)
 
         // Add sections
         for section in data.sections {
@@ -140,14 +134,6 @@ extension TermsView {
         label.numberOfLines = 0
         contentStackView.addArrangedSubview(label)
         contentStackView.setCustomSpacing(8, after: label)
-    }
-
-    private func addVersionLabel(_ version: String) {
-        let label = UILabel()
-        label.setTextWithTypography(version, style: .label12)
-        label.textColor = .neutral500
-        contentStackView.addArrangedSubview(label)
-        contentStackView.setCustomSpacing(24, after: label)
     }
 
     private func addDescriptionLabel(_ description: String) {
@@ -223,75 +209,49 @@ extension TermsView {
     }
 
     private func addServiceInfoView(_ serviceInfo: DTO.ServiceInfo) {
-        // Divider
-        let divider = UIView()
-        divider.backgroundColor = .stroke001
-        divider.snp.makeConstraints { $0.height.equalTo(1) }
-        contentStackView.addArrangedSubview(divider)
-        contentStackView.setCustomSpacing(16, after: divider)
+        // 부칙 title - 있을 경우만 표시 (.header14)
+        if let title = serviceInfo.title {
+            let titleLabel = UILabel()
+            titleLabel.setTextWithTypography(title, style: .header14)
+            titleLabel.textColor = .neutral800
+            contentStackView.addArrangedSubview(titleLabel)
+        }
 
-        // Service info title (부칙)
-        let titleLabel = UILabel()
-        titleLabel.setTextWithTypography(serviceInfo.title, style: .label14)
-        titleLabel.textColor = .neutral900
-        contentStackView.addArrangedSubview(titleLabel)
-        contentStackView.setCustomSpacing(8, after: titleLabel)
+        // Description - 있을 경우만 표시
+        if let description = serviceInfo.description {
+            let descLabel = UILabel()
+            descLabel.setTextWithTypography(description, style: .body14)
+            descLabel.textColor = .neutral800
+            descLabel.numberOfLines = 0
+            contentStackView.addArrangedSubview(descLabel)
+        }
 
-        // Description
-        let descLabel = UILabel()
-        descLabel.setTextWithTypography(serviceInfo.description, style: .body14)
-        descLabel.textColor = .neutral800
-        descLabel.numberOfLines = 0
-        contentStackView.addArrangedSubview(descLabel)
-        contentStackView.setCustomSpacing(16, after: descLabel)
+        // 문의처 헤더
+        let contactHeaderLabel = UILabel()
+        contactHeaderLabel.setTextWithTypography("문의처", style: .body14)
+        contactHeaderLabel.textColor = .neutral800
+        contentStackView.addArrangedSubview(contactHeaderLabel)
 
-        // Service details
-        let details = [
-            ("서비스명", serviceInfo.serviceName),
-            ("대표자명", serviceInfo.ceoName),
-            ("주소", serviceInfo.address),
-            ("이메일", serviceInfo.email),
-            ("시행일", serviceInfo.effectiveDate)
+        // 문의처 bullet list
+        let contactItems = [
+            "서비스명: \(serviceInfo.serviceName)",
+            "운영: \(serviceInfo.companyName)",
+            "이메일: \(serviceInfo.email)"
         ]
 
-        for (label, value) in details {
-            addServiceDetailRow(label: label, value: value)
-        }
-
-        // Privacy officer if exists
-        if let privacyOfficer = serviceInfo.privacyOfficer {
-            addServiceDetailRow(label: "개인정보 보호책임자", value: privacyOfficer)
+        for item in contactItems {
+            addBulletItem(item)
         }
     }
 
-    private func addServiceDetailRow(label: String, value: String) {
-        let rowView = UIView()
-
-        let labelText = UILabel()
-        labelText.setTextWithTypography(label, style: .label12)
-        labelText.textColor = .neutral500
-
-        let valueText = UILabel()
-        valueText.setTextWithTypography(value, style: .body12)
-        valueText.textColor = .neutral800
-        valueText.numberOfLines = 0
-
-        rowView.addSubview(labelText)
-        rowView.addSubview(valueText)
-
-        labelText.snp.makeConstraints {
-            $0.leading.top.bottom.equalToSuperview()
-            $0.width.equalTo(100)
-        }
-
-        valueText.snp.makeConstraints {
-            $0.leading.equalTo(labelText.snp.trailing).offset(8)
-            $0.trailing.top.bottom.equalToSuperview()
-        }
-
-        contentStackView.addArrangedSubview(rowView)
-        contentStackView.setCustomSpacing(8, after: rowView)
+    private func addBulletItem(_ text: String) {
+        let label = UILabel()
+        label.setTextWithTypography("• \(text)", style: .body14)
+        label.textColor = .neutral800
+        label.numberOfLines = 0
+        contentStackView.addArrangedSubview(label)
     }
+
 }
 
 // MARK: - Setup
