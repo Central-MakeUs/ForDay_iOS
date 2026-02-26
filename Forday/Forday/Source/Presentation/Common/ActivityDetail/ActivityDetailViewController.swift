@@ -363,9 +363,9 @@ extension ActivityDetailViewController {
 
         let popupVC = CommonPopupViewController(
             title: "활동 기록 삭제",
-            message: "정말 이 활동 기록을\n삭제하시겠어요?",
-            primaryButtonTitle: "삭제",
-            secondaryButtonTitle: "취소"
+            message: "삭제 시 복구는 안돼요!",
+            primaryButtonTitle: "삭제하기",
+            secondaryButtonTitle: "닫기"
         )
         popupVC.onPrimaryAction = { [weak self] in
             self?.deleteActivity()

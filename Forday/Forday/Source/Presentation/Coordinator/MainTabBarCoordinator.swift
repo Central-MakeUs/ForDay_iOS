@@ -39,6 +39,16 @@ class MainTabBarCoordinator: NSObject, Coordinator {
         self.homeViewController = homeVC
         let homeNav = createNavigationController(rootViewController: homeVC)
 
+        // 발견 탭
+        let discoverVC = DiscoverViewController()
+        discoverVC.coordinator = self
+        discoverVC.tabBarItem = UITabBarItem(
+            title: "발견",
+            image: .Gnb.recommendation,
+            selectedImage: .Gnb.recommendationFill
+        )
+        let discoverNav = createNavigationController(rootViewController: discoverVC)
+
         // 작성 탭 (더미 - 실제로는 presentActivityRecord()에서 present됨)
         let recordVC = UIViewController()
         recordVC.tabBarItem = UITabBarItem(
@@ -69,9 +79,10 @@ class MainTabBarCoordinator: NSObject, Coordinator {
         )
         let profileNav = createNavigationController(rootViewController: profileVC)
 
-        // TabBar 설정 (홈, 작성, 소식, 마이)
+        // TabBar 설정 (홈, 발견, 작성, 소식, 마이)
         tabBarController.viewControllers = [
             homeNav,
+            discoverNav,
             recordVC,
             storiesNav,
             profileNav,
@@ -105,9 +116,9 @@ class MainTabBarCoordinator: NSObject, Coordinator {
 extension MainTabBarCoordinator: UITabBarControllerDelegate {
     func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
 
-        // 작성 탭(index 1) 선택 시
+        // 작성 탭(index 2) 선택 시
         if let viewControllers = tabBarController.viewControllers,
-           viewControllers.firstIndex(of: viewController) == 1 {
+           viewControllers.firstIndex(of: viewController) == 2 {
 
             // ActivityRecordViewController present
             presentActivityRecord()
@@ -338,8 +349,8 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
     }
 
     func updateTabBarRecordingButtonState(enabled: Bool) {
-        // Get recording tab (index 1)
-        guard let recordVC = tabBarController.viewControllers?[1] else { return }
+        // Get recording tab (index 2)
+        guard let recordVC = tabBarController.viewControllers?[2] else { return }
         recordVC.tabBarItem.isEnabled = enabled
     }
 
@@ -350,7 +361,7 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         // Push to current navigation stack (enables swipe back gesture)
         if let currentNav = tabBarController.selectedViewController as? UINavigationController {
             currentNav.pushViewController(profileVC, animated: true)
-        } else if let storiesNav = tabBarController.viewControllers?[2] as? UINavigationController {
+        } else if let storiesNav = tabBarController.viewControllers?[3] as? UINavigationController {
             // Fallback to stories navigation (most likely source of user profile navigation)
             storiesNav.pushViewController(profileVC, animated: true)
         } else if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
@@ -364,7 +375,7 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
     }
 
     func switchToStoriesTab() {
-        tabBarController.selectedIndex = 2
+        tabBarController.selectedIndex = 3
     }
 
     func getCurrentNickname() -> String? {
