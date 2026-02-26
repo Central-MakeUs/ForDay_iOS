@@ -28,8 +28,8 @@ class ActivityCardCell: UITableViewCell {
 
     // MARK: - Constraints
 
-    private var labelLeadingToAiIcon: Constraint?
-    private var labelLeadingToCard: Constraint?
+    private var withAiRecommendConstraint: Constraint?
+    private var defaultConstraint: Constraint?
 
     // MARK: - Callbacks
 
@@ -57,8 +57,8 @@ class ActivityCardCell: UITableViewCell {
         deleteButton.isHidden = true
 
         // Reset label constraint to default (no AI icon)
-        labelLeadingToAiIcon?.deactivate()
-        labelLeadingToCard?.activate()
+        withAiRecommendConstraint?.deactivate()
+        defaultConstraint?.activate()
     }
 
     // MARK: - Configuration
@@ -90,11 +90,11 @@ class ActivityCardCell: UITableViewCell {
         aiIconImageView.isHidden = !showAiIcon
 
         if showAiIcon {
-            labelLeadingToCard?.deactivate()
-            labelLeadingToAiIcon?.activate()
+            defaultConstraint?.deactivate()
+            withAiRecommendConstraint?.activate()
         } else {
-            labelLeadingToAiIcon?.deactivate()
-            labelLeadingToCard?.activate()
+            withAiRecommendConstraint?.deactivate()
+            defaultConstraint?.activate()
         }
 
         // Show/hide delete button based on deletable flag
@@ -205,9 +205,17 @@ extension ActivityCardCell {
             $0.size.equalTo(24)
         }
 
-        // 스티커 스택 (버튼 왼쪽)
+        // 활동 라벨 (AI 아이콘 오른쪽 또는 왼쪽 끝에서 시작)
+        activityLabel.snp.makeConstraints {
+            withAiRecommendConstraint = $0.leading.equalTo(aiIconImageView.snp.trailing).offset(4).constraint
+            defaultConstraint = $0.leading.equalToSuperview().offset(16).constraint
+            $0.centerY.equalToSuperview()
+        }
+
+        // 스티커 스택 (활동명 바로 오른쪽에 붙음)
         stickerStackView.snp.makeConstraints {
-            $0.trailing.equalTo(buttonStackView.snp.leading).offset(-8)
+            $0.leading.equalTo(activityLabel.snp.trailing).offset(4)
+            $0.trailing.lessThanOrEqualTo(buttonStackView.snp.leading).offset(-8)
             $0.centerY.equalToSuperview()
         }
 
@@ -215,21 +223,13 @@ extension ActivityCardCell {
             $0.size.equalTo(20)
         }
 
-        // 활동 라벨 (AI 아이콘과 스티커 사이, 남은 공간 차지)
-        activityLabel.snp.makeConstraints {
-            labelLeadingToAiIcon = $0.leading.equalTo(aiIconImageView.snp.trailing).offset(4).constraint
-            labelLeadingToCard = $0.leading.equalToSuperview().offset(16).constraint
-            $0.trailing.equalTo(stickerStackView.snp.leading).offset(-8)
-            $0.centerY.equalToSuperview()
-        }
-
         // activityLabel이 줄어들 수 있도록 compression resistance 낮춤
         activityLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        activityLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        activityLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
 
         // 기본: AI 아이콘 숨김 상태
-        labelLeadingToAiIcon?.deactivate()
-        labelLeadingToCard?.activate()
+        withAiRecommendConstraint?.deactivate()
+        defaultConstraint?.activate()
     }
 
     private func setupActions() {
