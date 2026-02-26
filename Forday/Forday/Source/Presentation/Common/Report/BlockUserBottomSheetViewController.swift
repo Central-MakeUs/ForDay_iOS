@@ -55,13 +55,12 @@ extension BlockUserBottomSheetViewController {
     }
 
     private func setupActions() {
-        bottomSheetView.checkboxButton.addTarget(self, action: #selector(checkboxTapped), for: .touchUpInside)
         bottomSheetView.confirmButton.addTarget(self, action: #selector(confirmTapped), for: .touchUpInside)
 
         // Make checkbox container tappable
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(checkboxTapped))
-        bottomSheetView.checkboxButton.superview?.addGestureRecognizer(tapGesture)
-        bottomSheetView.checkboxButton.superview?.isUserInteractionEnabled = true
+        bottomSheetView.checkboxImageView.superview?.addGestureRecognizer(tapGesture)
+        bottomSheetView.checkboxImageView.superview?.isUserInteractionEnabled = true
     }
 }
 

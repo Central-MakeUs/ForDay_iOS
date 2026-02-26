@@ -14,11 +14,11 @@ final class ReportView: UIView {
     // MARK: - UI Components
 
     private let navigationBar = UIView()
-    let closeButton = UIButton()
+    let backButton = UIButton()
     private let titleLabel = UILabel()
-    let submitButton = UIButton()
 
-    private let descriptionLabel = UILabel()
+    private let headerTitleLabel = UILabel()
+    private let headerDescriptionLabel = UILabel()
 
     let collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -26,6 +26,9 @@ final class ReportView: UIView {
         layout.minimumLineSpacing = 8
         return UICollectionView(frame: .zero, collectionViewLayout: layout)
     }()
+
+    private let bottomButtonContainer = UIView()
+    let submitButton = UIButton()
 
     // MARK: - Initialization
 
@@ -43,7 +46,7 @@ final class ReportView: UIView {
 
     func updateSubmitButtonState(isEnabled: Bool) {
         submitButton.isEnabled = isEnabled
-        submitButton.setTitleColor(isEnabled ? .action001 : .neutral400, for: .normal)
+        submitButton.backgroundColor = isEnabled ? .action001 : .action003
     }
 }
 
@@ -51,35 +54,36 @@ final class ReportView: UIView {
 
 extension ReportView {
     private func style() {
-        backgroundColor = .neutral50
+        backgroundColor = .neutralWhite
 
         // Navigation Bar
         navigationBar.do {
-            $0.backgroundColor = .neutral50
+            $0.backgroundColor = .neutralWhite
         }
 
-        closeButton.do {
-            $0.setImage(.Icon.xmark, for: .normal)
+        backButton.do {
+            $0.setImage(.Icon.chevronLeft, for: .normal)
             $0.tintColor = .neutral900
         }
 
         titleLabel.do {
-            $0.setTextWithTypography("신고하기", style: .header18)
-            $0.textColor = .neutral900
+            $0.setTextWithTypography("신고하기", style: .header16)
+            $0.textColor = .neutral800
             $0.textAlignment = .center
         }
 
-        submitButton.do {
-            $0.setTitle("완료", for: .normal)
-            $0.setTitleColor(.neutral400, for: .normal)
-            $0.titleLabel?.font = TypographyStyle.header16.font
-            $0.isEnabled = false
+        // Header Title
+        headerTitleLabel.do {
+            $0.setTextWithTypography("해당 게시글이나 유저에 어떤 문제가 있나요?", style: .header20)
+            $0.textColor = .neutral900
         }
 
-        // Description
-        descriptionLabel.do {
-            $0.setTextWithTypography("신고 사유를 선택해 주세요.", style: .body14)
-            $0.textColor = .neutral600
+        // Header Description
+        headerDescriptionLabel.do {
+            $0.text = "회원님의 신고는 익명으로 처리됩니다.\n신고사유를 선택해주세요."
+            $0.font = TypographyStyle.label14.font
+            $0.textColor = .neutral800
+            $0.numberOfLines = 0
         }
 
         // Collection View
@@ -88,24 +92,41 @@ extension ReportView {
             $0.register(ReportReasonCell.self, forCellWithReuseIdentifier: ReportReasonCell.identifier)
             $0.showsVerticalScrollIndicator = false
         }
+
+        // Bottom Button Container
+        bottomButtonContainer.do {
+            $0.backgroundColor = .clear
+        }
+
+        // Submit Button
+        submitButton.do {
+            $0.setTitle("제출하기", for: .normal)
+            $0.setTitleColor(.neutralWhite, for: .normal)
+            $0.titleLabel?.font = TypographyStyle.header16.font
+            $0.backgroundColor = .action003
+            $0.layer.cornerRadius = 12
+            $0.isEnabled = false
+        }
     }
 
     private func layout() {
         addSubview(navigationBar)
-        navigationBar.addSubview(closeButton)
+        navigationBar.addSubview(backButton)
         navigationBar.addSubview(titleLabel)
-        navigationBar.addSubview(submitButton)
-        addSubview(descriptionLabel)
+        addSubview(headerTitleLabel)
+        addSubview(headerDescriptionLabel)
         addSubview(collectionView)
+        addSubview(bottomButtonContainer)
+        bottomButtonContainer.addSubview(submitButton)
 
         // Navigation Bar
         navigationBar.snp.makeConstraints {
             $0.top.equalTo(safeAreaLayoutGuide)
             $0.leading.trailing.equalToSuperview()
-            $0.height.equalTo(56)
+            $0.height.equalTo(44)
         }
 
-        closeButton.snp.makeConstraints {
+        backButton.snp.makeConstraints {
             $0.leading.equalToSuperview().offset(20)
             $0.centerY.equalToSuperview()
             $0.size.equalTo(24)
@@ -115,28 +136,42 @@ extension ReportView {
             $0.center.equalToSuperview()
         }
 
-        submitButton.snp.makeConstraints {
-            $0.trailing.equalToSuperview().offset(-20)
-            $0.centerY.equalToSuperview()
+        // Header Title
+        headerTitleLabel.snp.makeConstraints {
+            $0.top.equalTo(navigationBar.snp.bottom).offset(20)
+            $0.leading.trailing.equalToSuperview().inset(20)
         }
 
-        // Description
-        descriptionLabel.snp.makeConstraints {
-            $0.top.equalTo(navigationBar.snp.bottom).offset(24)
-            $0.leading.equalToSuperview().offset(20)
+        // Header Description
+        headerDescriptionLabel.snp.makeConstraints {
+            $0.top.equalTo(headerTitleLabel.snp.bottom).offset(10)
+            $0.leading.trailing.equalToSuperview().inset(20)
         }
 
         // Collection View
         collectionView.snp.makeConstraints {
-            $0.top.equalTo(descriptionLabel.snp.bottom).offset(16)
+            $0.top.equalTo(headerDescriptionLabel.snp.bottom).offset(24)
             $0.leading.trailing.equalToSuperview().inset(20)
-            $0.bottom.equalTo(safeAreaLayoutGuide)
+            $0.bottom.equalTo(bottomButtonContainer.snp.top)
+        }
+
+        // Bottom Button Container
+        bottomButtonContainer.snp.makeConstraints {
+            $0.leading.trailing.bottom.equalToSuperview()
+            $0.height.equalTo(88)
+        }
+
+        // Submit Button
+        submitButton.snp.makeConstraints {
+            $0.top.equalToSuperview()
+            $0.leading.trailing.equalToSuperview().inset(16)
+            $0.height.equalTo(56)
         }
     }
 }
 
 #if DEBUG
-#Preview {
+#Preview("ReportView") {
     ReportView()
 }
 #endif
