@@ -68,14 +68,14 @@ extension LoginView {
         }
 
         titleLabel.do {
-            $0.setTextWithTypography("포데이에\n오신 것을 환영합니다!", style: .header24)
+            $0.setTextWithTypography("취미 시작이 어려울 때.\n포데이", style: .header24)
             $0.textColor = .neutral900
             $0.textAlignment = .center
             $0.numberOfLines = 0
         }
 
         subtitleLabel.do {
-            $0.setTextWithTypography("당신만의 취미, AI가 추천해드립니다", style: .label14)
+            $0.setTextWithTypography("AI 추천으로 쉽게 시작하는 취미생활", style: .label14)
             $0.textColor = .secondary003
             $0.textAlignment = .center
         }
