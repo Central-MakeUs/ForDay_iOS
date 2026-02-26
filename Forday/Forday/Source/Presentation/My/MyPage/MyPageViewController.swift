@@ -303,7 +303,8 @@ extension MyPageViewController {
             if let scrapGridVC = scrapGridVC {
                 myPageView.contentContainerView.addSubview(scrapGridVC.view)
                 scrapGridVC.view.snp.makeConstraints {
-                    $0.edges.equalToSuperview()
+                    $0.top.equalToSuperview().offset(20)
+                    $0.leading.trailing.bottom.equalToSuperview()
                 }
                 scrapGridVC.didMove(toParent: self)
 
@@ -426,6 +427,7 @@ extension MyPageViewController {
 
         let viewModel = ManageHobbyCoverViewModel()
         let vc = ManageHobbyCoverViewController(viewModel: viewModel)
+        vc.hidesBottomBarWhenPushed = true  // 탭바 숨김
 
         // Pass all hobbies to the viewModel (진행 중 + 보관)
         viewModel.setHobbies(self.viewModel.myHobbies)
@@ -437,15 +439,7 @@ extension MyPageViewController {
 
     private func showGeneralSettings() {
         willNavigateToChildView()
-
-        let vc = GeneralSettingsViewController()
-        vc.coordinator = coordinator
-
-        // Wrap in navigation controller for navigation support
-        let navController = UINavigationController(rootViewController: vc)
-        navController.setNavigationBarHidden(true, animated: false)
-        navController.modalPresentationStyle = .fullScreen
-        present(navController, animated: true)
+        coordinator?.showGeneralSettings()
     }
 
     private func showComingSoonAlert(feature: String) {

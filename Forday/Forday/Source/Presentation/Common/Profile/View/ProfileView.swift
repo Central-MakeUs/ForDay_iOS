@@ -174,7 +174,7 @@ extension ProfileView {
 
         scrollContentView.snp.makeConstraints {
             $0.edges.equalToSuperview()
-            $0.width.equalToSuperview().priority(.high)
+            $0.width.equalTo(scrollView)
         }
 
         headerView.snp.makeConstraints {

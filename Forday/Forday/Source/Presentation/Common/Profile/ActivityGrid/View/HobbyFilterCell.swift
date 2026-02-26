@@ -77,7 +77,7 @@ final class HobbyFilterCell: UICollectionViewCell {
         iconContainerView.layoutIfNeeded()
 
         // Truncate hobby name if longer than 4 characters
-        nameLabel.setTextWithTypography(hobby.hobbyName.truncated(maxLength: 4), style: .body12)
+        nameLabel.setTextWithTypography(hobby.hobbyName.truncated(maxLength: 4), style: .body12, alignment: .center)
 
         // Apply dim for archived hobbies
         let alpha: CGFloat = hobby.status == .archived ? 0.4 : 1.0
@@ -116,6 +116,7 @@ extension HobbyFilterCell {
         nameLabel.do {
             $0.textColor = .neutral800
             $0.textAlignment = .center
+            $0.lineBreakMode = .byTruncatingTail
         }
 
         selectionBorderView.do {
@@ -133,7 +134,7 @@ extension HobbyFilterCell {
         contentView.addSubview(nameLabel)
 
         iconContainerView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(2)
+            $0.top.equalToSuperview()
             $0.centerX.equalToSuperview()
             $0.width.height.equalTo(48)
         }

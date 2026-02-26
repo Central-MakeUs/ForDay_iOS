@@ -86,7 +86,7 @@ extension CommonPopupViewController {
         messageLabel.do {
             $0.setTextWithTypography(popupMessage, style: .label14)
             $0.textColor = .neutral800
-            $0.textAlignment = .center
+            $0.textAlignment = .left
             $0.numberOfLines = 0
             $0.isHidden = popupMessage.isEmpty
         }

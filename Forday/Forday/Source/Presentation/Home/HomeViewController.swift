@@ -645,10 +645,10 @@ extension HomeViewController {
         let hobbyName = viewModel.homeInfo?.inProgressHobbies.first(where: { $0.currentHobby })?.hobbyName ?? "취미"
 
         let activityListVC = ActivityListViewController(hobbyId: hobbyId, hobbyName: hobbyName)
-        activityListVC.isPresentedModally = true
-        let nav = UINavigationController(rootViewController: activityListVC)
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
+        activityListVC.hidesBottomBarWhenPushed = true  // 탭바 숨김
+
+        // Push to navigation stack (스와이프 백 지원)
+        navigationController?.pushViewController(activityListVC, animated: true)
     }
     
     @objc private func addActivityButtonTapped() {
@@ -691,7 +691,7 @@ extension HomeViewController {
             }
         }
 
-        let nav = UINavigationController(rootViewController: inputVC)
+        let nav = BaseNavigationController(rootViewController: inputVC)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
@@ -721,6 +721,11 @@ extension HomeViewController {
     /// 오늘 활동 기록 완료 여부 확인
     func isActivityRecordedToday() -> Bool {
         return stickerBoardViewModel.stickerBoard?.activityRecordedToday == true
+    }
+
+    /// 가장 최근(마지막) 스티커의 활동 기록 ID 반환
+    func getLastActivityRecordId() -> Int? {
+        return stickerBoardViewModel.stickerBoard?.stickers.last?.activityRecordId
     }
 
     // MARK: - Floating Action Menu
@@ -768,7 +773,7 @@ extension HomeViewController {
             }
         }
 
-        let nav = UINavigationController(rootViewController: inputVC)
+        let nav = BaseNavigationController(rootViewController: inputVC)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }

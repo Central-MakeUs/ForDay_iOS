@@ -168,10 +168,21 @@ final class ImageTemplateSelectorViewModel {
     }
 
     private func saveImageToAlbum(image: UIImage, album: PHAssetCollection) {
+        // PNG 데이터로 변환
+        guard let pngData = image.pngData() else {
+            DispatchQueue.main.async { [weak self] in
+                self?.isLoading = false
+                self?.saveResult = .failure(ImageTemplateError.saveFailed)
+            }
+            return
+        }
+
         PHPhotoLibrary.shared().performChanges {
-            // 이미지 에셋 생성
-            let assetRequest = PHAssetChangeRequest.creationRequestForAsset(from: image)
-            guard let assetPlaceholder = assetRequest.placeholderForCreatedAsset else { return }
+            // PNG 형식으로 이미지 에셋 생성
+            let creationRequest = PHAssetCreationRequest.forAsset()
+            creationRequest.addResource(with: .photo, data: pngData, options: nil)
+
+            guard let assetPlaceholder = creationRequest.placeholderForCreatedAsset else { return }
 
             // 앨범에 에셋 추가
             let albumChangeRequest = PHAssetCollectionChangeRequest(for: album)

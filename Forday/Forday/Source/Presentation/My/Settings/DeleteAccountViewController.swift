@@ -63,7 +63,12 @@ extension DeleteAccountViewController {
 
 extension DeleteAccountViewController {
     @objc private func backButtonTapped() {
-        dismiss(animated: true)
+        // Pop if in navigation stack, otherwise dismiss
+        if let navController = navigationController, navController.viewControllers.count > 1 {
+            navController.popViewController(animated: true)
+        } else {
+            dismiss(animated: true)
+        }
     }
 
     @objc private func checkboxTapped() {
@@ -120,7 +125,8 @@ extension DeleteAccountViewController {
     }
 
     private func navigateToLogin() {
-        dismiss(animated: false) { [weak self] in
+        // Dismiss the entire navigation controller (GeneralSettings modal)
+        navigationController?.dismiss(animated: false) { [weak self] in
             self?.coordinator?.parentCoordinator?.logout()
         }
     }

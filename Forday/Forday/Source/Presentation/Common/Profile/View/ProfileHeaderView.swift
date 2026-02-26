@@ -30,6 +30,13 @@ final class ProfileHeaderView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // 레이아웃 변경 후에도 원형 유지 (60x60 고정)
+        let imageSize: CGFloat = 60
+        profileImageView.layer.cornerRadius = imageSize / 2
+    }
+
     // MARK: - Configuration
 
     func configure(with info: UserInfo) {
@@ -83,7 +90,7 @@ extension ProfileHeaderView {
         profileImageView.snp.makeConstraints {
             $0.leading.equalToSuperview().offset(20)
             $0.centerY.equalToSuperview()
-            $0.width.height.equalTo(60).priority(.high)
+            $0.width.height.equalTo(60)
         }
 
         nicknameLabel.snp.makeConstraints {

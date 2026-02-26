@@ -9,6 +9,7 @@
 import Foundation
 import Combine
 import UIKit
+import Kingfisher
 
 class ActivityRecordViewModel {
 
@@ -20,8 +21,35 @@ class ActivityRecordViewModel {
     @Published var privacy: Privacy = .public
     @Published var isSubmitEnabled: Bool = false
     @Published var activities: [Activity] = []
-    @Published var uploadedImageUrl: String?
     @Published var selectedImage: UIImage?
+    @Published var isUploading: Bool = false
+
+    // 이미지 관리 (수정 모드에서 기존 이미지와 새 이미지 구분)
+    /// 수정 모드 진입 시 기존 이미지 URL (변경 불가)
+    private(set) var originalImageUrl: String?
+    /// 새로 업로드한 이미지 URL
+    private(set) var newlyUploadedImageUrl: String?
+    /// 기존 이미지가 삭제되었는지 여부
+    private(set) var isOriginalImageDeleted: Bool = false
+
+    /// API 호출 시 사용할 최종 이미지 URL
+    var currentImageUrl: String? {
+        // 새로 업로드한 이미지가 있으면 그것을 사용
+        if let newUrl = newlyUploadedImageUrl {
+            return newUrl
+        }
+        // 기존 이미지가 삭제되었으면 nil
+        if isOriginalImageDeleted {
+            return nil
+        }
+        // 기존 이미지 URL 반환
+        return originalImageUrl
+    }
+
+    /// 새로 업로드한 이미지 URL (외부에서 참조용)
+    var uploadedImageUrl: String? {
+        return newlyUploadedImageUrl
+    }
 
     // Mock Data
     let stickers: [Sticker] = [
@@ -93,21 +121,36 @@ class ActivityRecordViewModel {
             privacy = privacyType
         }
 
-        // Set uploaded image URL
+        // Set original image URL (수정 모드에서 기존 이미지 URL 저장)
         if !detail.imageUrl.isEmpty {
-            uploadedImageUrl = detail.imageUrl
+            originalImageUrl = detail.imageUrl
         }
 
         // Note: selectedActivity and selectedSticker will be set after fetching activity list
         // We'll match them by activityId and sticker filename
     }
 
+    /// 수정 모드에서 기존 이미지를 Kingfisher로 로드
+    func loadOriginalImage() async {
+        guard let imageUrl = originalImageUrl,
+              let url = URL(string: imageUrl) else { return }
+
+        do {
+            let result = try await KingfisherManager.shared.retrieveImage(with: url)
+            await MainActor.run {
+                self.selectedImage = result.image
+            }
+        } catch {
+            print("❌ 기존 이미지 로드 실패: \(error)")
+        }
+    }
+
     // Methods
 
     private func bind() {
-        Publishers.CombineLatest($selectedActivity, $selectedSticker)
-            .sink { [weak self] activity, sticker in
-                self?.isSubmitEnabled = activity != nil && sticker != nil
+        Publishers.CombineLatest3($selectedActivity, $selectedSticker, $isUploading)
+            .sink { [weak self] activity, sticker, isUploading in
+                self?.isSubmitEnabled = activity != nil && sticker != nil && !isUploading
             }
             .store(in: &cancellables)
     }
@@ -154,22 +197,75 @@ class ActivityRecordViewModel {
     }
 
     func uploadImage(_ image: UIImage) async throws {
+        await MainActor.run {
+            self.isUploading = true
+        }
+
+        defer {
+            Task { @MainActor in
+                self.isUploading = false
+            }
+        }
+
         let imageUrls = try await uploadImageUseCase.execute(images: [(image: image, usage: .activityRecord)])
         await MainActor.run {
             if let firstUrl = imageUrls.first {
-                self.uploadedImageUrl = firstUrl
+                self.newlyUploadedImageUrl = firstUrl
                 self.selectedImage = image
+                // 새 이미지를 업로드하면 기존 이미지 삭제 상태는 유지 (나중에 수정 완료 시 기존 이미지 삭제)
             }
         }
     }
 
-    func deleteImage() async throws {
-        guard let imageUrl = uploadedImageUrl else { return }
-        _ = try await deleteImageUseCase.execute(imageUrl: imageUrl)
-        await MainActor.run {
-            self.uploadedImageUrl = nil
-            self.selectedImage = nil
+    /// 화면에서 이미지 제거 (x 버튼 클릭 시)
+    /// - 수정 모드: 기존 이미지 삭제 표시만, 새로 업로드한 이미지가 있으면 S3에서 삭제
+    /// - 생성 모드: 새로 업로드한 이미지를 S3에서 삭제
+    func removeImageFromUI() async throws {
+        // 새로 업로드한 이미지가 있으면 S3에서 삭제
+        if let newImageUrl = newlyUploadedImageUrl {
+            _ = try await deleteImageUseCase.execute(imageUrl: newImageUrl)
         }
+
+        await MainActor.run {
+            // 새로 업로드한 이미지 URL 초기화
+            self.newlyUploadedImageUrl = nil
+            // UI에서 이미지 제거
+            self.selectedImage = nil
+            // 수정 모드에서 기존 이미지가 있었다면 삭제 표시
+            if self.isEditMode && self.originalImageUrl != nil {
+                self.isOriginalImageDeleted = true
+            }
+        }
+    }
+
+    /// 기존 이미지를 S3에서 삭제 (수정 완료 시 호출)
+    func deleteOriginalImageIfNeeded() async throws {
+        // 기존 이미지가 있고, 변경되었거나 삭제되었을 때만 S3에서 삭제
+        guard isEditMode,
+              let originalUrl = originalImageUrl,
+              (newlyUploadedImageUrl != nil || isOriginalImageDeleted) else {
+            return
+        }
+
+        _ = try await deleteImageUseCase.execute(imageUrl: originalUrl)
+        print("✅ 기존 이미지 S3에서 삭제 완료")
+    }
+
+    /// 새로 업로드한 이미지 S3 삭제 (수정 취소 시 호출)
+    func deleteNewlyUploadedImageIfNeeded() async throws {
+        guard let newImageUrl = newlyUploadedImageUrl else { return }
+
+        _ = try await deleteImageUseCase.execute(imageUrl: newImageUrl)
+        await MainActor.run {
+            self.newlyUploadedImageUrl = nil
+        }
+        print("✅ 새로 업로드한 이미지 S3에서 삭제 완료")
+    }
+
+    /// 기존 deleteImage 메서드 (호환성 유지)
+    @available(*, deprecated, message: "Use removeImageFromUI() instead")
+    func deleteImage() async throws {
+        try await removeImageFromUI()
     }
 
     func submitActivityRecord() async throws -> ActivityRecord {
@@ -186,15 +282,25 @@ class ActivityRecordViewModel {
                 throw ActivityRecordError.missingRequiredFields
             }
 
-            // Call update API
+            // Call update API (currentImageUrl: 새 이미지 or 기존 이미지 or nil)
             let updateResult = try await updateActivityRecordUseCase.execute(
                 recordId: recordId,
                 activityId: activityId,
                 sticker: stickerFileName,
                 memo: memo.isEmpty ? nil : memo,
-                imageUrl: uploadedImageUrl,
+                imageUrl: currentImageUrl,
                 visibility: privacy
             )
+
+
+            // 수정 완료 후 기존 이미지가 변경/삭제되었으면 S3에서 삭제
+            try await deleteOriginalImageIfNeeded()
+            // 수정 완료 후 기존 이미지 정리(비치명 처리)
+            do {
+                try await deleteOriginalImageIfNeeded()
+            } catch {
+                // cleanup 실패는 제출 성공을 뒤집지 않음 (로깅/모니터링만)
+            }
 
             // Convert UpdateRecordResult to ActivityRecord for compatibility
             return ActivityRecord(
@@ -213,7 +319,7 @@ class ActivityRecordViewModel {
             activityId: activityId,
             sticker: stickerFileName,
             memo: memo.isEmpty ? nil : memo,
-            imageUrl: uploadedImageUrl,
+            imageUrl: newlyUploadedImageUrl,
             visibility: privacy
         )
     }

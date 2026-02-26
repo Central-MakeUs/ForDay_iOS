@@ -14,11 +14,10 @@ final class BlockUserBottomSheetView: UIView {
     // MARK: - UI Components
 
     private let titleLabel = UILabel()
-    private let descriptionLabel = UILabel()
 
     private let checkboxContainer = UIView()
-    let checkboxButton = UIButton()
     private let checkboxLabel = UILabel()
+    let checkboxImageView = UIImageView()
 
     let confirmButton = UIButton()
 
@@ -40,16 +39,12 @@ final class BlockUserBottomSheetView: UIView {
 
     func configure(nickname: String) {
         self.nickname = nickname
-        titleLabel.setTextWithTypography("신고가 접수되었습니다.", style: .header18)
-        descriptionLabel.setTextWithTypography("해당 게시글은 검토 후 조치됩니다.", style: .body14)
+        titleLabel.setTextWithTypography("신고가 완료되었습니다.", style: .header18)
         checkboxLabel.setTextWithTypography("\(nickname) 님 차단하기", style: .body14)
     }
 
     func updateCheckboxState(isChecked: Bool) {
-        let imageName = isChecked ? "checkmark.square.fill" : "square"
-        let image = UIImage(systemName: imageName)
-        checkboxButton.setImage(image, for: .normal)
-        checkboxButton.tintColor = isChecked ? .action001 : .neutral400
+        checkboxImageView.image = isChecked ? .Onoff.checkboxTrue : .Onoff.checkboxFalse
     }
 }
 
@@ -64,23 +59,18 @@ extension BlockUserBottomSheetView {
             $0.textAlignment = .center
         }
 
-        descriptionLabel.do {
-            $0.textColor = .neutral600
-            $0.textAlignment = .center
-        }
-
         checkboxContainer.do {
-            $0.backgroundColor = .neutral50
-            $0.layer.cornerRadius = 12
-        }
-
-        checkboxButton.do {
-            $0.setImage(UIImage(systemName: "square"), for: .normal)
-            $0.tintColor = .neutral400
+            $0.backgroundColor = .clear
+            $0.isUserInteractionEnabled = true
         }
 
         checkboxLabel.do {
             $0.textColor = .neutral800
+        }
+
+        checkboxImageView.do {
+            $0.image = .Onoff.checkboxFalse
+            $0.contentMode = .scaleAspectFit
         }
 
         confirmButton.do {
@@ -94,10 +84,9 @@ extension BlockUserBottomSheetView {
 
     private func layout() {
         addSubview(titleLabel)
-        addSubview(descriptionLabel)
         addSubview(checkboxContainer)
-        checkboxContainer.addSubview(checkboxButton)
         checkboxContainer.addSubview(checkboxLabel)
+        checkboxContainer.addSubview(checkboxImageView)
         addSubview(confirmButton)
 
         titleLabel.snp.makeConstraints {
@@ -105,26 +94,21 @@ extension BlockUserBottomSheetView {
             $0.centerX.equalToSuperview()
         }
 
-        descriptionLabel.snp.makeConstraints {
-            $0.top.equalTo(titleLabel.snp.bottom).offset(8)
-            $0.centerX.equalToSuperview()
-        }
-
         checkboxContainer.snp.makeConstraints {
-            $0.top.equalTo(descriptionLabel.snp.bottom).offset(24)
+            $0.top.equalTo(titleLabel.snp.bottom).offset(24)
             $0.leading.trailing.equalToSuperview().inset(20)
             $0.height.equalTo(52)
         }
 
-        checkboxButton.snp.makeConstraints {
-            $0.leading.equalToSuperview().offset(16)
+        checkboxLabel.snp.makeConstraints {
+            $0.leading.equalToSuperview()
             $0.centerY.equalToSuperview()
-            $0.size.equalTo(24)
         }
 
-        checkboxLabel.snp.makeConstraints {
-            $0.leading.equalTo(checkboxButton.snp.trailing).offset(12)
+        checkboxImageView.snp.makeConstraints {
+            $0.trailing.equalToSuperview()
             $0.centerY.equalToSuperview()
+            $0.size.equalTo(24)
         }
 
         confirmButton.snp.makeConstraints {

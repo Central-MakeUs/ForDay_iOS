@@ -10,7 +10,7 @@ import SnapKit
 import Then
 import Combine
 
-final class ActivityDetailViewController: UIViewController, UIGestureRecognizerDelegate {
+final class ActivityDetailViewController: UIViewController {
 
     // MARK: - Properties
 
@@ -28,6 +28,9 @@ final class ActivityDetailViewController: UIViewController, UIGestureRecognizerD
     private let displayMode: ActivityDetailView.DisplayMode
     private let nickname: String?
     private var successOverlayView: ActivityRecordSuccessOverlayView?
+
+    // 수정 후 재조회 플래그
+    private var needsRefreshAfterEdit = false
 
     // MARK: - Initialization
 
@@ -58,7 +61,18 @@ final class ActivityDetailViewController: UIViewController, UIGestureRecognizerD
         setupCustomNavigationBar()
         setupGestures()
         setupDisplayMode()
+        setupRefreshControl()
         bind()
+        loadData()
+    }
+
+    private func setupRefreshControl() {
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
+        detailView.setRefreshControl(refreshControl)
+    }
+
+    @objc private func handleRefresh() {
         loadData()
     }
 
@@ -81,8 +95,12 @@ final class ActivityDetailViewController: UIViewController, UIGestureRecognizerD
         super.viewWillAppear(animated)
         // 기본 내비게이션 숨기기 (커스텀 내비게이션 사용)
         navigationController?.setNavigationBarHidden(true, animated: animated)
-        navigationController?.interactivePopGestureRecognizer?.delegate = self
-        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+
+        // 수정 후 돌아왔을 때 데이터 재조회
+        if needsRefreshAfterEdit {
+            needsRefreshAfterEdit = false
+            loadData()
+        }
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -94,23 +112,12 @@ final class ActivityDetailViewController: UIViewController, UIGestureRecognizerD
         }
     }
 
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        // 다른 화면으로 이동 시 기본 내비게이션 복원
-        navigationController?.setNavigationBarHidden(false, animated: animated)
-    }
 
     private func showSuccessOverlay() {
         let overlay = ActivityRecordSuccessOverlayView()
         overlay.configure(nickname: nickname ?? "회원")
         overlay.show(in: view)
         successOverlayView = overlay
-    }
-
-    // MARK: - UIGestureRecognizerDelegate
-
-    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        return navigationController?.viewControllers.count ?? 0 > 1
     }
 }
 
@@ -159,11 +166,12 @@ extension ActivityDetailViewController {
         // Loading state
         viewModel.$isLoading
             .receive(on: DispatchQueue.main)
-            .sink { isLoading in
+            .sink { [weak self] isLoading in
                 if isLoading {
                     print("🔄 Loading activity detail...")
                 } else {
                     print("✅ Activity detail loaded")
+                    self?.detailView.endRefreshing()
                 }
             }
             .store(in: &cancellables)
@@ -306,7 +314,7 @@ extension ActivityDetailViewController {
     private func setAsProfileImage() {
         guard let detail = viewModel.activityDetail else { return }
 
-        print("📸 대표사진 설정: \(detail.imageUrl)")
+        print("📸 대표사진 설정 시작")
 
         Task { [weak self] in
             guard let self = self else { return }
@@ -341,10 +349,13 @@ extension ActivityDetailViewController {
         // ActivityRecordViewController를 수정 모드로 열기
         // hobbyName은 수정 모드에서는 크게 필요하지 않으므로 기본값 사용
         let recordVC = ActivityRecordViewController(hobbyId: viewModel.hobbyId, hobbyName: "취미", activityDetail: detail)
-        let nav = UINavigationController(rootViewController: recordVC)
+        let nav = BaseNavigationController(rootViewController: recordVC)
         nav.modalPresentationStyle = .fullScreen
 
-        present(nav, animated: true)
+        present(nav, animated: true) { [weak self] in
+            // 수정 화면이 dismiss될 때 데이터 재조회를 위한 플래그 설정
+            self?.needsRefreshAfterEdit = true
+        }
     }
 
     private func showDeleteConfirmation() {
@@ -352,9 +363,9 @@ extension ActivityDetailViewController {
 
         let popupVC = CommonPopupViewController(
             title: "활동 기록 삭제",
-            message: "정말 이 활동 기록을\n삭제하시겠어요?",
-            primaryButtonTitle: "삭제",
-            secondaryButtonTitle: "취소"
+            message: "삭제 시 복구는 안돼요!",
+            primaryButtonTitle: "삭제하기",
+            secondaryButtonTitle: "닫기"
         )
         popupVC.onPrimaryAction = { [weak self] in
             self?.deleteActivity()
@@ -441,14 +452,13 @@ extension ActivityDetailViewController {
             authorUserId: userInfo.userId,
             authorNickname: userInfo.nickname
         )
-        reportVC.modalPresentationStyle = .fullScreen
         reportVC.onReportCompleted = { [weak self] _ in
             // 신고 완료 후 Stories 탭으로 이동
             self?.coordinator?.switchToStoriesTab()
             self?.navigationController?.popToRootViewController(animated: false)
         }
 
-        present(reportVC, animated: true)
+        navigationController?.pushViewController(reportVC, animated: true)
     }
 }
 

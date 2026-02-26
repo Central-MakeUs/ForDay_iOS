@@ -34,6 +34,8 @@ protocol ProfileViewModelProtocol: AnyObject {
     var activities: [FeedItem] { get }
     var scraps: [FeedItem] { get }
     var isLoadingMore: Bool { get }
+    var myHobbies: [MyPageHobby] { get }
+    var selectedHobbyIds: Set<Int> { get }
 
     // MARK: - Methods
 

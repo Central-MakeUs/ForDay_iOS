@@ -39,6 +39,16 @@ class MainTabBarCoordinator: NSObject, Coordinator {
         self.homeViewController = homeVC
         let homeNav = createNavigationController(rootViewController: homeVC)
 
+        // 발견 탭
+        let discoverVC = DiscoverViewController()
+        discoverVC.coordinator = self
+        discoverVC.tabBarItem = UITabBarItem(
+            title: "발견",
+            image: .Gnb.recommendation,
+            selectedImage: .Gnb.recommendationFill
+        )
+        let discoverNav = createNavigationController(rootViewController: discoverVC)
+
         // 작성 탭 (더미 - 실제로는 presentActivityRecord()에서 present됨)
         let recordVC = UIViewController()
         recordVC.tabBarItem = UITabBarItem(
@@ -69,9 +79,10 @@ class MainTabBarCoordinator: NSObject, Coordinator {
         )
         let profileNav = createNavigationController(rootViewController: profileVC)
 
-        // TabBar 설정 (홈, 작성, 소식, 마이)
+        // TabBar 설정 (홈, 발견, 작성, 소식, 마이)
         tabBarController.viewControllers = [
             homeNav,
+            discoverNav,
             recordVC,
             storiesNav,
             profileNav,
@@ -105,9 +116,9 @@ class MainTabBarCoordinator: NSObject, Coordinator {
 extension MainTabBarCoordinator: UITabBarControllerDelegate {
     func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
 
-        // 작성 탭(index 1) 선택 시
+        // 작성 탭(index 2) 선택 시
         if let viewControllers = tabBarController.viewControllers,
-           viewControllers.firstIndex(of: viewController) == 1 {
+           viewControllers.firstIndex(of: viewController) == 2 {
 
             // ActivityRecordViewController present
             presentActivityRecord()
@@ -121,7 +132,7 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
     private func presentActivityRecord() {
         // 오늘 이미 활동 기록을 완료했는지 확인
         if homeViewController?.isActivityRecordedToday() == true {
-            ToastView.showError(message: "오늘은 활동 기록을 이미 완료했어요")
+            showAlreadyRecordedPopup()
             return
         }
 
@@ -140,12 +151,39 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
             preselectedActivityId: preselectedActivityId
         )
         recordVC.coordinator = self
-        let nav = UINavigationController(rootViewController: recordVC)
+        let nav = BaseNavigationController(rootViewController: recordVC)
         nav.modalPresentationStyle = .fullScreen
 
         // 현재 선택된 탭의 ViewController에서 present
         if let selectedVC = tabBarController.selectedViewController {
             selectedVC.present(nav, animated: true)
+        }
+    }
+
+    /// 오늘 이미 활동 기록을 완료한 경우 팝업 표시
+    private func showAlreadyRecordedPopup() {
+        let popup = CommonPopupViewController(
+            title: "활동 기록은 하루에 1개만 가능해요",
+            message: "이미 오늘의 활동을 기록하셨어요. 다른 활동을 기록하고 싶다면, 이전 활동 기록을 삭제해야 돼요.",
+            primaryButtonTitle: "기록 보러가기",
+            secondaryButtonTitle: "닫기"
+        )
+
+        // 기록 보러가기 버튼 액션
+        popup.onPrimaryAction = { [weak self] in
+            guard let self = self,
+                  let recordId = self.homeViewController?.getLastActivityRecordId() else {
+                return
+            }
+            self.showActivityDetail(activityRecordId: recordId)
+        }
+
+        // 닫기 버튼 액션 (dismiss만 - 기본 동작)
+        popup.onSecondaryAction = nil
+
+        // 현재 선택된 탭에서 present
+        if let selectedVC = tabBarController.selectedViewController {
+            selectedVC.present(popup, animated: true)
         }
     }
 
@@ -169,13 +207,11 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         // Create ViewController
         let hobbySettingsVC = HobbySettingsViewController(viewModel: viewModel)
         hobbySettingsVC.coordinator = self
+        hobbySettingsVC.hidesBottomBarWhenPushed = true  // 탭바 숨김
 
-        // Present as fullscreen modal
-        let nav = UINavigationController(rootViewController: hobbySettingsVC)
-        nav.modalPresentationStyle = .fullScreen
-
+        // Push to Home navigation stack (스와이프 백 지원)
         if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
-            homeNav.present(nav, animated: true)
+            homeNav.pushViewController(hobbySettingsVC, animated: true)
         }
     }
 
@@ -183,6 +219,7 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         // Create ViewController
         let profileSettingsVC = ProfileSettingsViewController()
         profileSettingsVC.coordinator = self
+        profileSettingsVC.hidesBottomBarWhenPushed = true  // 탭바 숨김
 
         // Push to MyPage navigation stack
         if let myPageNav = tabBarController.viewControllers?.last as? UINavigationController {
@@ -196,10 +233,14 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         // Create ViewController
         let generalSettingsVC = GeneralSettingsViewController()
         generalSettingsVC.coordinator = self
+        generalSettingsVC.hidesBottomBarWhenPushed = true  // 탭바 숨김
 
-        // Present as fullscreen modal
-        generalSettingsVC.modalPresentationStyle = .fullScreen
-        tabBarController.present(generalSettingsVC, animated: true)
+        // Push to current navigation stack (스와이프 백 지원)
+        if let currentNav = tabBarController.selectedViewController as? UINavigationController {
+            currentNav.pushViewController(generalSettingsVC, animated: true)
+        } else if let myPageNav = tabBarController.viewControllers?.last as? UINavigationController {
+            myPageNav.pushViewController(generalSettingsVC, animated: true)
+        }
     }
 
     func showActivityDetail(activityRecordId: Int) {
@@ -261,12 +302,29 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
             preselectedActivityId: preselectedActivityId
         )
         recordVC.coordinator = self
-        let nav = UINavigationController(rootViewController: recordVC)
+        let nav = BaseNavigationController(rootViewController: recordVC)
         nav.modalPresentationStyle = .fullScreen
 
         // Present from Home navigation stack
         if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
             homeNav.present(nav, animated: true)
+        }
+    }
+
+    /// MyPage에서 특정 취미로 활동 기록 화면 표시
+    func showActivityRecord(hobbyId: Int, hobbyName: String) {
+        let recordVC = ActivityRecordViewController(
+            hobbyId: hobbyId,
+            hobbyName: hobbyName,
+            preselectedActivityId: nil
+        )
+        recordVC.coordinator = self
+        let nav = BaseNavigationController(rootViewController: recordVC)
+        nav.modalPresentationStyle = .fullScreen
+
+        // Present from current selected tab
+        if let selectedVC = tabBarController.selectedViewController {
+            selectedVC.present(nav, animated: true)
         }
     }
 
@@ -308,8 +366,8 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
     }
 
     func updateTabBarRecordingButtonState(enabled: Bool) {
-        // Get recording tab (index 1)
-        guard let recordVC = tabBarController.viewControllers?[1] else { return }
+        // Get recording tab (index 2)
+        guard let recordVC = tabBarController.viewControllers?[2] else { return }
         recordVC.tabBarItem.isEnabled = enabled
     }
 
@@ -320,7 +378,7 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         // Push to current navigation stack (enables swipe back gesture)
         if let currentNav = tabBarController.selectedViewController as? UINavigationController {
             currentNav.pushViewController(profileVC, animated: true)
-        } else if let storiesNav = tabBarController.viewControllers?[2] as? UINavigationController {
+        } else if let storiesNav = tabBarController.viewControllers?[3] as? UINavigationController {
             // Fallback to stories navigation (most likely source of user profile navigation)
             storiesNav.pushViewController(profileVC, animated: true)
         } else if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
@@ -334,7 +392,7 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
     }
 
     func switchToStoriesTab() {
-        tabBarController.selectedIndex = 2
+        tabBarController.selectedIndex = 3
     }
 
     func getCurrentNickname() -> String? {

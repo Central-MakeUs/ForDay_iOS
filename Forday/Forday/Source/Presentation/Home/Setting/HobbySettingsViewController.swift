@@ -39,40 +39,38 @@ class HobbySettingsViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupNavigationBar()
+        setupCustomNavigationBar()
         setupTableView()
         setupSegmentedControl()
         bind()
         fetchInitialData()
     }
 
-    // MARK: - Setup
-
-    private func setupNavigationBar() {
-        navigationItem.title = "내 취미 관리"
-        navigationController?.navigationBar.prefersLargeTitles = false
-
-        // Apply background color to navigation bar
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = .neutral50
-        appearance.shadowColor = .clear
-        navigationController?.navigationBar.standardAppearance = appearance
-        navigationController?.navigationBar.scrollEdgeAppearance = appearance
-
-        // Add chevron-left dismiss button
-        let backButton = UIBarButtonItem(
-            image: .Icon.chevronLeft,
-            style: .plain,
-            target: self,
-            action: #selector(dismissViewController)
-        )
-        backButton.tintColor = .neutral900
-        navigationItem.leftBarButtonItem = backButton
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // 커스텀 내비게이션 사용으로 기본 내비게이션 바 숨김
+        navigationController?.setNavigationBarHidden(true, animated: animated)
     }
 
-    @objc private func dismissViewController() {
-        dismiss(animated: true)
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        // 다른 화면으로 이동 시 네비게이션 바 상태 복원
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+
+    // MARK: - Setup
+
+    private func setupCustomNavigationBar() {
+        hobbySettingsView.backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
+    }
+
+    @objc private func backButtonTapped() {
+        // Pop if in navigation stack, otherwise dismiss
+        if let navController = navigationController, navController.viewControllers.count > 1 {
+            navController.popViewController(animated: true)
+        } else {
+            dismiss(animated: true)
+        }
     }
 
     private func setupTableView() {
@@ -290,7 +288,7 @@ class HobbySettingsViewController: UIViewController {
             title: hobby.hobbyName
         )
 
-        let nav = UINavigationController(rootViewController: timeVC)
+        let nav = BaseNavigationController(rootViewController: timeVC)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
@@ -341,7 +339,7 @@ class HobbySettingsViewController: UIViewController {
             purpose: nil
         )
 
-        let nav = UINavigationController(rootViewController: frequencyVC)
+        let nav = BaseNavigationController(rootViewController: frequencyVC)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
@@ -385,7 +383,7 @@ class HobbySettingsViewController: UIViewController {
             purpose: nil
         )
 
-        let nav = UINavigationController(rootViewController: periodVC)
+        let nav = BaseNavigationController(rootViewController: periodVC)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }

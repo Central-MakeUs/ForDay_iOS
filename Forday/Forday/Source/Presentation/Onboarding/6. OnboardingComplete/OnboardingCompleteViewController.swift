@@ -41,11 +41,6 @@ class OnboardingCompleteViewController: UIViewController {
         completeView.collectionView.reloadData()
     }
 
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        // 다음 화면을 위해 네비게이션 바 다시 보이기
-        navigationController?.setNavigationBarHidden(false, animated: false)
-    }
 }
 
 // Setup

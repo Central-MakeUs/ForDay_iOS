@@ -19,8 +19,8 @@ final class ReportViewController: UIViewController {
     }
 
     private let recordId: Int
-    private let authorUserId: String
-    private let authorNickname: String
+    private let targetUserId: String
+    private let targetNickname: String
 
     private var selectedReason: ReportReasonType?
     private var cancellables = Set<AnyCancellable>()
@@ -29,11 +29,13 @@ final class ReportViewController: UIViewController {
 
     // MARK: - Initialization
 
+    /// 활동 기록 신고용 초기화
     init(recordId: Int, authorUserId: String, authorNickname: String) {
         self.recordId = recordId
-        self.authorUserId = authorUserId
-        self.authorNickname = authorNickname
+        self.targetUserId = authorUserId
+        self.targetNickname = authorNickname
         super.init(nibName: nil, bundle: nil)
+        hidesBottomBarWhenPushed = true
     }
 
     required init?(coder: NSCoder) {
@@ -51,6 +53,11 @@ final class ReportViewController: UIViewController {
         setupCollectionView()
         setupActions()
     }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
 }
 
 // MARK: - Setup
@@ -62,7 +69,7 @@ extension ReportViewController {
     }
 
     private func setupActions() {
-        reportView.closeButton.addTarget(self, action: #selector(closeButtonTapped), for: .touchUpInside)
+        reportView.backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
         reportView.submitButton.addTarget(self, action: #selector(submitButtonTapped), for: .touchUpInside)
     }
 }
@@ -70,8 +77,8 @@ extension ReportViewController {
 // MARK: - Actions
 
 extension ReportViewController {
-    @objc private func closeButtonTapped() {
-        dismiss(animated: true)
+    @objc private func backButtonTapped() {
+        navigationController?.popViewController(animated: true)
     }
 
     @objc private func submitButtonTapped() {
@@ -83,7 +90,7 @@ extension ReportViewController {
 
     private func showBlockUserConfirmation(reason: ReportReasonType) {
         let bottomSheet = BlockUserBottomSheetViewController(
-            nickname: authorNickname,
+            nickname: targetNickname,
             onConfirm: { [weak self] shouldBlock in
                 self?.submitReport(reason: reason, shouldBlock: shouldBlock)
             }
@@ -103,21 +110,21 @@ extension ReportViewController {
         Task { [weak self] in
             guard let self = self else { return }
             do {
-                // Submit report
+                // Submit report for record
                 let recordsService = RecordsService()
                 _ = try await recordsService.reportRecord(recordId: self.recordId, reason: reason)
 
                 // Block user if requested
                 if shouldBlock {
                     let friendsService = FriendsService()
-                    _ = try await friendsService.blockUser(userId: self.authorUserId)
+                    _ = try await friendsService.blockUser(userId: self.targetUserId)
                 }
 
                 await MainActor.run { [weak self] in
                     ToastView.showSuccess(message: "신고가 접수되었습니다.")
-                    self?.dismiss(animated: true) {
-                        self?.onReportCompleted?(shouldBlock)
-                    }
+
+                    self?.navigationController?.popViewController(animated: true)
+                    self?.onReportCompleted?(shouldBlock)
                 }
             } catch {
                 await MainActor.run {
@@ -175,7 +182,8 @@ extension ReportViewController: UICollectionViewDelegateFlowLayout {
 }
 
 #if DEBUG
-#Preview {
-    ReportViewController(recordId: 1, authorUserId: "test-user-id", authorNickname: "테스트닉네임")
+#Preview("ReportViewController") {
+    let vc = ReportViewController(recordId: 1, authorUserId: "test-user-id", authorNickname: "테스트닉네임")
+    return UINavigationController(rootViewController: vc)
 }
 #endif
