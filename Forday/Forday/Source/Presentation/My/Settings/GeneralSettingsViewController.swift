@@ -99,8 +99,7 @@ extension GeneralSettingsViewController {
     @objc private func deleteAccountTapped() {
         let vc = DeleteAccountViewController()
         vc.coordinator = coordinator
-        vc.modalPresentationStyle = .fullScreen
-        present(vc, animated: true)
+        navigationController?.pushViewController(vc, animated: true)
     }
 
     private func showLogoutPopup() {

@@ -140,7 +140,7 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
             preselectedActivityId: preselectedActivityId
         )
         recordVC.coordinator = self
-        let nav = UINavigationController(rootViewController: recordVC)
+        let nav = BaseNavigationController(rootViewController: recordVC)
         nav.modalPresentationStyle = .fullScreen
 
         // 현재 선택된 탭의 ViewController에서 present
@@ -169,13 +169,11 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         // Create ViewController
         let hobbySettingsVC = HobbySettingsViewController(viewModel: viewModel)
         hobbySettingsVC.coordinator = self
+        hobbySettingsVC.hidesBottomBarWhenPushed = true  // 탭바 숨김
 
-        // Present as fullscreen modal
-        let nav = UINavigationController(rootViewController: hobbySettingsVC)
-        nav.modalPresentationStyle = .fullScreen
-
+        // Push to Home navigation stack (스와이프 백 지원)
         if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
-            homeNav.present(nav, animated: true)
+            homeNav.pushViewController(hobbySettingsVC, animated: true)
         }
     }
 
@@ -183,6 +181,7 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         // Create ViewController
         let profileSettingsVC = ProfileSettingsViewController()
         profileSettingsVC.coordinator = self
+        profileSettingsVC.hidesBottomBarWhenPushed = true  // 탭바 숨김
 
         // Push to MyPage navigation stack
         if let myPageNav = tabBarController.viewControllers?.last as? UINavigationController {
@@ -196,10 +195,14 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         // Create ViewController
         let generalSettingsVC = GeneralSettingsViewController()
         generalSettingsVC.coordinator = self
+        generalSettingsVC.hidesBottomBarWhenPushed = true  // 탭바 숨김
 
-        // Present as fullscreen modal
-        generalSettingsVC.modalPresentationStyle = .fullScreen
-        tabBarController.present(generalSettingsVC, animated: true)
+        // Push to current navigation stack (스와이프 백 지원)
+        if let currentNav = tabBarController.selectedViewController as? UINavigationController {
+            currentNav.pushViewController(generalSettingsVC, animated: true)
+        } else if let myPageNav = tabBarController.viewControllers?.last as? UINavigationController {
+            myPageNav.pushViewController(generalSettingsVC, animated: true)
+        }
     }
 
     func showActivityDetail(activityRecordId: Int) {
@@ -261,7 +264,7 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
             preselectedActivityId: preselectedActivityId
         )
         recordVC.coordinator = self
-        let nav = UINavigationController(rootViewController: recordVC)
+        let nav = BaseNavigationController(rootViewController: recordVC)
         nav.modalPresentationStyle = .fullScreen
 
         // Present from Home navigation stack

@@ -49,7 +49,6 @@ final class ProfileSettingsViewController: UIViewController {
         // Hide navigation bar immediately in viewDidLoad
         navigationController?.setNavigationBarHidden(true, animated: false)
     }
-
 }
 
 // MARK: - Setup

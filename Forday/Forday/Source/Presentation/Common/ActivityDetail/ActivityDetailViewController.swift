@@ -10,7 +10,7 @@ import SnapKit
 import Then
 import Combine
 
-final class ActivityDetailViewController: UIViewController, UIGestureRecognizerDelegate {
+final class ActivityDetailViewController: UIViewController {
 
     // MARK: - Properties
 
@@ -81,8 +81,6 @@ final class ActivityDetailViewController: UIViewController, UIGestureRecognizerD
         super.viewWillAppear(animated)
         // 기본 내비게이션 숨기기 (커스텀 내비게이션 사용)
         navigationController?.setNavigationBarHidden(true, animated: animated)
-        navigationController?.interactivePopGestureRecognizer?.delegate = self
-        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -100,12 +98,6 @@ final class ActivityDetailViewController: UIViewController, UIGestureRecognizerD
         overlay.configure(nickname: nickname ?? "회원")
         overlay.show(in: view)
         successOverlayView = overlay
-    }
-
-    // MARK: - UIGestureRecognizerDelegate
-
-    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        return navigationController?.viewControllers.count ?? 0 > 1
     }
 }
 
@@ -336,7 +328,7 @@ extension ActivityDetailViewController {
         // ActivityRecordViewController를 수정 모드로 열기
         // hobbyName은 수정 모드에서는 크게 필요하지 않으므로 기본값 사용
         let recordVC = ActivityRecordViewController(hobbyId: viewModel.hobbyId, hobbyName: "취미", activityDetail: detail)
-        let nav = UINavigationController(rootViewController: recordVC)
+        let nav = BaseNavigationController(rootViewController: recordVC)
         nav.modalPresentationStyle = .fullScreen
 
         present(nav, animated: true)

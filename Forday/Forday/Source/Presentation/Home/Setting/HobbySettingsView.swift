@@ -11,6 +11,11 @@ import Then
 
 class HobbySettingsView: UIView {
 
+    // Custom Navigation
+    private let navigationView = UIView()
+    let backButton = UIButton()
+    private let titleLabel = UILabel()
+
     // UI Components
     private let scrollView = UIScrollView()
     private let contentView = UIView()
@@ -35,6 +40,22 @@ class HobbySettingsView: UIView {
 
     private func style() {
         backgroundColor = .neutral50
+
+        // Custom Navigation
+        navigationView.do {
+            $0.backgroundColor = .neutral50
+        }
+
+        backButton.do {
+            $0.setImage(.Icon.chevronLeft, for: .normal)
+            $0.tintColor = .neutral800
+        }
+
+        titleLabel.do {
+            $0.setTextWithTypography("내 취미 관리", style: .header16)
+            $0.textColor = .neutral800
+            $0.textAlignment = .center
+        }
 
         // Header
         headerLabel.do {
@@ -87,6 +108,11 @@ class HobbySettingsView: UIView {
     }
 
     private func layout() {
+        // Custom Navigation
+        addSubview(navigationView)
+        navigationView.addSubview(backButton)
+        navigationView.addSubview(titleLabel)
+
         addSubview(headerLabel)
         addSubview(subtitleLabel)
         addSubview(segmentContainerView)
@@ -95,8 +121,24 @@ class HobbySettingsView: UIView {
         segmentContainerView.addSubview(segmentedControl)
         segmentContainerView.addSubview(underlineView)
 
+        navigationView.snp.makeConstraints {
+            $0.top.equalTo(safeAreaLayoutGuide)
+            $0.leading.trailing.equalToSuperview()
+            $0.height.equalTo(44)
+        }
+
+        backButton.snp.makeConstraints {
+            $0.leading.equalToSuperview().offset(20)
+            $0.centerY.equalToSuperview()
+            $0.size.equalTo(24)
+        }
+
+        titleLabel.snp.makeConstraints {
+            $0.center.equalToSuperview()
+        }
+
         headerLabel.snp.makeConstraints {
-            $0.top.equalTo(safeAreaLayoutGuide).offset(20)
+            $0.top.equalTo(navigationView.snp.bottom).offset(20)
             $0.leading.trailing.equalToSuperview().inset(20)
         }
 

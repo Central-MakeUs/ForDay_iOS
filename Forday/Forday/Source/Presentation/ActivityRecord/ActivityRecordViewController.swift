@@ -327,7 +327,7 @@ extension ActivityRecordViewController {
                 inputVC?.dismiss(animated: true)
             }
 
-            let nav = UINavigationController(rootViewController: inputVC)
+            let nav = BaseNavigationController(rootViewController: inputVC)
             nav.modalPresentationStyle = .fullScreen
             presenter.present(nav, animated: true)
         }

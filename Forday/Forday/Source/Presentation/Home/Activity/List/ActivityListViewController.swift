@@ -27,9 +27,6 @@ class ActivityListViewController: UIViewController {
     var aiCallRemaining = true  // AI 호출 가능 여부
     private var aiToastView: AIRecommendationToastView?
 
-    // Modal Presentation
-    var isPresentedModally = false
-
     // MARK: - Initialization
 
     init(hobbyId: Int, hobbyName: String, viewModel: ActivityListViewModel = ActivityListViewModel()) {
@@ -117,7 +114,7 @@ extension ActivityListViewController {
             }
         }
 
-        let nav = UINavigationController(rootViewController: inputVC)
+        let nav = BaseNavigationController(rootViewController: inputVC)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
@@ -167,10 +164,11 @@ extension ActivityListViewController {
 
 extension ActivityListViewController {
     @objc private func backButtonTapped() {
-        if isPresentedModally {
-            dismiss(animated: true)
+        // Pop if in navigation stack, otherwise dismiss
+        if let navController = navigationController, navController.viewControllers.count > 1 {
+            navController.popViewController(animated: true)
         } else {
-            navigationController?.popViewController(animated: true)
+            dismiss(animated: true)
         }
     }
 
