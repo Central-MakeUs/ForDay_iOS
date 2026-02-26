@@ -72,9 +72,9 @@ final class FeedItemCell: UICollectionViewCell {
 
     func configure(feedItem: FeedItem, isSelectionMode: Bool, isSelected: Bool) {
         // Branch based on thumbnailImageUrl
-        if !feedItem.thumbnailImageUrl.isEmpty {
+        if let imageUrl = feedItem.thumbnailImageUrl, !imageUrl.isEmpty {
             // Image mode: Show image
-            showImageMode(imageUrl: feedItem.thumbnailImageUrl)
+            showImageMode(imageUrl: imageUrl)
         } else {
             // Gradient mode: Show gradient + memo
             showGradientMode(

@@ -18,7 +18,7 @@ final class ReportViewController: UIViewController {
         return view as! ReportView
     }
 
-    private let recordId: Int
+    private let recordId: Int?
     private let targetUserId: String
     private let targetNickname: String
 
@@ -34,6 +34,15 @@ final class ReportViewController: UIViewController {
         self.recordId = recordId
         self.targetUserId = authorUserId
         self.targetNickname = authorNickname
+        super.init(nibName: nil, bundle: nil)
+        hidesBottomBarWhenPushed = true
+    }
+
+    /// 사용자 신고용 초기화 (활동 기록 없이 사용자만 신고)
+    init(targetUserId: String, targetNickname: String) {
+        self.recordId = nil
+        self.targetUserId = targetUserId
+        self.targetNickname = targetNickname
         super.init(nibName: nil, bundle: nil)
         hidesBottomBarWhenPushed = true
     }
@@ -110,9 +119,11 @@ extension ReportViewController {
         Task { [weak self] in
             guard let self = self else { return }
             do {
-                // Submit report for record
-                let recordsService = RecordsService()
-                _ = try await recordsService.reportRecord(recordId: self.recordId, reason: reason)
+                // Submit report for record (if recordId exists)
+                if let recordId = self.recordId {
+                    let recordsService = RecordsService()
+                    _ = try await recordsService.reportRecord(recordId: recordId, reason: reason)
+                }
 
                 // Block user if requested
                 if shouldBlock {
@@ -121,7 +132,16 @@ extension ReportViewController {
                 }
 
                 await MainActor.run { [weak self] in
-                    ToastView.showSuccess(message: "신고가 접수되었습니다.")
+                    if self?.recordId != nil {
+                        // 활동 기록 신고
+                        ToastView.showSuccess(message: "신고가 접수되었습니다.")
+                    } else if shouldBlock {
+                        // 사용자 신고 (차단 선택한 경우)
+                        ToastView.showSuccess(message: "차단이 완료되었습니다.")
+                    } else {
+                        // 사용자 신고 (차단 선택 안 한 경우) - API 없으므로 안내만
+                        ToastView.showSuccess(message: "신고가 접수되었습니다.")
+                    }
 
                     self?.navigationController?.popViewController(animated: true)
                     self?.onReportCompleted?(shouldBlock)
@@ -131,7 +151,7 @@ extension ReportViewController {
                     if let appError = error as? AppError {
                         ToastView.showError(message: appError.userMessage)
                     } else {
-                        ToastView.showError(message: "신고 처리 중 오류가 발생했습니다.")
+                        ToastView.showError(message: "처리 중 오류가 발생했습니다.")
                     }
                 }
             }

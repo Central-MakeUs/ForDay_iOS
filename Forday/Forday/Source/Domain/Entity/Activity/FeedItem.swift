@@ -17,7 +17,7 @@ struct FeedResult {
 
 struct FeedItem {
     let recordId: Int
-    let thumbnailImageUrl: String
+    let thumbnailImageUrl: String?
     let sticker: String
     let memo: String?
     let createdAt: String

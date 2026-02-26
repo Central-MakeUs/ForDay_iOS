@@ -8,10 +8,13 @@
 import UIKit
 
 enum UserProfileMenuItem: DropdownMenuItem {
+    case report
     case block
 
     var title: String {
         switch self {
+        case .report:
+            return "신고하기"
         case .block:
             return "차단하기"
         }
@@ -19,7 +22,7 @@ enum UserProfileMenuItem: DropdownMenuItem {
 
     var textColor: UIColor {
         switch self {
-        case .block:
+        case .report, .block:
             return .neutral800
         }
     }
@@ -29,6 +32,6 @@ enum UserProfileMenuItem: DropdownMenuItem {
     }
 
     static var menuItems: [UserProfileMenuItem] {
-        [.block]
+        [.report, .block]
     }
 }

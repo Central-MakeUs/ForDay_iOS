@@ -206,7 +206,8 @@ extension UserProfileView {
         scrollView.snp.makeConstraints {
             $0.top.equalTo(navigationView.snp.bottom)
             $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(safeAreaLayoutGuide)
+            // 탭바가 숨겨지므로 화면 끝까지 확장 (home indicator 영역 포함)
+            $0.bottom.equalToSuperview()
         }
 
         scrollContentView.snp.makeConstraints {
@@ -234,10 +235,11 @@ extension UserProfileView {
         }
 
         // Blocked state layout
+        // bottom constraint 제거 - isHidden=true여도 Auto Layout에서 활성화되어
+        // contentContainerView의 동적 높이 업데이트를 방해함
         blockedStateView.snp.makeConstraints {
             $0.top.equalTo(segmentedControlView.snp.bottom)
             $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalToSuperview()
             $0.height.equalTo(400)
         }
 
@@ -346,8 +348,12 @@ extension UserProfileView {
     }
 
     func updateContentHeight(_ height: CGFloat) {
+        // Ensure minimum height to fill screen
         let screenHeight = UIScreen.main.bounds.height
-        let minHeight = screenHeight - 44 - 80 - 44 - 100
+        // UserProfile은 hidesBottomBarWhenPushed = true로 탭바가 숨겨지므로
+        // nav(44) + header(80) + segment(44) + safeAreaBottom
+        let safeAreaBottom = safeAreaInsets.bottom
+        let minHeight = screenHeight - 44 - 80 - 44 - safeAreaBottom
         let finalHeight = max(height, minHeight)
         contentHeightConstraint?.update(offset: finalHeight)
     }

@@ -123,13 +123,31 @@ extension ActivityGridViewController {
     }
 
     private func updateCollectionViewHeight(_ height: CGFloat) {
-        guard height > 0 else { return }
         collectionViewHeightConstraint?.update(offset: height)
 
         // Notify parent about height change
         // top offset(20) + hobbyFilter(90) + spacing(16) + countLabel(17) + spacing(8) + collectionView + bottomPadding(20)
         let totalHeight = 20 + 90 + 16 + 17 + 8 + height + 20
         onContentHeightChanged?(totalHeight)
+    }
+
+    /// Force recalculate and notify content height (called when view is re-added to parent)
+    func refreshContentHeight() {
+        view.layoutIfNeeded()
+        activityCollectionView.layoutIfNeeded()
+
+        let height = activityCollectionView.contentSize.height
+        if height > 0 {
+            updateCollectionViewHeight(height)
+        } else {
+            // If contentSize is 0, try to recalculate
+            activityCollectionView.reloadData()
+            activityCollectionView.layoutIfNeeded()
+            let recalculatedHeight = activityCollectionView.contentSize.height
+            if recalculatedHeight > 0 {
+                updateCollectionViewHeight(recalculatedHeight)
+            }
+        }
     }
 
     private func setupHobbyFilter() {

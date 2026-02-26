@@ -21,6 +21,9 @@ final class HobbyCardStackViewController: UIViewController {
     private let cardStackView = HobbyCardStackView()
     private let emptyStateView = EmptyStateView()
 
+    // Callback for content height change (for parent scroll adjustment)
+    var onContentHeightChanged: ((CGFloat) -> Void)?
+
     // MARK: - Initialization
 
     init(viewModel: ProfileViewModelProtocol) {
@@ -99,6 +102,10 @@ extension HobbyCardStackViewController {
             }
 
             emptyStateView.configureForHobbyCards()
+
+            // Notify parent about height change for empty state
+            // top offset(100) + emptyStateView(200) + bottomPadding(100)
+            onContentHeightChanged?(400)
         } else {
             // Show cards
             cardStackView.isHidden = false
@@ -107,6 +114,31 @@ extension HobbyCardStackViewController {
             emptyStateView.removeFromSuperview()
 
             cardStackView.configure(with: cards)
+
+            // Notify parent about height change
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                self?.notifyContentHeight()
+            }
         }
+    }
+
+    private func notifyContentHeight() {
+        view.layoutIfNeeded()
+
+        // Calculate total height: title(~25) + spacing(20) + cardStackView height + bottom padding(40)
+        let titleHeight: CGFloat = 25
+        let topPadding: CGFloat = 20
+        let spacing: CGFloat = 20
+        let cardHeight = cardStackView.frame.height
+        let bottomPadding: CGFloat = 40
+
+        let totalHeight = topPadding + titleHeight + spacing + cardHeight + bottomPadding
+        onContentHeightChanged?(totalHeight)
+    }
+
+    /// Force recalculate and notify content height (called when view is re-added to parent)
+    func refreshContentHeight() {
+        view.layoutIfNeeded()
+        notifyContentHeight()
     }
 }

@@ -179,22 +179,14 @@ extension UserProfileViewController {
             self?.userProfileView.updateContentHeight(height)
         }
         addChild(activityGridVC)
-        userProfileView.contentContainerView.addSubview(activityGridVC.view)
-        activityGridVC.view.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(20)
-            $0.leading.trailing.bottom.equalToSuperview()
-        }
-        activityGridVC.didMove(toParent: self)
         self.activityGridVC = activityGridVC
 
         // Hobby Card Stack ViewController
         let hobbyCardStackVC = HobbyCardStackViewController(viewModel: viewModel)
-        addChild(hobbyCardStackVC)
-        userProfileView.contentContainerView.addSubview(hobbyCardStackVC.view)
-        hobbyCardStackVC.view.snp.makeConstraints {
-            $0.edges.equalToSuperview()
+        hobbyCardStackVC.onContentHeightChanged = { [weak self] height in
+            self?.userProfileView.updateContentHeight(height)
         }
-        hobbyCardStackVC.didMove(toParent: self)
+        addChild(hobbyCardStackVC)
         self.hobbyCardStackVC = hobbyCardStackVC
 
         // Scrap Grid ViewController
@@ -204,24 +196,65 @@ extension UserProfileViewController {
             self?.userProfileView.updateContentHeight(height)
         }
         addChild(scrapGridVC)
-        userProfileView.contentContainerView.addSubview(scrapGridVC.view)
-        scrapGridVC.view.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(20)
-            $0.leading.trailing.bottom.equalToSuperview()
-        }
-        scrapGridVC.didMove(toParent: self)
         self.scrapGridVC = scrapGridVC
-
-        // Initially hide all except activities
-        hobbyCardStackVC.view.isHidden = true
-        scrapGridVC.view.isHidden = true
     }
 
     private func switchToTab(_ tab: MyPageTab) {
-        // Toggle visibility instead of removing/adding views
-        activityGridVC?.view.isHidden = tab != .activities
-        hobbyCardStackVC?.view.isHidden = tab != .hobbyCards
-        scrapGridVC?.view.isHidden = tab != .scraps
+        // Remove current child view
+        userProfileView.contentContainerView.subviews.forEach { $0.removeFromSuperview() }
+
+        switch tab {
+        case .activities:
+            if let activityGridVC = activityGridVC {
+                userProfileView.contentContainerView.addSubview(activityGridVC.view)
+                activityGridVC.view.snp.makeConstraints {
+                    $0.top.equalToSuperview().offset(20)
+                    $0.leading.trailing.bottom.equalToSuperview()
+                }
+                activityGridVC.didMove(toParent: self)
+
+                // Refresh content height after layout
+                DispatchQueue.main.async {
+                    activityGridVC.refreshContentHeight()
+                }
+            }
+
+        case .hobbyCards:
+            if let hobbyCardStackVC = hobbyCardStackVC {
+                userProfileView.contentContainerView.addSubview(hobbyCardStackVC.view)
+                hobbyCardStackVC.view.snp.makeConstraints {
+                    $0.edges.equalToSuperview()
+                }
+                hobbyCardStackVC.didMove(toParent: self)
+
+                // Refresh content height after layout
+                DispatchQueue.main.async {
+                    hobbyCardStackVC.refreshContentHeight()
+                }
+            }
+
+        case .scraps:
+            if let scrapGridVC = scrapGridVC {
+                userProfileView.contentContainerView.addSubview(scrapGridVC.view)
+                scrapGridVC.view.snp.makeConstraints {
+                    $0.top.equalToSuperview().offset(20)
+                    $0.leading.trailing.bottom.equalToSuperview()
+                }
+                scrapGridVC.didMove(toParent: self)
+
+                // Load scraps when first switched to scraps tab
+                if viewModel.scraps.isEmpty {
+                    Task { [weak self] in
+                        await self?.viewModel.refreshScraps()
+                    }
+                } else {
+                    // Refresh content height after layout
+                    DispatchQueue.main.async {
+                        scrapGridVC.refreshContentHeight()
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -288,6 +321,8 @@ extension UserProfileViewController {
         dismissDropdown()
 
         switch menuItem {
+        case .report:
+            showReportScreen()
         case .block:
             showBlockConfirmation()
         }
@@ -339,6 +374,23 @@ extension UserProfileViewController {
                 }
             }
         }
+    }
+
+    private func showReportScreen() {
+        guard let profile = viewModel.userProfile else { return }
+
+        let reportVC = ReportViewController(
+            targetUserId: viewModel.userId,
+            targetNickname: profile.nickname
+        )
+        reportVC.onReportCompleted = { [weak self] isBlocked in
+            if isBlocked {
+                self?.viewModel.isBlocked = true
+                self?.userProfileView.showBlockedState()
+            }
+        }
+
+        navigationController?.pushViewController(reportVC, animated: true)
     }
 
 }

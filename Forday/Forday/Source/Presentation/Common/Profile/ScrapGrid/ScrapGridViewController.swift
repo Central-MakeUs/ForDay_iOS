@@ -115,13 +115,31 @@ extension ScrapGridViewController {
     }
 
     private func updateCollectionViewHeight(_ height: CGFloat) {
-        guard height > 0 else { return }
         collectionViewHeightConstraint?.update(offset: height)
 
         // Notify parent about height change
         // top offset(20) + countLabel(17) + spacing(8) + collectionView + bottomPadding(20)
         let totalHeight = 20 + 17 + 8 + height + 20
         onContentHeightChanged?(totalHeight)
+    }
+
+    /// Force recalculate and notify content height (called when view is re-added to parent)
+    func refreshContentHeight() {
+        view.layoutIfNeeded()
+        scrapCollectionView.layoutIfNeeded()
+
+        let height = scrapCollectionView.contentSize.height
+        if height > 0 {
+            updateCollectionViewHeight(height)
+        } else {
+            // If contentSize is 0, try to recalculate
+            scrapCollectionView.reloadData()
+            scrapCollectionView.layoutIfNeeded()
+            let recalculatedHeight = scrapCollectionView.contentSize.height
+            if recalculatedHeight > 0 {
+                updateCollectionViewHeight(recalculatedHeight)
+            }
+        }
     }
 
     private func bind() {

@@ -243,6 +243,9 @@ extension MyPageViewController {
 
             // Hobby Card Stack ViewController
             let hobbyCardStackVC = HobbyCardStackViewController(viewModel: viewModel)
+            hobbyCardStackVC.onContentHeightChanged = { [weak self] height in
+                self?.myPageView.updateContentHeight(height)
+            }
             addChild(hobbyCardStackVC)
             self.hobbyCardStackVC = hobbyCardStackVC
 
@@ -288,6 +291,11 @@ extension MyPageViewController {
                     $0.leading.trailing.bottom.equalToSuperview()
                 }
                 activityGridVC.didMove(toParent: self)
+
+                // Refresh content height after layout
+                DispatchQueue.main.async {
+                    activityGridVC.refreshContentHeight()
+                }
             }
 
         case .hobbyCards:
@@ -297,6 +305,12 @@ extension MyPageViewController {
                     $0.edges.equalToSuperview()
                 }
                 hobbyCardStackVC.didMove(toParent: self)
+
+                // Refresh content height after layout
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self, weak hobbyCardStackVC] in
+                    guard self != nil else { return }
+                    hobbyCardStackVC?.refreshContentHeight()
+                }
             }
 
         case .scraps:
@@ -312,6 +326,11 @@ extension MyPageViewController {
                 if viewModel.scraps.isEmpty {
                     Task { [weak self] in
                         await self?.viewModel.refreshScraps()
+                    }
+                } else {
+                    // Refresh content height after layout
+                    DispatchQueue.main.async {
+                        scrapGridVC.refreshContentHeight()
                     }
                 }
             }
