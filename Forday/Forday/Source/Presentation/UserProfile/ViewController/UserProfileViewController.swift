@@ -290,8 +290,6 @@ extension UserProfileViewController {
         switch menuItem {
         case .block:
             showBlockConfirmation()
-        case .report:
-            showReportOptions()
         }
     }
 
@@ -343,53 +341,6 @@ extension UserProfileViewController {
         }
     }
 
-    private func showReportOptions() {
-        guard let profile = viewModel.userProfile else { return }
-
-        // 사용자 신고는 차단 확인 바텀시트로 바로 이동
-        let bottomSheet = BlockUserBottomSheetViewController(
-            nickname: profile.nickname,
-            onConfirm: { [weak self] shouldBlock in
-                self?.handleUserReport(shouldBlock: shouldBlock)
-            }
-        )
-        bottomSheet.modalPresentationStyle = .pageSheet
-
-        if let sheet = bottomSheet.sheetPresentationController {
-            sheet.detents = [.custom(resolver: { _ in 280 })]
-            sheet.prefersGrabberVisible = true
-            sheet.preferredCornerRadius = 20
-        }
-
-        present(bottomSheet, animated: true)
-    }
-
-    private func handleUserReport(shouldBlock: Bool) {
-        Task { [weak self] in
-            guard let self = self else { return }
-
-            do {
-                // 차단 요청 시 API 호출
-                if shouldBlock {
-                    let friendsService = FriendsService()
-                    _ = try await friendsService.blockUser(userId: self.viewModel.userId)
-                }
-
-                await MainActor.run { [weak self] in
-                    ToastView.showSuccess(message: "신고가 접수되었습니다.")
-                    self?.navigationController?.popViewController(animated: true)
-                }
-            } catch {
-                await MainActor.run {
-                    if let appError = error as? AppError {
-                        ToastView.showError(message: appError.userMessage)
-                    } else {
-                        ToastView.showError(message: "처리 중 오류가 발생했습니다.")
-                    }
-                }
-            }
-        }
-    }
 }
 
 // MARK: - UIScrollViewDelegate
