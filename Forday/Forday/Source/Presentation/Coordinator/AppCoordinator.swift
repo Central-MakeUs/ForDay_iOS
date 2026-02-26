@@ -24,6 +24,9 @@ class AppCoordinator: Coordinator {
     func start() {
         print("🟣 AppCoordinator start")
 
+        // window 배경색 설정 (화면 전환 시 흰색 깜빡임 방지)
+        window.backgroundColor = .bg004
+
         // 스플래시 화면 표시
         showSplash()
     }
@@ -110,6 +113,17 @@ class AppCoordinator: Coordinator {
 
     // 자동 로그인 체크
     private func checkAutoLogin() {
+        // 앱 소개를 본 적이 없으면 앱 소개 화면 표시
+        if !AppLaunchStorage.shared.hasSeenAppIntro {
+            showAppIntro()
+            return
+        }
+
+        proceedToLogin()
+    }
+
+    // 실제 로그인 체크 로직
+    private func proceedToLogin() {
         let autoLoginUseCase = AuthUseCaseFactory().makeAutoLoginUseCase()
 
         Task { [weak self] in
@@ -126,6 +140,15 @@ class AppCoordinator: Coordinator {
                 }
             }
         }
+    }
+
+    // 앱 소개 화면
+    private func showAppIntro() {
+        let appIntroVC = AppIntroViewController()
+        appIntroVC.onIntroComplete = { [weak self] in
+            self?.proceedToLogin()
+        }
+        window.rootViewController = appIntroVC
     }
 
     // 자동 로그인 처리 (토큰 유효 확인 후 호출)
