@@ -26,11 +26,12 @@ final class UserProfileViewModel: ProfileViewModelProtocol {
     @Published var selectedHobbyIds: Set<Int> = []
     @Published var isLoading: Bool = false
     @Published var isLoadingMore: Bool = false
+    @Published var isBlocked: Bool = false
     @Published var error: AppError?
 
     // MARK: - Private Properties
 
-    private let userId: String
+    let userId: String
     private var lastRecordId: Int? = nil
     private var hasMoreActivities: Bool = true
     private var lastHobbyCardId: Int? = nil

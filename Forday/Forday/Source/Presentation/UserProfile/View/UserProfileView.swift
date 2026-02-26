@@ -27,6 +27,11 @@ final class UserProfileView: UIView {
     let segmentedControlView = ProfileSegmentedControlView()
     let contentContainerView = UIView()
 
+    // Blocked user state view
+    private let blockedStateView = UIView()
+    private let blockedIconImageView = UIImageView()
+    private let blockedLabel = UILabel()
+
     // Skeleton Views
     private let skeletonContainerView = UIView()
     private let profileImageSkeleton = SkeletonView()
@@ -99,6 +104,23 @@ extension UserProfileView {
             $0.backgroundColor = .systemBackground
         }
 
+        // Blocked state view
+        blockedStateView.do {
+            $0.backgroundColor = .systemBackground
+            $0.isHidden = true
+        }
+
+        blockedIconImageView.do {
+            $0.image = .Icon.sorryBubble
+            $0.contentMode = .scaleAspectFit
+        }
+
+        blockedLabel.do {
+            $0.setTextWithTypography("차단한 유저예요.", style: .label14)
+            $0.textColor = .neutral600
+            $0.textAlignment = .center
+        }
+
         // Skeleton styles
         skeletonContainerView.do {
             $0.backgroundColor = .systemBackground
@@ -139,6 +161,9 @@ extension UserProfileView {
         scrollContentView.addSubview(headerView)
         scrollContentView.addSubview(segmentedControlView)
         scrollContentView.addSubview(contentContainerView)
+        scrollContentView.addSubview(blockedStateView)
+        blockedStateView.addSubview(blockedIconImageView)
+        blockedStateView.addSubview(blockedLabel)
 
         // Skeleton container
         scrollContentView.addSubview(skeletonContainerView)
@@ -206,6 +231,25 @@ extension UserProfileView {
             $0.leading.trailing.equalToSuperview()
             $0.bottom.equalToSuperview()
             contentHeightConstraint = $0.height.equalTo(400).constraint
+        }
+
+        // Blocked state layout
+        blockedStateView.snp.makeConstraints {
+            $0.top.equalTo(segmentedControlView.snp.bottom)
+            $0.leading.trailing.equalToSuperview()
+            $0.bottom.equalToSuperview()
+            $0.height.equalTo(400)
+        }
+
+        blockedIconImageView.snp.makeConstraints {
+            $0.centerX.equalToSuperview()
+            $0.top.equalToSuperview().offset(100)
+            $0.width.height.equalTo(80)
+        }
+
+        blockedLabel.snp.makeConstraints {
+            $0.centerX.equalToSuperview()
+            $0.top.equalTo(blockedIconImageView.snp.bottom).offset(16)
         }
 
         // Skeleton layout
@@ -306,6 +350,18 @@ extension UserProfileView {
         let minHeight = screenHeight - 44 - 80 - 44 - 100
         let finalHeight = max(height, minHeight)
         contentHeightConstraint?.update(offset: finalHeight)
+    }
+
+    func showBlockedState() {
+        segmentedControlView.isHidden = true
+        contentContainerView.isHidden = true
+        blockedStateView.isHidden = false
+    }
+
+    func hideBlockedState() {
+        segmentedControlView.isHidden = false
+        contentContainerView.isHidden = false
+        blockedStateView.isHidden = true
     }
 
     // MARK: - Skeleton

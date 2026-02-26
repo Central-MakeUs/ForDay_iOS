@@ -132,7 +132,6 @@ extension UserProfileViewController {
             .sink { [weak self] profile in
                 guard let profile = profile else { return }
                 self?.userProfileView.headerView.configure(with: profile)
-                self?.userProfileView.setTitle(profile.nickname)
             }
             .store(in: &cancellables)
 
@@ -164,6 +163,18 @@ extension UserProfileViewController {
             .compactMap { $0 }
             .sink { [weak self] error in
                 self?.handleAppError(error)
+            }
+            .store(in: &cancellables)
+
+        // Blocked state
+        viewModel.$isBlocked
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isBlocked in
+                if isBlocked {
+                    self?.userProfileView.showBlockedState()
+                } else {
+                    self?.userProfileView.hideBlockedState()
+                }
             }
             .store(in: &cancellables)
     }
@@ -293,44 +304,99 @@ extension UserProfileViewController {
     }
 
     private func showBlockConfirmation() {
-        let alert = UIAlertController(
-            title: "차단하기",
-            message: "이 사용자를 차단하시겠습니까?\n차단된 사용자의 게시물은 더 이상 표시되지 않습니다.",
-            preferredStyle: .alert
+        guard let profile = viewModel.userProfile else { return }
+
+        let popupVC = CommonPopupViewController(
+            title: "\(profile.nickname)님을 차단하시겠어요?",
+            message: "\(profile.nickname) 님이 올리는 모든 활동기록은 숨김처리되며, 회원님의 프로필 또는 활동기록은 공개되지 않습니다.\n상대방에게는 회원님이 차단한 사실은 알려지지 않으며, 언제든지 차단 해지 가능합니다.",
+            primaryButtonTitle: "예",
+            secondaryButtonTitle: "아니오"
         )
-
-        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
-        alert.addAction(UIAlertAction(title: "차단", style: .destructive) { [weak self] _ in
+        popupVC.onPrimaryAction = { [weak self] in
             self?.performBlock()
-        })
+        }
 
-        present(alert, animated: true)
+        present(popupVC, animated: true)
     }
 
     private func performBlock() {
-        // TODO: 차단 API 호출
-        ToastView.show(message: "사용자를 차단했습니다")
-        navigationController?.popViewController(animated: true)
+        Task { [weak self] in
+            guard let self = self else { return }
+
+            do {
+                let friendsService = FriendsService()
+                let response = try await friendsService.blockUser(userId: self.viewModel.userId)
+
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+
+                    // Show toast with API response message
+                    if let data = response.data {
+                        ToastView.showSuccess(message: data.message)
+                    }
+
+                    // Show blocked state
+                    self.viewModel.isBlocked = true
+                    self.userProfileView.showBlockedState()
+                }
+            } catch {
+                await MainActor.run { [weak self] in
+                    if let appError = error as? AppError {
+                        ToastView.showError(message: appError.userMessage)
+                    } else {
+                        ToastView.showError(message: "차단 처리 중 오류가 발생했습니다.")
+                    }
+                }
+            }
+        }
     }
 
     private func showReportOptions() {
-        let alert = UIAlertController(
-            title: "신고하기",
-            message: "이 사용자를 신고하시겠습니까?",
-            preferredStyle: .alert
+        guard let profile = viewModel.userProfile else { return }
+
+        // 사용자 신고는 차단 확인 바텀시트로 바로 이동
+        let bottomSheet = BlockUserBottomSheetViewController(
+            nickname: profile.nickname,
+            onConfirm: { [weak self] shouldBlock in
+                self?.handleUserReport(shouldBlock: shouldBlock)
+            }
         )
+        bottomSheet.modalPresentationStyle = .pageSheet
 
-        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
-        alert.addAction(UIAlertAction(title: "신고", style: .destructive) { [weak self] _ in
-            self?.performReport()
-        })
+        if let sheet = bottomSheet.sheetPresentationController {
+            sheet.detents = [.custom(resolver: { _ in 280 })]
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 20
+        }
 
-        present(alert, animated: true)
+        present(bottomSheet, animated: true)
     }
 
-    private func performReport() {
-        // TODO: 신고 API 호출
-        ToastView.show(message: "신고가 접수되었습니다")
+    private func handleUserReport(shouldBlock: Bool) {
+        Task { [weak self] in
+            guard let self = self else { return }
+
+            do {
+                // 차단 요청 시 API 호출
+                if shouldBlock {
+                    let friendsService = FriendsService()
+                    _ = try await friendsService.blockUser(userId: self.viewModel.userId)
+                }
+
+                await MainActor.run { [weak self] in
+                    ToastView.showSuccess(message: "신고가 접수되었습니다.")
+                    self?.navigationController?.popViewController(animated: true)
+                }
+            } catch {
+                await MainActor.run {
+                    if let appError = error as? AppError {
+                        ToastView.showError(message: appError.userMessage)
+                    } else {
+                        ToastView.showError(message: "처리 중 오류가 발생했습니다.")
+                    }
+                }
+            }
+        }
     }
 }
 
