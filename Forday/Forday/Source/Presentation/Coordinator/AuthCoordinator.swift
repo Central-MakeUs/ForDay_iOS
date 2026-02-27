@@ -123,6 +123,22 @@ class AuthCoordinator: Coordinator {
         parentCoordinator?.showMainTabBar()
     }
 
+    // 온보딩 취소 (뒤로가기) - 로그인 화면으로 돌아감
+    func cancelOnboarding() {
+        print("🔴 온보딩 취소 - 로그인 화면으로 돌아감")
+
+        // 온보딩 코디네이터 참조 정리
+        onboardingCoordinator = nil
+
+        // dismiss 전에 로그인 화면 먼저 설정 (dismiss 애니메이션 중 빈 화면 방지)
+        let loginVC = LoginViewController()
+        loginVC.coordinator = self
+        navigationController.setViewControllers([loginVC], animated: false)
+
+        // 온보딩 dismiss
+        navigationController.dismiss(animated: true)
+    }
+
     // 자동 로그인 (앱 시작 시, 토큰 valid할 때)
     func autoLogin() {
         print("🔵 autoLogin() 시작")
