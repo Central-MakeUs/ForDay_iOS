@@ -64,7 +64,7 @@ final class AppIntroViewController: UIViewController {
         static let indicatorTopSpacing: CGFloat = 15
         static let indicatorSize: CGFloat = 8
         static let indicatorSpacing: CGFloat = 6
-        static let swipeThreshold: CGFloat = 20
+        static let swipeThreshold: CGFloat = 10
         static let transitionDuration: TimeInterval = 0.3
     }
 

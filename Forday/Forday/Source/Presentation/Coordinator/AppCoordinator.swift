@@ -133,6 +133,13 @@ class AppCoordinator: Coordinator {
 
     // 자동 로그인 체크
     private func proceedToLogin() {
+        // 비동기 작업 전에 먼저 로그인 화면 설정 (AppIntro 전환 시 빈 화면 방지)
+        window.rootViewController = navigationController
+        let authCoordinator = AuthCoordinator(navigationController: navigationController)
+        authCoordinator.parentCoordinator = self
+        authCoordinator.start()  // 로그인 화면 표시
+        self.authCoordinator = authCoordinator
+
         let autoLoginUseCase = AuthUseCaseFactory().makeAutoLoginUseCase()
 
         Task { [weak self] in
@@ -142,25 +149,17 @@ class AppCoordinator: Coordinator {
                 switch result {
                 case .success:
                     print("🟢 AppCoordinator - 자동 로그인 성공")
-                    self?.performAutoLogin()
+                    // 이미 로그인 화면이 표시되어 있으므로 autoLogin만 호출
+                    self?.authCoordinator?.autoLogin()
 
                 case .needsLogin:
-                    print("🔴 AppCoordinator - 로그인 필요")
-                    self?.showAuth()
+                    // 이미 로그인 화면이 표시되어 있으므로 추가 작업 불필요
+                    print("🔴 AppCoordinator - 로그인 필요 (로그인 화면 이미 표시됨)")
                 }
             }
         }
     }
 
-    // 자동 로그인 처리 (토큰 유효 확인 후 호출)
-    private func performAutoLogin() {
-        window.rootViewController = navigationController
-        let authCoordinator = AuthCoordinator(navigationController: navigationController)
-        authCoordinator.parentCoordinator = self
-        authCoordinator.autoLogin()
-        self.authCoordinator = authCoordinator
-    }
-    
     // 인증 화면 (로그인)
     func showAuth() {
         print("show auth")
