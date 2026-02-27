@@ -131,9 +131,7 @@ class AuthCoordinator: Coordinator {
         onboardingCoordinator = nil
 
         // dismiss 전에 로그인 화면 먼저 설정 (dismiss 애니메이션 중 빈 화면 방지)
-        let loginVC = LoginViewController()
-        loginVC.coordinator = self
-        navigationController.setViewControllers([loginVC], animated: false)
+        showLogin()
 
         // 온보딩 dismiss
         navigationController.dismiss(animated: true)
