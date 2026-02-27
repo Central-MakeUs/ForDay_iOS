@@ -64,7 +64,7 @@ final class AppIntroViewController: UIViewController {
         static let indicatorTopSpacing: CGFloat = 15
         static let indicatorSize: CGFloat = 8
         static let indicatorSpacing: CGFloat = 6
-        static let swipeThreshold: CGFloat = 100
+        static let swipeThreshold: CGFloat = 10
         static let transitionDuration: TimeInterval = 0.3
     }
 
@@ -196,7 +196,7 @@ extension AppIntroViewController {
 
         if currentPage == pages.count - 1 && overscroll > 0 {
             // 오버스크롤 정도에 따라 뷰 이동 (저항감 적용)
-            let translation = -overscroll * 0.5
+            let translation = -overscroll * 1.0
             view.transform = CGAffineTransform(translationX: translation, y: 0)
         } else {
             view.transform = .identity

@@ -162,7 +162,13 @@ class OnboardingCoordinator: Coordinator {
     }
     
     func dismissOnboarding() {
-        navigationController.dismiss(animated: true)
+        // parentCoordinator를 통해 dismiss 및 로그인 화면 복원
+        if let parentCoordinator {
+            parentCoordinator.cancelOnboarding()
+        } else {
+            // fallback: parentCoordinator가 없으면 직접 dismiss
+            navigationController.dismiss(animated: true)
+        }
     }
 
     // MARK: - Resume Onboarding with Saved Data
