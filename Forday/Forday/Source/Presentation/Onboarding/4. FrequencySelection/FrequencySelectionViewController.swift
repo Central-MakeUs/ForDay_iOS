@@ -52,6 +52,11 @@ class FrequencySelectionViewController: BaseOnboardingViewController {
         setupCollectionView()
         setupEditMode()
         bind()
+
+        // Analytics: 취미 주당 횟수 선택 진입 (온보딩 모드만)
+        if !isEditMode {
+            FirebaseAnalyticsService.shared.log(.hobbyInfoFrequencyEntry)
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -204,11 +209,17 @@ extension FrequencySelectionViewController: UICollectionViewDataSource {
 
 extension FrequencySelectionViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let frequency = viewModel.frequencies[indexPath.item]
+
+        // Analytics: 선택한 취미 주당 횟수 (온보딩 모드만)
+        if !isEditMode {
+            FirebaseAnalyticsService.shared.log(.hobbyWeeklyCount(count: frequency.count))
+        }
+
         viewModel.selectFrequency(at: indexPath.item)
         frequencyView.selectedHobbyCard.setSelected(true)
 
         // 선택한 빈도를 HobbyCard에 실시간 표시
-        let frequency = viewModel.frequencies[indexPath.item]
         updateHobbyCardInfo(frequency: "주 \(frequency.count)회")
     }
 

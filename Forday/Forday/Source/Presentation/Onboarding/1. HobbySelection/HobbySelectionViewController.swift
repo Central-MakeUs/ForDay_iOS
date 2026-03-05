@@ -41,6 +41,9 @@ class HobbySelectionViewController: BaseOnboardingViewController {
         setupActions()
         bind()
         loadHobbies()
+
+        // Analytics: 취미카드 선택화면 진입
+        FirebaseAnalyticsService.shared.log(.selectHobbyScreen)
     }
 
     private func loadHobbies() {
@@ -128,6 +131,9 @@ extension HobbySelectionViewController {
     }
 
     @objc private func customInputButtonTapped() {
+        // Analytics: 취미 직접 입력하기 버튼 클릭
+        FirebaseAnalyticsService.shared.log(.clickDirectInputHobbyBtn)
+
         showCustomInputPopup()
     }
 
@@ -192,6 +198,11 @@ extension HobbySelectionViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         // Ignore selection while showing skeleton
         guard !isShowingSkeleton else { return }
+
+        let hobby = viewModel.hobbies[indexPath.item]
+
+        // Analytics: 선택한 취미 카드
+        FirebaseAnalyticsService.shared.log(.selectedHobbyCard(id: hobby.name))
 
         viewModel.selectHobby(at: indexPath.item)
         hobbyView.resetCustomInputButton()

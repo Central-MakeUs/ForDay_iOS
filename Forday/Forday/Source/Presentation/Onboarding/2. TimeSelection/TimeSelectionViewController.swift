@@ -53,6 +53,11 @@ class TimeSelectionViewController: BaseOnboardingViewController {
         setupSlider()
         setupEditMode()
         bind()
+
+        // Analytics: 취미 시간 선택 화면 진입 (온보딩 모드만)
+        if !isEditMode {
+            FirebaseAnalyticsService.shared.log(.viewHobbyTimeSelectionScreen)
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -150,10 +155,17 @@ class TimeSelectionViewController: BaseOnboardingViewController {
 extension TimeSelectionViewController {
     private func setupSlider() {
         timeView.timeSlider.onValueChanged = { [weak self] time in
-            self?.viewModel.selectTime(time)
-            self?.timeView.selectedHobbyCard.setSelected(true)
+            guard let self else { return }
+
+            // Analytics: 선택한 시간 (온보딩 모드만)
+            if !self.isEditMode, let minutesInt = Int(time) {
+                FirebaseAnalyticsService.shared.log(.selectedTime(minutes: minutesInt))
+            }
+
+            self.viewModel.selectTime(time)
+            self.timeView.selectedHobbyCard.setSelected(true)
             // 선택한 시간을 HobbyCard에 실시간 표시
-            self?.timeView.selectedHobbyCard.updateInfo(time: time)
+            self.timeView.selectedHobbyCard.updateInfo(time: time)
         }
     }
 

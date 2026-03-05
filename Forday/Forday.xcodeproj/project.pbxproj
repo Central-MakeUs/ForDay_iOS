@@ -14,6 +14,7 @@
 		6C698A702F10E9E6001229A8 /* KakaoSDKAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 6C698A6F2F10E9E6001229A8 /* KakaoSDKAuth */; };
 		6C698A722F10E9E6001229A8 /* KakaoSDKUser in Frameworks */ = {isa = PBXBuildFile; productRef = 6C698A712F10E9E6001229A8 /* KakaoSDKUser */; };
 		6C85871E2F1784F700A8AA1B /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 6C85871D2F1784F700A8AA1B /* Lottie */; };
+		6C8BB44A2F5973AB001D3B96 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 6C8BB4492F5973AB001D3B96 /* FirebaseAnalytics */; };
 		6C944CBA2F0ACF9F007D9AB5 /* Then in Frameworks */ = {isa = PBXBuildFile; productRef = 6C944CB92F0ACF9F007D9AB5 /* Then */; };
 		6C944CBD2F0AD02D007D9AB5 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6C944CBC2F0AD02D007D9AB5 /* SnapKit */; };
 /* End PBXBuildFile section */
@@ -79,6 +80,7 @@
 				6C698A0B2F0ECF2B001229A8 /* Moya in Frameworks */,
 				6C698A092F0ECF2B001229A8 /* CombineMoya in Frameworks */,
 				6C698A702F10E9E6001229A8 /* KakaoSDKAuth in Frameworks */,
+				6C8BB44A2F5973AB001D3B96 /* FirebaseAnalytics in Frameworks */,
 				6C85871E2F1784F700A8AA1B /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -86,11 +88,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6C8BB4482F59739B001D3B96 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		6C944C972F0ACF42007D9AB5 = {
 			isa = PBXGroup;
 			children = (
 				6C944CA22F0ACF42007D9AB5 /* Forday */,
 				6C325D4E2F3B5BB500F87C18 /* FordayTests */,
+				6C8BB4482F59739B001D3B96 /* Frameworks */,
 				6C944CA12F0ACF42007D9AB5 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -156,6 +166,7 @@
 				6C698A712F10E9E6001229A8 /* KakaoSDKUser */,
 				6C85871D2F1784F700A8AA1B /* Lottie */,
 				6C40ECED2F268FFC00FEFD60 /* Kingfisher */,
+				6C8BB4492F5973AB001D3B96 /* FirebaseAnalytics */,
 			);
 			productName = Forday;
 			productReference = 6C944CA02F0ACF42007D9AB5 /* Forday.app */;
@@ -196,6 +207,7 @@
 				6C698A6C2F10E9E6001229A8 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
 				6C85871C2F1784F700A8AA1B /* XCRemoteSwiftPackageReference "lottie-ios" */,
 				6C40ECEC2F268FFC00FEFD60 /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				6C8BB03A2F52C512001D3B96 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6C944CA12F0ACF42007D9AB5 /* Products */;
@@ -569,6 +581,14 @@
 				minimumVersion = 4.6.0;
 			};
 		};
+		6C8BB03A2F52C512001D3B96 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.10.0;
+			};
+		};
 		6C944CB82F0ACF9F007D9AB5 /* XCRemoteSwiftPackageReference "Then" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/devxoul/Then.git";
@@ -622,6 +642,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 6C85871C2F1784F700A8AA1B /* XCRemoteSwiftPackageReference "lottie-ios" */;
 			productName = Lottie;
+		};
+		6C8BB4492F5973AB001D3B96 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6C8BB03A2F52C512001D3B96 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
 		};
 		6C944CB92F0ACF9F007D9AB5 /* Then */ = {
 			isa = XCSwiftPackageProductDependency;

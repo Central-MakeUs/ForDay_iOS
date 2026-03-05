@@ -51,6 +51,13 @@ class HomeViewController: UIViewController {
         bind()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        // Analytics: 홈 화면 진입 (실제로 화면이 표시된 후 로깅)
+        FirebaseAnalyticsService.shared.log(.homeScreen)
+    }
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: false)
@@ -668,6 +675,10 @@ extension HomeViewController {
         } else {
             // 취미활동 추가하기 → Activity 입력 화면으로 이동
             print("취미활동 추가하기 탭")
+
+            // Analytics: 취미활동 추가하기 클릭
+            FirebaseAnalyticsService.shared.log(.homeScreenClickAddHobbyActivityBtn)
+
             showActivityInput()
         }
     }

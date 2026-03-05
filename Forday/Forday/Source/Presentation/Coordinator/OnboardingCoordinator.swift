@@ -82,6 +82,9 @@ class OnboardingCoordinator: Coordinator {
             viewModel.onHobbyCreated = { [weak self] hobbyId in
                 print("✅ 취미 생성 완료 - hobbyId: \(hobbyId)")
 
+                // Analytics: 온보딩 완료 (네트워크 성공 시)
+                FirebaseAnalyticsService.shared.log(.onboardingSuccess)
+
                 // If called from HobbySettings, call completion handler instead of navigating
                 if let completionHandler = self?.onHobbyCreationCompleted {
                     completionHandler()
