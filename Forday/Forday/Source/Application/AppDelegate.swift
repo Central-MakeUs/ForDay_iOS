@@ -7,12 +7,16 @@
 
 import UIKit
 import KakaoSDKCommon
+import FirebaseCore
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        
+
+        // Firebase 초기화
+        FirebaseApp.configure()
+
 #if DEBUG
         if ProcessInfo.processInfo.environment["CLEAR_TOKENS_ON_LAUNCH"] == "YES" {
             try? TokenStorage.shared.deleteAllTokens()
