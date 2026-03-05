@@ -15,9 +15,12 @@ import Foundation
 /// // 화면 진입 이벤트 (파라미터 없음)
 /// FirebaseAnalyticsService.shared.log(.loginScreen)
 ///
-/// // 선택 이벤트 (파라미터 포함)
+/// // 선택 이벤트 (동적 값은 파라미터로 전달)
 /// FirebaseAnalyticsService.shared.log(.selectedHobbyCard(id: "cooking"))
+/// // → 이벤트명: "selected_hobby_card", 파라미터: ["hobby_card_id": "cooking"]
+///
 /// FirebaseAnalyticsService.shared.log(.selectedTime(minutes: 30))
+/// // → 이벤트명: "selected_time", 파라미터: ["minutes": 30]
 ///
 /// // AI 추천 이벤트
 /// FirebaseAnalyticsService.shared.log(.aiRecommendationShown(
@@ -46,6 +49,8 @@ enum AnalyticsEvent {
 
     // MARK: - Phase 1: 로그인
     case loginScreen
+    case kakaoLoginClick
+    case appleLoginClick
     case guestModeClick
 
     // MARK: - Phase 2: 온보딩 Flow
@@ -62,7 +67,7 @@ enum AnalyticsEvent {
 
     // MARK: - Phase 3: 닉네임 설정 및 홈
     case nicknameDirectInputScreen
-    case currentInputNickname(name: String)
+    case currentInputNickname // 닉네임은 PII이므로 파라미터로 전송하지 않음
     case nicknameRegisterClick
     case homeScreen
     case homeScreenClickAddHobbyActivityBtn
@@ -92,23 +97,25 @@ enum AnalyticsEvent {
         switch self {
         // Phase 1
         case .loginScreen: return "login_screen"
+        case .kakaoLoginClick: return "kakao_login_click"
+        case .appleLoginClick: return "apple_login_click"
         case .guestModeClick: return "guest_mode_click"
 
         // Phase 2
         case .selectHobbyScreen: return "select_hobby_screen"
         case .clickDirectInputHobbyBtn: return "click_direct_input_hobby_btn"
-        case .selectedHobbyCard(let id): return "selected_hobby_card_\(id)"
+        case .selectedHobbyCard: return "selected_hobby_card"
         case .viewHobbyTimeSelectionScreen: return "view_hobby_time_selection_screen"
-        case .selectedTime(let minutes): return "selected_time_\(minutes)"
+        case .selectedTime: return "selected_time"
         case .hobbyInfoFrequencyEntry: return "hobby_info_frequency_entry"
-        case .hobbyWeeklyCount(let count): return "hobby_weekly_count_\(count)"
+        case .hobbyWeeklyCount: return "hobby_weekly_count"
         case .hobbyJourneyDateScreen: return "hobby_journey_date_screen"
-        case .selectedJourneyDate(let mode): return "selected_journey_date_\(mode)"
+        case .selectedJourneyDate: return "selected_journey_date"
         case .onboardingSuccess: return "onboarding_success"
 
         // Phase 3
         case .nicknameDirectInputScreen: return "nickname_direct_input_screen"
-        case .currentInputNickname(let name): return "current_input_nickname_\(name)"
+        case .currentInputNickname: return "current_input_nickname"
         case .nicknameRegisterClick: return "nickname_register_click"
         case .homeScreen: return "home_screen"
         case .homeScreenClickAddHobbyActivityBtn: return "home_screen_click_add_hobby_activity_btn"
@@ -132,6 +139,24 @@ enum AnalyticsEvent {
     /// Firebase 이벤트 파라미터
     var parameters: [String: Any]? {
         switch self {
+        // Phase 2 - 동적 값을 파라미터로 전달
+        case .selectedHobbyCard(let id):
+            return ["hobby_card_id": id]
+
+        case .selectedTime(let minutes):
+            return ["minutes": minutes]
+
+        case .hobbyWeeklyCount(let count):
+            return ["count": count]
+
+        case .selectedJourneyDate(let mode):
+            return ["mode": mode]
+
+        // Phase 3 - 닉네임은 PII이므로 전송하지 않음 (파라미터 없음)
+        case .currentInputNickname:
+            return nil
+
+        // 상세 스펙
         case .aiRecommendationShown(let hobbyName, let recommendationCount):
             return [
                 "hobby_name": hobbyName,

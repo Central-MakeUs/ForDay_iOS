@@ -154,9 +154,8 @@ extension NicknameViewController {
             return
         }
 
-        // Analytics: 닉네임 중복검사 클릭
-        let nickname = viewModel.nickname
-        FirebaseAnalyticsService.shared.log(.currentInputNickname(name: nickname))
+        // Analytics: 닉네임 입력 이벤트 (닉네임은 PII이므로 파라미터로 전송하지 않음)
+        FirebaseAnalyticsService.shared.log(.currentInputNickname)
 
         nicknameView.nicknameTextField.resignFirstResponder()
 

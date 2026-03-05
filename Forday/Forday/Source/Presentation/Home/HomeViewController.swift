@@ -49,8 +49,12 @@ class HomeViewController: UIViewController {
         setupActions()
         setupStickerBoardCallbacks()
         bind()
+    }
 
-        // Analytics: 홈 화면 진입
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        // Analytics: 홈 화면 진입 (실제로 화면이 표시된 후 로깅)
         FirebaseAnalyticsService.shared.log(.homeScreen)
     }
 

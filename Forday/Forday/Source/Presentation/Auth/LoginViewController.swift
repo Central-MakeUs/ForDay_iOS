@@ -78,6 +78,9 @@ extension LoginViewController {
     // MARK: - Actions
     
     @objc private func kakaoLoginButtonTapped() {
+        // Analytics: 카카오 로그인 클릭
+        FirebaseAnalyticsService.shared.log(.kakaoLoginClick)
+
         loginView.isLoginInProgress = true
         Task { [weak self] in
             guard let self = self else { return }
@@ -102,6 +105,9 @@ extension LoginViewController {
     }
 
     @objc private func appleLoginButtonTapped() {
+        // Analytics: 애플 로그인 클릭
+        FirebaseAnalyticsService.shared.log(.appleLoginClick)
+
         loginView.isLoginInProgress = true
         Task { [weak self] in
             guard let self = self else { return }

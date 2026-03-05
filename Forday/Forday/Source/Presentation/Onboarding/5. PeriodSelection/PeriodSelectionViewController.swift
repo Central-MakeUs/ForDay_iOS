@@ -102,9 +102,6 @@ class PeriodSelectionViewController: BaseOnboardingViewController {
         guard let onboardingCoordinator = coordinator as? OnboardingCoordinator else { return }
         guard !isTransitioning else { return }
 
-        // Analytics: 온보딩 완료
-        FirebaseAnalyticsService.shared.log(.onboardingSuccess)
-
         startTransition()
 
         let onboardingData = onboardingCoordinator.getOnboardingData()
