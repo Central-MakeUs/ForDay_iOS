@@ -19,8 +19,6 @@ class HomeViewController: UIViewController {
     private let stickerBoardViewModel = StickerBoardViewModel()
     private var cancellables = Set<AnyCancellable>()
 
-    // TODO: HomeInfo API에 nickname 필드 추가되면 getCurrentNickname() 수정 필요
-    // 현재는 greetingMessage에서 파싱하여 사용 중
     
     // Coordinator
     weak var coordinator: MainTabBarCoordinator?
@@ -78,6 +76,8 @@ class HomeViewController: UIViewController {
             // hobbyId가 전달되면 해당 취미로, 아니면 서버가 결정하도록 함
             // (취미설정에서 보관/꺼내기 후 돌아왔을 때 정확한 상태 반영)
             await self.viewModel.fetchHomeInfo(hobbyId: hobbyId)
+            // 사용자 프로필 로드 (nickname 포함)
+            await self.viewModel.fetchUserProfile()
             // fetchHomeInfo 완료 후 업데이트된 currentHobbyId 사용
             await self.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: self.viewModel.currentHobbyId)
 
@@ -804,14 +804,8 @@ extension HomeViewController {
     }
 
     func getCurrentNickname() -> String? {
-        // greetingMessage에서 닉네임 추출 (예: "유지님, 안녕하세요!" → "유지")
-        guard let greetingMessage = viewModel.homeInfo?.greetingMessage else { return nil }
-
-        // "님" 전까지의 문자열을 닉네임으로 추출
-        if let range = greetingMessage.range(of: "님") {
-            return String(greetingMessage[..<range.lowerBound])
-        }
-        return nil
+        // UserInfo에서 닉네임 직접 반환
+        return viewModel.userInfo?.nickname
     }
 
     /// 계정 전환 시 홈 상태 초기화 (이전 사용자의 hobbyId 제거 후 새로고침)
