@@ -174,6 +174,9 @@ extension HobbyActivityInputViewController {
     private func saveActivities() {
         let activities = activityInputView.getActivities()
 
+        // Analytics: 취미활동 생성 버튼 클릭
+        FirebaseAnalyticsService.shared.log(.createHobbyClick)
+
         Task { [weak self] in
             guard let self = self else { return }
             do {
@@ -204,6 +207,9 @@ extension HobbyActivityInputViewController {
     }
 
     private func handleAIToastTapped() {
+        // Analytics: 포데이 AI 추천 활동 보기 클릭
+        FirebaseAnalyticsService.shared.log(.hobbyInputViewAIRecommendationsClick)
+
         // Hide toast
         activityInputView.hideAIRecommendationToast()
 

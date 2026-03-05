@@ -46,6 +46,9 @@ class LoginViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupActions()
+
+        // Analytics: 로그인 화면 진입
+        FirebaseAnalyticsService.shared.log(.loginScreen)
     }
 }
 
@@ -123,6 +126,9 @@ extension LoginViewController {
     }
 
     @objc private func guestLoginButtonTapped() {
+        // Analytics: 게스트 모드 클릭
+        FirebaseAnalyticsService.shared.log(.guestModeClick)
+
         loginView.isLoginInProgress = true
         Task { [weak self] in
             guard let self = self else { return }

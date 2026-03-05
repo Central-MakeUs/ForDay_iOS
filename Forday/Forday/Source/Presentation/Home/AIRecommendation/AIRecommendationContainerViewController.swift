@@ -385,6 +385,9 @@ extension AIRecommendationContainerViewController {
             return
         }
 
+        // Analytics: AI 추천 활동 화면 진입
+        FirebaseAnalyticsService.shared.log(.aiRecommendHobbyRoutineScreen)
+
         // First time showing selection
         currentStep = .selection
 

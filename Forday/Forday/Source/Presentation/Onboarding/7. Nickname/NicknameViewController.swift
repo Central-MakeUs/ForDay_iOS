@@ -29,6 +29,9 @@ class NicknameViewController: BaseOnboardingViewController {
         setupTextField()
         setupActions()
         bind()
+
+        // Analytics: 닉네임 입력 화면 진입
+        FirebaseAnalyticsService.shared.log(.nicknameDirectInputScreen)
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -63,6 +66,9 @@ class NicknameViewController: BaseOnboardingViewController {
     // Actions
 
     override func nextButtonTapped() {
+        // Analytics: 닉네임 등록 버튼 클릭
+        FirebaseAnalyticsService.shared.log(.nicknameRegisterClick)
+
         // 다음 버튼 비활성화 (중복 클릭 방지)
         setNextButtonEnabled(false)
 
@@ -147,9 +153,13 @@ extension NicknameViewController {
         guard viewModel.validationResult == .valid else {
             return
         }
-        
+
+        // Analytics: 닉네임 중복검사 클릭
+        let nickname = viewModel.nickname
+        FirebaseAnalyticsService.shared.log(.currentInputNickname(name: nickname))
+
         nicknameView.nicknameTextField.resignFirstResponder()
-        
+
         // async 호출
         Task { [weak self] in
             await self?.viewModel.checkDuplicate()

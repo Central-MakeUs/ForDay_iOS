@@ -684,6 +684,9 @@ extension AIActivitySelectionView {
     @objc private func nextButtonTapped() {
         guard let selectedView = selectedActivityView else { return }
 
+        // Analytics: AI 추천 활동 - 다음 버튼 클릭
+        FirebaseAnalyticsService.shared.log(.clickAIRecommendationNext)
+
         // Get the (possibly edited) content from the selected view
         let content = selectedView.getContent()
 

@@ -52,6 +52,11 @@ class PeriodSelectionViewController: BaseOnboardingViewController {
         setupCollectionView()
         setupEditMode()
         bind()
+
+        // Analytics: 여정일 선택 화면 진입 (온보딩 모드만)
+        if !isEditMode {
+            FirebaseAnalyticsService.shared.log(.hobbyJourneyDateScreen)
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -96,6 +101,9 @@ class PeriodSelectionViewController: BaseOnboardingViewController {
         guard viewModel.selectedPeriod != nil else { return }
         guard let onboardingCoordinator = coordinator as? OnboardingCoordinator else { return }
         guard !isTransitioning else { return }
+
+        // Analytics: 온보딩 완료
+        FirebaseAnalyticsService.shared.log(.onboardingSuccess)
 
         startTransition()
 
@@ -260,12 +268,19 @@ extension PeriodSelectionViewController: UICollectionViewDataSource {
 
 extension PeriodSelectionViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let period = viewModel.periods[indexPath.item]
+        let periodText = period.type == .fixed ? "66일" : "자율모드"
+        let mode = period.type == .fixed ? "66일" : "기간 미지정"
+
+        // Analytics: 선택한 여정일 (온보딩 모드만)
+        if !isEditMode {
+            FirebaseAnalyticsService.shared.log(.selectedJourneyDate(mode: mode))
+        }
+
         viewModel.selectPeriod(at: indexPath.item)
         periodView.selectedHobbyCard.setSelected(true)
 
         // 선택한 기간을 HobbyCard에 실시간 표시
-        let period = viewModel.periods[indexPath.item]
-        let periodText = period.type == .fixed ? "66일" : "자율모드"
         updateHobbyCardInfo(period: periodText)
     }
 
