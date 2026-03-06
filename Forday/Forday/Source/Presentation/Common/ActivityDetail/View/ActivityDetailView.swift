@@ -222,19 +222,13 @@ final class ActivityDetailView: UIView {
                 $0.top.equalTo(dateLabel.snp.bottom).offset(16)
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.equalToSuperview().offset(-20)
-                $0.bottom.lessThanOrEqualToSuperview().offset(-20)
+                $0.bottom.equalToSuperview().offset(-80) // ReactionButtonsView 높이만큼 여유 공간
             }
 
         case .withoutImage:
             // 이미지 없을 때: 타이틀 아래에 날짜
             dateLabel.snp.remakeConstraints {
                 $0.top.equalTo(titleLabel.snp.bottom).offset(8)
-                $0.leading.equalToSuperview().offset(20)
-                $0.trailing.equalToSuperview().offset(-20)
-            }
-            // 메모 컨테이너
-            memoContainerView.snp.remakeConstraints {
-                $0.top.equalTo(dateLabel.snp.bottom).offset(16)
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.equalToSuperview().offset(-20)
             }
@@ -249,12 +243,16 @@ final class ActivityDetailView: UIView {
                 $0.trailing.equalToSuperview().offset(-36) // 20(컨테이너) + 16(내부 패딩)
                 $0.size.equalTo(80)
             }
-            // memoContainerView의 bottom을 스티커 아래로 설정
+            // 메모 컨테이너 (스티커 아래까지 확장하고, contentView의 bottom과 연결)
             memoContainerView.snp.remakeConstraints {
                 $0.top.equalTo(dateLabel.snp.bottom).offset(16)
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.equalToSuperview().offset(-20)
                 $0.bottom.equalTo(memoStickerImageView.snp.bottom).offset(16)
+            }
+            // contentView의 bottom을 메모 컨테이너에 연결 (충분한 패딩)
+            memoContainerView.snp.makeConstraints {
+                $0.bottom.equalToSuperview().offset(-80) // ReactionButtonsView 높이만큼 여유 공간
             }
 
         case .withoutImageAndMemo:
@@ -268,7 +266,7 @@ final class ActivityDetailView: UIView {
                 $0.top.equalTo(dateLabel.snp.bottom).offset(24)
                 $0.trailing.equalToSuperview().offset(-20)
                 $0.size.equalTo(80)
-                $0.bottom.lessThanOrEqualToSuperview().offset(-20)
+                $0.bottom.equalToSuperview().offset(-80) // ReactionButtonsView 높이만큼 여유 공간
             }
         }
     }
