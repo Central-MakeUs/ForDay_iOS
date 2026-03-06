@@ -232,31 +232,43 @@ final class ActivityDetailView: UIView {
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.equalToSuperview().offset(-20)
             }
-            // 메모 컨테이너 전체 너비, 스티커가 메모 안 오른쪽 하단에 위치
+            // 메모 컨테이너
             memoContainerView.snp.remakeConstraints {
                 $0.top.equalTo(dateLabel.snp.bottom).offset(16)
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.equalToSuperview().offset(-20)
-                $0.bottom.lessThanOrEqualToSuperview().offset(-20)
             }
-            // 스티커가 메모 컨테이너 안 오른쪽 하단
+            // 메모 텍스트
+            contentLabel.snp.remakeConstraints {
+                $0.top.leading.equalTo(memoContainerView).offset(16)
+                $0.trailing.equalTo(memoContainerView).offset(-16)
+            }
+            // 스티커를 contentView 기준으로 배치 (시각적으로 메모 컨테이너 안에 있는 것처럼)
             memoStickerImageView.snp.remakeConstraints {
-                $0.trailing.equalTo(memoContainerView).offset(-8)
-                $0.bottom.equalTo(memoContainerView).offset(-8)
-                $0.size.equalTo(64)
+                $0.top.equalTo(contentLabel.snp.bottom).offset(20)
+                $0.trailing.equalToSuperview().offset(-36) // 20(컨테이너) + 16(내부 패딩)
+                $0.size.equalTo(80)
+            }
+            // memoContainerView의 bottom을 스티커 아래로 설정
+            memoContainerView.snp.remakeConstraints {
+                $0.top.equalTo(dateLabel.snp.bottom).offset(16)
+                $0.leading.equalToSuperview().offset(20)
+                $0.trailing.equalToSuperview().offset(-20)
+                $0.bottom.equalTo(memoStickerImageView.snp.bottom).offset(16)
             }
 
         case .withoutImageAndMemo:
-            // 이미지도 메모도 없을 때: 타이틀 아래에 날짜, 스티커는 날짜 아래
+            // 이미지도 메모도 없을 때: 타이틀 아래 24px → 날짜, 날짜 아래 24px → 스티커 (contentView 기준)
             dateLabel.snp.remakeConstraints {
-                $0.top.equalTo(titleLabel.snp.bottom).offset(8)
+                $0.top.equalTo(titleLabel.snp.bottom).offset(24)
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.equalToSuperview().offset(-20)
             }
             memoStickerImageView.snp.remakeConstraints {
+                $0.top.equalTo(dateLabel.snp.bottom).offset(24)
                 $0.trailing.equalToSuperview().offset(-20)
-                $0.top.equalTo(dateLabel.snp.bottom).offset(16)
                 $0.size.equalTo(80)
+                $0.bottom.lessThanOrEqualToSuperview().offset(-20)
             }
         }
     }
@@ -525,6 +537,7 @@ extension ActivityDetailView {
 
         // Memo container with background
         memoContainerView.addSubview(contentLabel)
+
         memoContainerView.snp.makeConstraints {
             $0.top.equalTo(dateLabel.snp.bottom).offset(16)
             $0.leading.equalToSuperview().offset(20)
@@ -532,18 +545,19 @@ extension ActivityDetailView {
             $0.bottom.lessThanOrEqualToSuperview().offset(-20)
         }
 
-        // Content label inside memo container
+        // Content label inside memo container (텍스트만, bottom 제약 없음)
         contentLabel.snp.makeConstraints {
             $0.top.leading.equalToSuperview().offset(16)
             $0.trailing.equalToSuperview().offset(-16)
-            $0.bottom.equalToSuperview().offset(-16)
         }
 
-        // Memo sticker (when no image - inside memo container)
+        // Memo sticker (when no image - contentView의 직접 자식, 제약으로만 위치 제어)
+        // withoutImage: memoContainerView 안에 있는 것처럼 배치
+        // withoutImageAndMemo: dateLabel 아래에 배치
         memoStickerImageView.snp.makeConstraints {
-            $0.trailing.equalTo(memoContainerView).offset(-8)
-            $0.bottom.equalTo(memoContainerView).offset(-8)
-            $0.size.equalTo(64)
+            $0.top.equalTo(dateLabel.snp.bottom).offset(16)
+            $0.trailing.equalToSuperview().offset(-20)
+            $0.size.equalTo(80)
         }
     }
 }
