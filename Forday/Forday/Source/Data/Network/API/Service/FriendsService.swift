@@ -29,4 +29,20 @@ final class FriendsService {
         let request = DTO.BlockUserRequest(userId: userId)
         return try await provider.request(.blockUser(request: request))
     }
+
+    // MARK: - 사용자 신고
+
+    /// 사용자를 신고합니다.
+    ///
+    /// - Parameters:
+    ///   - userId: 신고할 사용자 ID
+    ///   - reason: 신고 사유
+    /// - Returns: 신고 결과
+    /// - Throws:
+    ///   - `USER_NOT_FOUND` (404): 존재하지 않는 사용자
+    ///   - `CANNOT_REPORT_SELF` (400): 자기 자신을 신고하려는 경우
+    func reportUser(userId: String, reason: String) async throws -> DTO.ReportUserResponse {
+        let request = DTO.ReportUserRequest(userId: userId, reason: reason)
+        return try await provider.request(.reportUser(request: request))
+    }
 }

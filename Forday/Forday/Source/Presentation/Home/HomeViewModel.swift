@@ -17,6 +17,7 @@ class HomeViewModel {
     @Published var activities: [Activity] = []
     @Published var aiRecommendationResult: AIRecommendationResult?
     @Published var currentHobbyId: Int?
+    @Published var userInfo: UserInfo?
     @Published var isLoading: Bool = false
     @Published var error: AppError?
     @Published var currentToastMessage: String = ""
@@ -30,17 +31,20 @@ class HomeViewModel {
     private let fetchHomeInfoUseCase: FetchHomeInfoUseCase
     private let fetchAIRecommendationsUseCase: FetchAIRecommendationsUseCase
     private let fetchActivityDropdownListUseCase: FetchActivityDropdownListUseCase
+    private let fetchUserProfileUseCase: FetchUserProfileUseCase
 
     // Initialization
 
     init(
         fetchHomeInfoUseCase: FetchHomeInfoUseCase = FetchHomeInfoUseCase(),
         fetchAIRecommendationsUseCase: FetchAIRecommendationsUseCase = FetchAIRecommendationsUseCase(),
-        fetchActivityDropdownListUseCase: FetchActivityDropdownListUseCase = FetchActivityDropdownListUseCase()
+        fetchActivityDropdownListUseCase: FetchActivityDropdownListUseCase = FetchActivityDropdownListUseCase(),
+        fetchUserProfileUseCase: FetchUserProfileUseCase = FetchUserProfileUseCase()
     ) {
         self.fetchHomeInfoUseCase = fetchHomeInfoUseCase
         self.fetchAIRecommendationsUseCase = fetchAIRecommendationsUseCase
         self.fetchActivityDropdownListUseCase = fetchActivityDropdownListUseCase
+        self.fetchUserProfileUseCase = fetchUserProfileUseCase
     }
     
     // Methods
@@ -76,6 +80,24 @@ class HomeViewModel {
                 self.error = .unknown(error)
                 self.isLoading = false
                 print("❌ 홈 정보 로드 실패: \(error)")
+            }
+        }
+    }
+
+    func fetchUserProfile() async {
+        do {
+            let info = try await fetchUserProfileUseCase.execute()
+            await MainActor.run {
+                self.userInfo = info
+                print("✅ 사용자 프로필 로드 성공 - nickname: \(info.nickname)")
+            }
+        } catch let appError as AppError {
+            await MainActor.run {
+                print("❌ 사용자 프로필 로드 실패: \(appError)")
+            }
+        } catch {
+            await MainActor.run {
+                print("❌ 사용자 프로필 로드 실패: \(error)")
             }
         }
     }

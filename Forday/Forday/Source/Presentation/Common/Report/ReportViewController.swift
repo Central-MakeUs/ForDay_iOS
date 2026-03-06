@@ -119,15 +119,19 @@ extension ReportViewController {
         Task { [weak self] in
             guard let self = self else { return }
             do {
+                let friendsService = FriendsService()
+
                 // Submit report for record (if recordId exists)
                 if let recordId = self.recordId {
                     let recordsService = RecordsService()
                     _ = try await recordsService.reportRecord(recordId: recordId, reason: reason)
+                } else {
+                    // Submit user report (if recordId doesn't exist)
+                    _ = try await friendsService.reportUser(userId: self.targetUserId, reason: reason.rawValue)
                 }
 
                 // Block user if requested
                 if shouldBlock {
-                    let friendsService = FriendsService()
                     _ = try await friendsService.blockUser(userId: self.targetUserId)
                 }
 
@@ -139,7 +143,7 @@ extension ReportViewController {
                         // 사용자 신고 (차단 선택한 경우)
                         ToastView.showSuccess(message: "차단이 완료되었습니다.")
                     } else {
-                        // 사용자 신고 (차단 선택 안 한 경우) - API 없으므로 안내만
+                        // 사용자 신고 (차단 선택 안 한 경우)
                         ToastView.showSuccess(message: "신고가 접수되었습니다.")
                     }
 

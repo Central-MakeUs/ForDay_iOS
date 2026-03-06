@@ -41,6 +41,9 @@ class AIRecommendationContainerViewController: UIViewController {
     // 캐시된 닉네임 (API 호출 후 저장)
     private var cachedNickname: String?
 
+    // AI 추천 요청 시점의 hobbyId (dismiss 시점 재조회 방지)
+    private var requestedHobbyId: Int?
+
     // AI 추천 결과 (직접 hobbyId 전달 시 사용)
     @Published private var aiRecommendationResult: AIRecommendationResult?
     @Published private var aiActivityItemsResult: AIActivityItemsResult?
@@ -56,6 +59,13 @@ class AIRecommendationContainerViewController: UIViewController {
     var onActivitySelected: ((String) -> Void)?
     /// 활동 저장 후 ActivityList로 이동 요청
     var onNavigateToActivityList: (() -> Void)?
+
+    // AI 추천 API 호출 여부 추적 (횟수 차감 여부)
+    private var didCallAIRecommendation = false
+    // 이미 이벤트를 발생시켰는지 추적 (중복 방지)
+    private var didSendCompletionEvent = false
+    // AI 추천 요청 중 여부 (중복 요청 방지)
+    private var isLoadingAIRecommendation = false
 
     // MARK: - Initialization
 
@@ -105,6 +115,9 @@ class AIRecommendationContainerViewController: UIViewController {
         // 이전 AI 추천 결과 초기화 (새로운 세션 시작)
         viewModel?.clearAIRecommendationResult()
 
+        // 캐시된 닉네임 초기화 (계정 전환 시 이전 사용자 데이터 노출 방지)
+        cachedNickname = nil
+
         setupActions()
         bind()
 
@@ -112,6 +125,20 @@ class AIRecommendationContainerViewController: UIViewController {
             startAIRecommendation()
         } else {
             showIntro()
+        }
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+
+        // Home에서 사용 시 + AI 추천을 호출했지만 아직 이벤트를 발생시키지 않은 경우
+        // (활동을 저장하지 않고 바텀시트를 닫은 경우)
+        if viewModel != nil && didCallAIRecommendation && !didSendCompletionEvent {
+            if let hobbyId = requestedHobbyId {
+                print("🔄 AI 추천 호출됨 (선택하지 않음) - 홈 새로고침")
+                AppEventBus.shared.aiRecommendationCompleted.send(hobbyId)
+                didSendCompletionEvent = true
+            }
         }
     }
 }
@@ -179,7 +206,19 @@ extension AIRecommendationContainerViewController {
     }
 
     private func startAIRecommendation() {
+        // 중복 요청 방지
+        guard !isLoadingAIRecommendation else { return }
+        isLoadingAIRecommendation = true
+
+        // UI 상태 먼저 전환 (중복 호출 방지)
         currentStep = .loading
+
+        // hobbyId 요청 시점에 저장 (dismiss 시점 재조회 방지)
+        if let hobbyId = hobbyId {
+            requestedHobbyId = hobbyId
+        } else if let currentHobbyId = viewModel?.currentHobbyId {
+            requestedHobbyId = currentHobbyId
+        }
 
         // 취미명 결정
         let resolvedHobbyName: String
@@ -193,17 +232,18 @@ extension AIRecommendationContainerViewController {
             resolvedHobbyName = "취미"
         }
 
-        // 캐시된 닉네임이 있으면 바로 사용, 없으면 API 호출
+        // 닉네임 우선순위: 캐시 > ViewModel > API 호출
         if let cachedNickname = cachedNickname {
+            // 1순위: 캐시된 닉네임
             configureLoadingViewAndFetch(nickname: cachedNickname, hobbyName: resolvedHobbyName)
+        } else if let nickname = viewModel?.userInfo?.nickname {
+            // 2순위: HomeViewModel에 이미 로드된 닉네임
+            self.cachedNickname = nickname
+            configureLoadingViewAndFetch(nickname: nickname, hobbyName: resolvedHobbyName)
         } else {
-            // 임시로 "회원" 표시 후 닉네임 로드
-            loadingView.configure(nickname: "회원", hobbyName: resolvedHobbyName, showToast: isFullscreen)
-            transitionToView(loadingView)
-
-            // 닉네임 가져오기 및 AI 추천 동시 호출
+            // 3순위: API 호출 (닉네임 로드 후 화면 전환하여 깜빡임 방지)
             Task { [weak self] in
-                await self?.fetchNicknameAndAIRecommendations(hobbyName: resolvedHobbyName)
+                await self?.fetchNicknameAndShowLoading(hobbyName: resolvedHobbyName)
             }
         }
     }
@@ -228,8 +268,11 @@ extension AIRecommendationContainerViewController {
         let listView = AIActivityListView(hobbyId: hobbyId)
 
         // 저장 완료 시 바텀시트 닫지 않음 (토스트가 뷰 내에서 표시됨)
-        listView.onActivitySaved = {
+        listView.onActivitySaved = { [weak self] in
             print("✅ AI 추천 활동 저장 완료 (리스트)")
+            // AI 추천 완료 이벤트 발생 (홈 데이터 새로고침 트리거)
+            AppEventBus.shared.aiRecommendationCompleted.send(hobbyId)
+            self?.didSendCompletionEvent = true
         }
 
         // 토스트 "이동하기" 버튼 클릭 시 ActivityList로 이동
@@ -264,18 +307,29 @@ extension AIRecommendationContainerViewController {
         }
     }
 
-    private func fetchNicknameAndAIRecommendations(hobbyName: String) async {
-        // 닉네임 가져오기
+    /// 닉네임을 먼저 로드한 후 로딩 화면 표시 (깜빡임 방지)
+    private func fetchNicknameAndShowLoading(hobbyName: String) async {
+        // 닉네임 먼저 가져오기
+        let nickname: String
         do {
             let userInfo = try await fetchUserProfileUseCase.execute()
+            nickname = userInfo.nickname
             await MainActor.run {
-                self.cachedNickname = userInfo.nickname
-                // 로딩 뷰 업데이트
-                self.loadingView.configure(nickname: userInfo.nickname, hobbyName: hobbyName, showToast: self.isFullscreen)
+                self.cachedNickname = nickname
             }
         } catch {
             print("⚠️ 닉네임 로드 실패, 기본값 사용: \(error)")
-            // 실패 시 "회원" 유지
+            nickname = "회원"
+            await MainActor.run {
+                // 실패 시 캐시 초기화 (이전 사용자 데이터 노출 방지)
+                self.cachedNickname = nil
+            }
+        }
+
+        // 닉네임 로드 후 로딩 뷰 표시
+        await MainActor.run {
+            self.loadingView.configure(nickname: nickname, hobbyName: hobbyName, showToast: self.isFullscreen)
+            self.transitionToView(self.loadingView)
         }
 
         // AI 추천 호출
@@ -287,20 +341,32 @@ extension AIRecommendationContainerViewController {
             if let viewModel = viewModel {
                 // Home에서 사용 시
                 try await viewModel.fetchAIRecommendations()
+                // AI 추천 성공 - 횟수가 차감됨
+                await MainActor.run {
+                    self.didCallAIRecommendation = true
+                    self.isLoadingAIRecommendation = false
+                }
             } else if let hobbyId = hobbyId {
                 // 직접 hobbyId 전달 시
                 let result = try await fetchAIRecommendationsUseCase.execute(hobbyId: hobbyId)
                 await MainActor.run {
                     self.aiRecommendationResult = result
+                    // AI 추천 성공 - 횟수가 차감됨
+                    self.didCallAIRecommendation = true
+                    self.isLoadingAIRecommendation = false
                 }
             }
         } catch {
             // AI_CALL_LIMIT_EXCEEDED 에러 체크
             if isAICallLimitExceeded(error) {
                 await handleAICallLimitExceeded()
+                await MainActor.run {
+                    self.isLoadingAIRecommendation = false
+                }
             } else {
                 await MainActor.run {
                     self.showError(error)
+                    self.isLoadingAIRecommendation = false
                     if self.skipIntro {
                         self.dismiss(animated: true)
                     } else {
@@ -323,7 +389,7 @@ extension AIRecommendationContainerViewController {
 
     /// AI 호출 횟수 초과 시 최신 추천 목록 가져오기
     private func handleAICallLimitExceeded() async {
-        guard let hobbyId = hobbyId ?? viewModel?.currentHobbyId else {
+        guard let hobbyId = requestedHobbyId else {
             await MainActor.run {
                 self.showError(NSError(domain: "AIRecommendation", code: -1, userInfo: [NSLocalizedDescriptionKey: "취미 정보를 찾을 수 없습니다."]))
                 if self.skipIntro {
@@ -420,8 +486,11 @@ extension AIRecommendationContainerViewController {
             selectionView = AIActivitySelectionView(result: result, hobbyId: hobbyId, showNavigation: isFullscreen)
 
             // 저장 완료 시 바텀시트 닫지 않음 (토스트가 뷰 내에서 표시됨)
-            selectionView.onActivitySaved = {
+            selectionView.onActivitySaved = { [weak self] in
                 print("✅ AI 추천 활동 저장 완료")
+                // AI 추천 완료 이벤트 발생 (홈 데이터 새로고침 트리거)
+                AppEventBus.shared.aiRecommendationCompleted.send(hobbyId)
+                self?.didSendCompletionEvent = true
             }
 
             // 토스트 "이동하기" 버튼 클릭 시 ActivityList로 이동

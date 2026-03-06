@@ -56,4 +56,10 @@ final class AppEventBus {
 
     /// Published when scrap status changes (added or removed)
     let scrapDidUpdate = PassthroughSubject<Void, Never>()
+
+    // MARK: - AI Recommendation Events
+
+    /// Published when AI recommendation is completed (activity saved or selected)
+    /// Payload: hobbyId that the recommendation was made for
+    let aiRecommendationCompleted = PassthroughSubject<Int, Never>()
 }

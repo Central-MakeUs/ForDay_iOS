@@ -16,6 +16,7 @@ extension DTO {
 
     struct ActivityRecordDetailData: Codable {
         let hobbyId: Int
+        let hobbyName: String
         let activityId: Int?
         let activityContent: String
         let activityRecordId: Int
@@ -25,7 +26,7 @@ extension DTO {
         let memo: String?
         let recordOwner: Bool
         let scraped: Bool?
-        let userInfo: UserInfo?        
+        let userInfo: UserInfo?
         let visibility: String
         let newReaction: NewReaction
         let userReaction: UserReaction
@@ -59,6 +60,7 @@ extension DTO.ActivityRecordDetailResponse {
         return ActivityDetail(
             activityRecordId: data.activityRecordId,
             hobbyId: data.hobbyId,
+            hobbyName: data.hobbyName,
             activityId: data.activityId ?? 0,
             activityContent: data.activityContent,
             imageUrl: data.imageUrl ?? "",  // Handle optional imageUrl with empty string fallback
