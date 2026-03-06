@@ -47,6 +47,10 @@ final class ActivityDetailView: UIView {
     // User info (profile + nickname)
     let userInfoView = UserInfoView()
 
+    // Hobby name (category badge)
+    private let hobbyNameContainerView = UIView()
+    let hobbyNameLabel = UILabel()
+
     // Title at top (activity content)
     let titleLabel = UILabel()
 
@@ -105,6 +109,9 @@ final class ActivityDetailView: UIView {
             userInfoView.isHidden = true
         }
 
+        // Configure hobby name (category badge)
+        hobbyNameLabel.setTextWithTypography(detail.hobbyName, style: .label12)
+
         // Load sticker image
         if let stickerType = StickerType(fileName: detail.sticker) {
             stickerImageView.image = stickerType.image
@@ -156,17 +163,24 @@ final class ActivityDetailView: UIView {
 
     private func updateTitlePosition() {
         if userInfoView.isHidden {
-            titleLabel.snp.remakeConstraints {
+            // userInfoView가 숨김일 때: hobbyNameContainerView를 최상단에 배치
+            hobbyNameContainerView.snp.remakeConstraints {
                 $0.top.equalToSuperview().offset(16)
                 $0.leading.equalToSuperview().offset(20)
-                $0.trailing.equalToSuperview().offset(-20)
             }
         } else {
-            titleLabel.snp.remakeConstraints {
+            // userInfoView가 보일 때: hobbyNameContainerView를 userInfoView 아래에 배치
+            hobbyNameContainerView.snp.remakeConstraints {
                 $0.top.equalTo(userInfoView.snp.bottom).offset(8)
                 $0.leading.equalToSuperview().offset(20)
-                $0.trailing.equalToSuperview().offset(-20)
             }
+        }
+
+        // titleLabel은 항상 hobbyNameContainerView 아래에 배치
+        titleLabel.snp.remakeConstraints {
+            $0.top.equalTo(hobbyNameContainerView.snp.bottom).offset(10)
+            $0.leading.equalToSuperview().offset(20)
+            $0.trailing.equalToSuperview().offset(-20)
         }
     }
 
@@ -305,6 +319,16 @@ extension ActivityDetailView {
             $0.isHidden = true  // 기본적으로 숨김 (userInfo가 있을 때만 표시)
         }
 
+        hobbyNameContainerView.do {
+            $0.backgroundColor = .primary003
+            $0.layer.cornerRadius = 8
+        }
+
+        hobbyNameLabel.do {
+            $0.textColor = .action001
+            $0.textAlignment = .center
+        }
+
         titleLabel.do {
             $0.textColor = .neutral900
             $0.numberOfLines = 0
@@ -424,11 +448,15 @@ extension ActivityDetailView {
 
         // Add subviews to content view
         contentView.addSubview(userInfoView)
+        contentView.addSubview(hobbyNameContainerView)
         contentView.addSubview(titleLabel)
         contentView.addSubview(imageContainerView)
         contentView.addSubview(dateLabel)
         contentView.addSubview(memoContainerView)
         contentView.addSubview(memoStickerImageView)
+
+        // Hobby name container and label
+        hobbyNameContainerView.addSubview(hobbyNameLabel)
 
         // Image container (with padding)
         imageContainerView.addSubview(imageView)
@@ -445,9 +473,23 @@ extension ActivityDetailView {
             $0.height.equalTo(24)
         }
 
-        // Title at top left (below userInfoView if visible)
-        titleLabel.snp.makeConstraints {
+        // Hobby name container (category badge)
+        hobbyNameContainerView.snp.makeConstraints {
             $0.top.equalTo(userInfoView.snp.bottom).offset(8)
+            $0.leading.equalToSuperview().offset(20)
+        }
+
+        // Hobby name label
+        hobbyNameLabel.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(4)
+            $0.leading.equalToSuperview().offset(6)
+            $0.trailing.equalToSuperview().offset(-6)
+            $0.bottom.equalToSuperview().offset(-4)
+        }
+
+        // Title at top left (below hobbyNameContainerView)
+        titleLabel.snp.makeConstraints {
+            $0.top.equalTo(hobbyNameContainerView.snp.bottom).offset(10)
             $0.leading.equalToSuperview().offset(20)
             $0.trailing.equalToSuperview().offset(-20)
         }
