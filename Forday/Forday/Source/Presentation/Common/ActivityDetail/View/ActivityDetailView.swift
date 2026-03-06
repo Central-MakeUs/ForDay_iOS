@@ -27,6 +27,13 @@ final class ActivityDetailView: UIView {
         case afterRecord      // 기록 완료 후 (홈으로 가기 버튼 표시)
     }
 
+    // MARK: - Constants
+
+    private enum Layout {
+        /// ReactionButtonsView와 충돌하지 않도록 하는 하단 여백
+        static let bottomPadding: CGFloat = 80
+    }
+
     // MARK: - Properties
 
     private var displayMode: DisplayMode = .normal
@@ -110,7 +117,8 @@ final class ActivityDetailView: UIView {
         }
 
         // Configure hobby name (category badge)
-        hobbyNameLabel.setTextWithTypography(detail.hobbyName, style: .label12)
+        let displayHobbyName = detail.hobbyName.isEmpty ? "취미" : detail.hobbyName
+        hobbyNameLabel.setTextWithTypography(displayHobbyName, style: .label12)
 
         // Load sticker image
         if let stickerType = StickerType(fileName: detail.sticker) {
@@ -222,7 +230,7 @@ final class ActivityDetailView: UIView {
                 $0.top.equalTo(dateLabel.snp.bottom).offset(16)
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.equalToSuperview().offset(-20)
-                $0.bottom.equalToSuperview().offset(-80) // ReactionButtonsView 높이만큼 여유 공간
+                $0.bottom.equalToSuperview().offset(-Layout.bottomPadding)
             }
 
         case .withoutImage:
@@ -252,7 +260,7 @@ final class ActivityDetailView: UIView {
             }
             // contentView의 bottom을 메모 컨테이너에 연결 (충분한 패딩)
             memoContainerView.snp.makeConstraints {
-                $0.bottom.equalToSuperview().offset(-80) // ReactionButtonsView 높이만큼 여유 공간
+                $0.bottom.equalToSuperview().offset(-Layout.bottomPadding)
             }
 
         case .withoutImageAndMemo:
@@ -266,7 +274,7 @@ final class ActivityDetailView: UIView {
                 $0.top.equalTo(dateLabel.snp.bottom).offset(24)
                 $0.trailing.equalToSuperview().offset(-20)
                 $0.size.equalTo(80)
-                $0.bottom.equalToSuperview().offset(-80) // ReactionButtonsView 높이만큼 여유 공간
+                $0.bottom.equalToSuperview().offset(-Layout.bottomPadding)
             }
         }
     }

@@ -41,6 +41,9 @@ class AIRecommendationContainerViewController: UIViewController {
     // 캐시된 닉네임 (API 호출 후 저장)
     private var cachedNickname: String?
 
+    // AI 추천 요청 시점의 hobbyId (dismiss 시점 재조회 방지)
+    private var requestedHobbyId: Int?
+
     // AI 추천 결과 (직접 hobbyId 전달 시 사용)
     @Published private var aiRecommendationResult: AIRecommendationResult?
     @Published private var aiActivityItemsResult: AIActivityItemsResult?
@@ -61,6 +64,8 @@ class AIRecommendationContainerViewController: UIViewController {
     private var didCallAIRecommendation = false
     // 이미 이벤트를 발생시켰는지 추적 (중복 방지)
     private var didSendCompletionEvent = false
+    // AI 추천 요청 중 여부 (중복 요청 방지)
+    private var isLoadingAIRecommendation = false
 
     // MARK: - Initialization
 
@@ -110,6 +115,9 @@ class AIRecommendationContainerViewController: UIViewController {
         // 이전 AI 추천 결과 초기화 (새로운 세션 시작)
         viewModel?.clearAIRecommendationResult()
 
+        // 캐시된 닉네임 초기화 (계정 전환 시 이전 사용자 데이터 노출 방지)
+        cachedNickname = nil
+
         setupActions()
         bind()
 
@@ -126,7 +134,7 @@ class AIRecommendationContainerViewController: UIViewController {
         // Home에서 사용 시 + AI 추천을 호출했지만 아직 이벤트를 발생시키지 않은 경우
         // (활동을 저장하지 않고 바텀시트를 닫은 경우)
         if viewModel != nil && didCallAIRecommendation && !didSendCompletionEvent {
-            if let hobbyId = viewModel?.currentHobbyId {
+            if let hobbyId = requestedHobbyId {
                 print("🔄 AI 추천 호출됨 (선택하지 않음) - 홈 새로고침")
                 AppEventBus.shared.aiRecommendationCompleted.send(hobbyId)
                 didSendCompletionEvent = true
@@ -198,7 +206,19 @@ extension AIRecommendationContainerViewController {
     }
 
     private func startAIRecommendation() {
+        // 중복 요청 방지
+        guard !isLoadingAIRecommendation else { return }
+        isLoadingAIRecommendation = true
+
+        // UI 상태 먼저 전환 (중복 호출 방지)
         currentStep = .loading
+
+        // hobbyId 요청 시점에 저장 (dismiss 시점 재조회 방지)
+        if let hobbyId = hobbyId {
+            requestedHobbyId = hobbyId
+        } else if let currentHobbyId = viewModel?.currentHobbyId {
+            requestedHobbyId = currentHobbyId
+        }
 
         // 취미명 결정
         let resolvedHobbyName: String
@@ -300,6 +320,10 @@ extension AIRecommendationContainerViewController {
         } catch {
             print("⚠️ 닉네임 로드 실패, 기본값 사용: \(error)")
             nickname = "회원"
+            await MainActor.run {
+                // 실패 시 캐시 초기화 (이전 사용자 데이터 노출 방지)
+                self.cachedNickname = nil
+            }
         }
 
         // 닉네임 로드 후 로딩 뷰 표시
@@ -320,6 +344,7 @@ extension AIRecommendationContainerViewController {
                 // AI 추천 성공 - 횟수가 차감됨
                 await MainActor.run {
                     self.didCallAIRecommendation = true
+                    self.isLoadingAIRecommendation = false
                 }
             } else if let hobbyId = hobbyId {
                 // 직접 hobbyId 전달 시
@@ -328,15 +353,20 @@ extension AIRecommendationContainerViewController {
                     self.aiRecommendationResult = result
                     // AI 추천 성공 - 횟수가 차감됨
                     self.didCallAIRecommendation = true
+                    self.isLoadingAIRecommendation = false
                 }
             }
         } catch {
             // AI_CALL_LIMIT_EXCEEDED 에러 체크
             if isAICallLimitExceeded(error) {
                 await handleAICallLimitExceeded()
+                await MainActor.run {
+                    self.isLoadingAIRecommendation = false
+                }
             } else {
                 await MainActor.run {
                     self.showError(error)
+                    self.isLoadingAIRecommendation = false
                     if self.skipIntro {
                         self.dismiss(animated: true)
                     } else {
@@ -359,7 +389,7 @@ extension AIRecommendationContainerViewController {
 
     /// AI 호출 횟수 초과 시 최신 추천 목록 가져오기
     private func handleAICallLimitExceeded() async {
-        guard let hobbyId = hobbyId ?? viewModel?.currentHobbyId else {
+        guard let hobbyId = requestedHobbyId else {
             await MainActor.run {
                 self.showError(NSError(domain: "AIRecommendation", code: -1, userInfo: [NSLocalizedDescriptionKey: "취미 정보를 찾을 수 없습니다."]))
                 if self.skipIntro {
