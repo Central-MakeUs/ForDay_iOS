@@ -10,6 +10,7 @@ import Foundation
 struct ActivityDetail {
     let activityRecordId: Int
     let hobbyId: Int
+    let hobbyName: String
     let activityId: Int
     let activityContent: String
     let imageUrl: String
@@ -56,6 +57,7 @@ extension ActivityDetail {
         ActivityDetail(
             activityRecordId: 1,
             hobbyId: 1,
+            hobbyName: "러닝",
             activityId: 1,
             activityContent: "아침 러닝 10km",
             imageUrl: "https://picsum.photos/300/300",
@@ -75,6 +77,7 @@ extension ActivityDetail {
         ActivityDetail(
             activityRecordId: 2,
             hobbyId: 1,
+            hobbyName: "요가",
             activityId: 2,
             activityContent: "저녁 요가 60분",
             imageUrl: "https://picsum.photos/300/300",
@@ -94,6 +97,7 @@ extension ActivityDetail {
         ActivityDetail(
             activityRecordId: 3,
             hobbyId: 2,
+            hobbyName: "음악 듣기",
             activityId: 3,
             activityContent: "기타 연습 2시간",
             imageUrl: "https://picsum.photos/300/300",
@@ -113,6 +117,7 @@ extension ActivityDetail {
         ActivityDetail(
             activityRecordId: 4,
             hobbyId: 3,
+            hobbyName: "독서",
             activityId: 4,
             activityContent: "독서 1시간",
             imageUrl: "https://picsum.photos/300/300",
