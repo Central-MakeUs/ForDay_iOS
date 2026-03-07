@@ -15,10 +15,11 @@ struct APIConstants {
 //        return "http://localhost:8080"
         return "https://forday.kr"
         #else
-        guard let ip = Bundle.main.infoDictionary?["LOCAL_MAC_IP"] as? String else {
-            fatalError("LOCAL_MAC_IP not found in Info.plist")
-        }
-        return "http://\(ip):8080"
+//        guard let ip = Bundle.main.infoDictionary?["LOCAL_MAC_IP"] as? String else {
+//            fatalError("LOCAL_MAC_IP not found in Info.plist")
+//        }
+//        return "http://\(ip):8080"
+        return "https://forday.kr"
         #endif
         #else
         // 배포 환경: Config.xcconfig의 BASE_URL 사용

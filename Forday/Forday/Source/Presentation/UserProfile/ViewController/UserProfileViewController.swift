@@ -30,7 +30,7 @@ final class UserProfileViewController: UIViewController {
 
     // Dropdown
     private var dropdownBackgroundView: UIView?
-    private var dropdownView: DropdownMenuView<UserProfileMenuItem>?
+    private var dropdownView: DropdownMenuView?
 
     // Track if this is the first load
     private var isFirstLoad = true
@@ -302,7 +302,8 @@ extension UserProfileViewController {
         // Dropdown menu
         let dropdown = DropdownMenuView(items: UserProfileMenuItem.menuItems)
         dropdown.onItemSelected = { [weak self] menuItem in
-            self?.handleMenuSelection(menuItem)
+            guard let item = menuItem as? UserProfileMenuItem else { return }
+            self?.handleMenuSelection(item)
         }
         dropdown.showInParent(view, below: userProfileView.moreButton)
 

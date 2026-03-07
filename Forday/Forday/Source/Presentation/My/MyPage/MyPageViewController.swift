@@ -34,7 +34,7 @@ final class MyPageViewController: UIViewController {
 
     // Settings dropdown
     private var settingsDropdownBackgroundView: UIView?
-    private var settingsDropdownView: UIView?  // Either DropdownMenuView<MySettingsMenuItem> or DropdownMenuView<GuestSettingsMenuItem>
+    private var settingsDropdownView: UIView?  // DropdownMenuView
 
     // Guest login bottom sheet
     private var hasShownGuestLoginSheet = false
@@ -391,7 +391,8 @@ extension MyPageViewController {
             // Social login user: Show full menu with styled "전체설정"
             let dropdownView = DropdownMenuView(items: MySettingsMenuItem.socialLoginMenuItems)
             dropdownView.onItemSelected = { [weak self] menuItem in
-                self?.handleSettingsMenuSelection(menuItem)
+                guard let item = menuItem as? MySettingsMenuItem else { return }
+                self?.handleSettingsMenuSelection(item)
             }
             dropdownView.showInParent(view, below: myPageView.settingsButton)
             settingsDropdownView = dropdownView
@@ -402,10 +403,8 @@ extension MyPageViewController {
     }
 
     @objc private func dismissSettingsDropdown() {
-        // Dismiss dropdown (handle both types)
-        if let dropdown = settingsDropdownView as? DropdownMenuView<MySettingsMenuItem> {
-            dropdown.dismiss()
-        } else if let dropdown = settingsDropdownView as? DropdownMenuView<GuestSettingsMenuItem> {
+        // Dismiss dropdown
+        if let dropdown = settingsDropdownView as? DropdownMenuView {
             dropdown.dismiss()
         }
         settingsDropdownBackgroundView?.removeFromSuperview()

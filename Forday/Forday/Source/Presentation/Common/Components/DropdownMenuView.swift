@@ -24,19 +24,20 @@ extension DropdownMenuItem {
 
 // MARK: - DropdownMenuView
 
-final class DropdownMenuView<Item: DropdownMenuItem>: UIView {
+final class DropdownMenuView: UIView {
 
     // MARK: - Properties
 
     private let containerView = UIView()
     private let stackView = UIStackView()
-    private let items: [Item]
+    private let items: [any DropdownMenuItem]
+    private var itemViews: [(view: UIView, item: any DropdownMenuItem)] = []
 
-    var onItemSelected: ((Item) -> Void)?
+    var onItemSelected: ((any DropdownMenuItem) -> Void)?
 
     // MARK: - Initialization
 
-    init(items: [Item]) {
+    init(items: [any DropdownMenuItem]) {
         self.items = items
         super.init(frame: .zero)
         style()
@@ -46,6 +47,27 @@ final class DropdownMenuView<Item: DropdownMenuItem>: UIView {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    // MARK: - Actions
+
+    @objc private func handleMenuItemTap(_ gesture: UITapGestureRecognizer) {
+        guard let tappedView = gesture.view else { return }
+
+        if let matched = itemViews.first(where: { $0.view === tappedView }) {
+            UIView.animate(
+                withDuration: 0.1,
+                animations: {
+                    tappedView.alpha = 0.6
+                },
+                completion: { [weak self] _ in
+                    UIView.animate(withDuration: 0.1) {
+                        tappedView.alpha = 1
+                    }
+                    self?.onItemSelected?(matched.item)
+                }
+            )
+        }
     }
 }
 
@@ -89,16 +111,34 @@ extension DropdownMenuView {
 
     private func setupMenuItems() {
         for item in items {
-            let menuItemView = DropdownMenuItemView(
-                title: item.title,
-                textColor: item.textColor,
-                fontWeight: item.fontWeight
-            )
-            menuItemView.onTap = { [weak self] in
-                self?.onItemSelected?(item)
-            }
+            let menuItemView = createMenuItemView(for: item)
+            itemViews.append((view: menuItemView, item: item))
             stackView.addArrangedSubview(menuItemView)
         }
+    }
+
+    private func createMenuItemView(for item: any DropdownMenuItem) -> UIView {
+        let itemView = UIView()
+        let label = UILabel()
+
+        label.setTextWithTypography(item.title, style: item.fontWeight)
+        label.textColor = item.textColor
+
+        itemView.addSubview(label)
+
+        itemView.snp.makeConstraints {
+            $0.height.equalTo(40)
+        }
+
+        label.snp.makeConstraints {
+            $0.leading.equalToSuperview()
+            $0.centerY.equalToSuperview()
+        }
+
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleMenuItemTap(_:)))
+        itemView.addGestureRecognizer(tapGesture)
+
+        return itemView
     }
 }
 
@@ -159,84 +199,6 @@ extension DropdownMenuView {
             self.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
         }) { _ in
             self.removeFromSuperview()
-        }
-    }
-}
-
-// MARK: - DropdownMenuItemView
-
-private final class DropdownMenuItemView: UIView {
-
-    // MARK: - Properties
-
-    private let titleLabel = UILabel()
-    private let title: String
-    private let textColor: UIColor
-    private let fontWeight: TypographyStyle
-
-    var onTap: (() -> Void)?
-
-    // MARK: - Initialization
-
-    init(title: String, textColor: UIColor, fontWeight: TypographyStyle) {
-        self.title = title
-        self.textColor = textColor
-        self.fontWeight = fontWeight
-        super.init(frame: .zero)
-        style()
-        layout()
-        setupGesture()
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    // MARK: - Gesture
-
-    private func setupGesture() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
-        addGestureRecognizer(tapGesture)
-    }
-
-    @objc private func handleTap() {
-        UIView.animate(
-            withDuration: 0.1,
-            animations: { [weak self] in
-                self?.alpha = 0.6
-            },
-            completion: { [weak self] _ in
-                UIView.animate(withDuration: 0.1) {
-                    self?.alpha = 1
-                }
-                self?.onTap?()
-            }
-        )
-    }
-}
-
-// MARK: - Setup
-
-extension DropdownMenuItemView {
-    private func style() {
-        backgroundColor = .clear
-
-        titleLabel.do {
-            $0.setTextWithTypography(title, style: fontWeight)
-            $0.textColor = textColor
-        }
-    }
-
-    private func layout() {
-        addSubview(titleLabel)
-
-        snp.makeConstraints {
-            $0.height.equalTo(40)
-        }
-
-        titleLabel.snp.makeConstraints {
-            $0.leading.equalToSuperview()
-            $0.centerY.equalToSuperview()
         }
     }
 }
