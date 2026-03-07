@@ -18,10 +18,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         FirebaseApp.configure()
 
 #if DEBUG
-        if ProcessInfo.processInfo.environment["CLEAR_TOKENS_ON_LAUNCH"] == "YES" {
-            try? TokenStorage.shared.deleteAllTokens()
-            print("🔧 [DEBUG] 토큰 삭제됨 - 로그인 화면으로 이동")
-        }
+//        if ProcessInfo.processInfo.environment["CLEAR_TOKENS_ON_LAUNCH"] == "YES" {
+//            try? TokenStorage.shared.deleteAllTokens()
+//            print("🔧 [DEBUG] 토큰 삭제됨 - 로그인 화면으로 이동")
+//        }
 
         // 앱 인트로 테스트용 - 주석 해제하면 매 빌드마다 앱 소개 화면 표시
         // AppLaunchStorage.shared.resetAppIntroStatus()

@@ -89,7 +89,11 @@ extension DropdownMenuView {
 
     private func setupMenuItems() {
         for item in items {
-            let menuItemView = DropdownMenuItemView(item: item)
+            let menuItemView = DropdownMenuItemView(
+                title: item.title,
+                textColor: item.textColor,
+                fontWeight: item.fontWeight
+            )
             menuItemView.onTap = { [weak self] in
                 self?.onItemSelected?(item)
             }
@@ -101,13 +105,12 @@ extension DropdownMenuView {
 // MARK: - Public Methods
 
 extension DropdownMenuView {
-    /// parentView에 추가하고 sourceView 아래에 표시
     func showInParent(_ parentView: UIView, below sourceView: UIView, width: CGFloat = 200) {
         isHidden = false
         parentView.addSubview(self)
 
         let itemHeight: CGFloat = 40
-        let verticalPadding: CGFloat = 20 // 10px top + 10px bottom
+        let verticalPadding: CGFloat = 20
         let totalHeight = CGFloat(items.count) * itemHeight + verticalPadding
 
         self.snp.makeConstraints {
@@ -126,13 +129,12 @@ extension DropdownMenuView {
         }
     }
 
-    /// navigationBar 아래에 표시
     func showInParent(_ parentView: UIView, belowNavigationBar navigationBar: UINavigationBar, trailingOffset: CGFloat = 16, width: CGFloat = 200) {
         isHidden = false
         parentView.addSubview(self)
 
         let itemHeight: CGFloat = 40
-        let verticalPadding: CGFloat = 20 // 10px top + 10px bottom
+        let verticalPadding: CGFloat = 20
         let totalHeight = CGFloat(items.count) * itemHeight + verticalPadding
 
         self.snp.makeConstraints {
@@ -151,7 +153,6 @@ extension DropdownMenuView {
         }
     }
 
-    /// 드롭다운 닫기
     func dismiss() {
         UIView.animate(withDuration: 0.15, delay: 0, options: .curveEaseIn, animations: {
             self.alpha = 0
@@ -164,19 +165,23 @@ extension DropdownMenuView {
 
 // MARK: - DropdownMenuItemView
 
-private final class DropdownMenuItemView<Item: DropdownMenuItem>: UIView {
+private final class DropdownMenuItemView: UIView {
 
     // MARK: - Properties
 
     private let titleLabel = UILabel()
-    private let item: Item
+    private let title: String
+    private let textColor: UIColor
+    private let fontWeight: TypographyStyle
 
     var onTap: (() -> Void)?
 
     // MARK: - Initialization
 
-    init(item: Item) {
-        self.item = item
+    init(title: String, textColor: UIColor, fontWeight: TypographyStyle) {
+        self.title = title
+        self.textColor = textColor
+        self.fontWeight = fontWeight
         super.init(frame: .zero)
         style()
         layout()
@@ -187,7 +192,7 @@ private final class DropdownMenuItemView<Item: DropdownMenuItem>: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - Gesture (must be in main class body for generic classes)
+    // MARK: - Gesture
 
     private func setupGesture() {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
@@ -195,7 +200,6 @@ private final class DropdownMenuItemView<Item: DropdownMenuItem>: UIView {
     }
 
     @objc private func handleTap() {
-        // 탭 피드백 애니메이션
         UIView.animate(
             withDuration: 0.1,
             animations: { [weak self] in
@@ -218,8 +222,8 @@ extension DropdownMenuItemView {
         backgroundColor = .clear
 
         titleLabel.do {
-            $0.setTextWithTypography(item.title, style: item.fontWeight)
-            $0.textColor = item.textColor
+            $0.setTextWithTypography(title, style: fontWeight)
+            $0.textColor = textColor
         }
     }
 
