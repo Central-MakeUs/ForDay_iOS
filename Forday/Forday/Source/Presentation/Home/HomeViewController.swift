@@ -32,7 +32,7 @@ class HomeViewController: UIViewController {
 
     // Settings Dropdown
     private var settingsDropdownBackgroundView: UIView?
-    private var settingsDropdownView: DropdownMenuView<HomeSettingsMenuItem>?
+    private var settingsDropdownView: DropdownMenuView?
     
     // Lifecycle
     
@@ -504,7 +504,8 @@ extension HomeViewController {
         // 드롭다운 생성
         let dropdownView = DropdownMenuView(items: menuItems)
         dropdownView.onItemSelected = { [weak self] menuItem in
-            self?.handleSettingsDropdownOption(menuItem)
+            guard let item = menuItem as? HomeSettingsMenuItem else { return }
+            self?.handleSettingsDropdownOption(item)
         }
 
         // 드롭다운 표시
