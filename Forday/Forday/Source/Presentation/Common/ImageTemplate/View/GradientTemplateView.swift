@@ -18,7 +18,6 @@ final class GradientTemplateView: UIView {
     private enum Layout {
         // 템플릿 전체 크기 (CardTemplateView와 동일)
         static let templateSize = CGSize(width: 250.5, height: 360)
-        static let cornerRadius: CGFloat = 16
 
         // 로고 (우상단)
         static let logoWidth: CGFloat = 48
@@ -150,7 +149,6 @@ final class GradientTemplateView: UIView {
 extension GradientTemplateView {
     private func style() {
         backgroundColor = .clear
-        layer.cornerRadius = Layout.cornerRadius
         clipsToBounds = true
 
         photoImageView.do {

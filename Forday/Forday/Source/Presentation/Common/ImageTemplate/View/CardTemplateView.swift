@@ -18,7 +18,6 @@ final class CardTemplateView: UIView {
     private enum Layout {
         // 템플릿 전체 크기
         static let templateSize = CGSize(width: 250.5, height: 360)
-        static let backgroundCornerRadius: CGFloat = 16
         static let backgroundHorizontalPadding: CGFloat = 20  // px-20
         static let backgroundVerticalPadding: CGFloat = 28    // py-28
 
@@ -138,7 +137,6 @@ extension CardTemplateView {
         backgroundImageView.do {
             $0.contentMode = .scaleAspectFill
             $0.clipsToBounds = true
-            $0.layer.cornerRadius = Layout.backgroundCornerRadius
         }
 
         cardContainerView.do {
