@@ -15,6 +15,8 @@ class ActivityRecordViewModel {
 
     // Published Properties
 
+    @Published var hobbyChips: [HobbyChip] = []
+    @Published var selectedHobbyId: Int?
     @Published var selectedActivity: Activity?
     @Published var selectedSticker: Sticker?
     @Published var memo: String = ""
@@ -62,6 +64,7 @@ class ActivityRecordViewModel {
     private var cancellables = Set<AnyCancellable>()
 
     // UseCase
+    private let fetchHobbyChipsUseCase: FetchHobbyChipsUseCase
     private let fetchActivityListUseCase: FetchActivityDropdownListUseCase
     private let uploadImageUseCase: UploadImageUseCase
     private let deleteImageUseCase: DeleteImageUseCase
@@ -90,6 +93,7 @@ class ActivityRecordViewModel {
         hobbyId: Int,
         activityDetail: ActivityDetail? = nil,
         preselectedActivityId: Int? = nil,
+        fetchHobbyChipsUseCase: FetchHobbyChipsUseCase = FetchHobbyChipsUseCase(),
         fetchActivityListUseCase: FetchActivityDropdownListUseCase = FetchActivityDropdownListUseCase(),
         uploadImageUseCase: UploadImageUseCase = UploadImageUseCase(),
         deleteImageUseCase: DeleteImageUseCase = DeleteImageUseCase(),
@@ -99,11 +103,13 @@ class ActivityRecordViewModel {
         self.hobbyId = hobbyId
         self.activityDetail = activityDetail
         self.preselectedActivityId = preselectedActivityId
+        self.fetchHobbyChipsUseCase = fetchHobbyChipsUseCase
         self.fetchActivityListUseCase = fetchActivityListUseCase
         self.uploadImageUseCase = uploadImageUseCase
         self.deleteImageUseCase = deleteImageUseCase
         self.createActivityRecordUseCase = createActivityRecordUseCase
         self.updateActivityRecordUseCase = updateActivityRecordUseCase
+        self.selectedHobbyId = hobbyId
         bind()
         loadExistingData()
     }
@@ -159,8 +165,26 @@ class ActivityRecordViewModel {
         selectedSticker = sticker
     }
 
+    func fetchHobbyChips() async throws {
+        let fetchedChips = try await fetchHobbyChipsUseCase.execute(status: "IN_PROGRESS")
+        await MainActor.run {
+            self.hobbyChips = fetchedChips
+        }
+    }
+
+    func selectHobbyChip(_ hobbyChip: HobbyChip) {
+        // Don't allow selection of already recorded hobbies
+        guard !hobbyChip.todayRecorded else { return }
+
+        selectedHobbyId = hobbyChip.hobbyId
+        // Clear selected activity when hobby changes
+        selectedActivity = nil
+    }
+
     func fetchActivityList() async throws {
-        let fetchedActivities = try await fetchActivityListUseCase.execute(hobbyId: hobbyId)
+        // Use selected hobby ID from chip selection, fallback to initial hobbyId
+        let targetHobbyId = selectedHobbyId ?? hobbyId
+        let fetchedActivities = try await fetchActivityListUseCase.execute(hobbyId: targetHobbyId)
         await MainActor.run {
             self.activities = fetchedActivities
 

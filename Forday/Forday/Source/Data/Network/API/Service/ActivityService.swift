@@ -59,6 +59,12 @@ final class ActivityService {
         return try await provider.request(.fetchAIActivityItems(hobbyId: hobbyId, type: type))
     }
 
+    // MARK: - 활동 기록 - 취미 칩 목록 조회
+
+    func fetchHobbyChips(status: String = "IN_PROGRESS") async throws -> DTO.HobbyChipsResponse {
+        return try await provider.request(.fetchHobbyChips(status: status))
+    }
+
     // MARK: - 활동 목록 조회
 
     func fetchActivityList(hobbyId: Int) async throws -> DTO.ActivityListResponse {

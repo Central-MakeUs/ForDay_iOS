@@ -55,6 +55,7 @@ class ActivityRecordViewController: UIViewController {
         setupActions()
         bind()
         setupForEditMode()
+        fetchHobbyChips()
         fetchActivities()
     }
 
@@ -100,6 +101,10 @@ extension ActivityRecordViewController {
     }
     
     private func setupActions() {
+        // 취미 칩 선택
+        recordView.hobbyChipCollectionView.delegate = self
+        recordView.hobbyChipCollectionView.dataSource = self
+
         // 스티커 선택
         recordView.stickerCollectionView.delegate = self
         recordView.stickerCollectionView.dataSource = self
@@ -156,6 +161,24 @@ extension ActivityRecordViewController {
     }
 
     private func bind() {
+        // 취미 칩 목록
+        viewModel.$hobbyChips
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.recordView.hobbyChipCollectionView.reloadData()
+            }
+            .store(in: &cancellables)
+
+        // 선택된 취미 칩 변경 시 활동 목록 새로고침
+        viewModel.$selectedHobbyId
+            .dropFirst() // 초기값 무시
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.recordView.hobbyChipCollectionView.reloadData()
+                self?.fetchActivities()
+            }
+            .store(in: &cancellables)
+
         // 활동 선택
         viewModel.$selectedActivity
             .receive(on: DispatchQueue.main)
@@ -222,6 +245,17 @@ extension ActivityRecordViewController {
         Task { [weak self] in
             guard let self = self else { return }
             await self.viewModel.loadOriginalImage()
+        }
+    }
+
+    private func fetchHobbyChips() {
+        Task { [weak self] in
+            guard let self = self else { return }
+            do {
+                try await self.viewModel.fetchHobbyChips()
+            } catch {
+                print("❌ 취미 칩 목록 로드 실패: \(error)")
+            }
         }
     }
 
@@ -513,27 +547,52 @@ extension ActivityRecordViewController {
 extension ActivityRecordViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return viewModel.stickers.count
+        if collectionView == recordView.hobbyChipCollectionView {
+            return viewModel.hobbyChips.count
+        } else {
+            return viewModel.stickers.count
+        }
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "StickerCell", for: indexPath) as? StickerCell else {
-            return UICollectionViewCell()
+        if collectionView == recordView.hobbyChipCollectionView {
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "HobbyChipCell", for: indexPath) as? HobbyChipCell else {
+                return UICollectionViewCell()
+            }
+
+            let hobbyChip = viewModel.hobbyChips[indexPath.item]
+            let isSelected = hobbyChip.hobbyId == viewModel.selectedHobbyId
+            cell.configure(with: hobbyChip, isSelected: isSelected)
+
+            return cell
+        } else {
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "StickerCell", for: indexPath) as? StickerCell else {
+                return UICollectionViewCell()
+            }
+
+            let sticker = viewModel.stickers[indexPath.item]
+            cell.configure(with: sticker, isSelected: viewModel.selectedSticker == sticker)
+
+            return cell
         }
-
-        let sticker = viewModel.stickers[indexPath.item]
-        cell.configure(with: sticker, isSelected: viewModel.selectedSticker == sticker)
-
-        return cell
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let sticker = viewModel.stickers[indexPath.item]
-        viewModel.selectSticker(sticker)
-        collectionView.reloadData()
+        if collectionView == recordView.hobbyChipCollectionView {
+            let hobbyChip = viewModel.hobbyChips[indexPath.item]
+            viewModel.selectHobbyChip(hobbyChip)
+        } else {
+            let sticker = viewModel.stickers[indexPath.item]
+            viewModel.selectSticker(sticker)
+            collectionView.reloadData()
+        }
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        // Hobby chip은 automaticSize 사용, sticker는 고정 크기
+        if collectionView == recordView.stickerCollectionView {
+            return CGSize(width: 64, height: 64)
+        }
         return CGSize(width: 64, height: 64)
     }
 }
