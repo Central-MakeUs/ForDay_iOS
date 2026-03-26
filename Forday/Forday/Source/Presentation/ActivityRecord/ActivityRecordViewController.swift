@@ -55,7 +55,10 @@ class ActivityRecordViewController: UIViewController {
         setupActions()
         bind()
         setupForEditMode()
-        fetchHobbyChips()
+        // 수정 모드가 아닐 때만 취미 칩 목록 가져오기 (수정 모드는 현재 취미만 표시)
+        if !viewModel.isEditMode {
+            fetchHobbyChips()
+        }
         fetchActivities()
     }
 
@@ -235,6 +238,11 @@ extension ActivityRecordViewController {
 
             // 공개범위 UI 설정
             updatePrivacyButton(viewModel.privacy)
+
+            // 단일 취미 칩 표시 (수정 모드)
+            if let firstChip = viewModel.displayedHobbyChips.first {
+                recordView.showSingleHobbyChip(firstChip.hobbyName, show: true)
+            }
 
             // 기존 이미지 로드
             loadExistingImage()
@@ -548,7 +556,7 @@ extension ActivityRecordViewController: UICollectionViewDelegate, UICollectionVi
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if collectionView == recordView.hobbyChipCollectionView {
-            return viewModel.hobbyChips.count
+            return viewModel.displayedHobbyChips.count
         } else {
             return viewModel.stickers.count
         }
@@ -560,7 +568,7 @@ extension ActivityRecordViewController: UICollectionViewDelegate, UICollectionVi
                 return UICollectionViewCell()
             }
 
-            let hobbyChip = viewModel.hobbyChips[indexPath.item]
+            let hobbyChip = viewModel.displayedHobbyChips[indexPath.item]
             let isSelected = hobbyChip.hobbyId == viewModel.selectedHobbyId
             cell.configure(with: hobbyChip, isSelected: isSelected)
 
@@ -579,7 +587,10 @@ extension ActivityRecordViewController: UICollectionViewDelegate, UICollectionVi
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if collectionView == recordView.hobbyChipCollectionView {
-            let hobbyChip = viewModel.hobbyChips[indexPath.item]
+            // 수정 모드에서는 취미 변경 불가
+            guard !viewModel.isEditMode else { return }
+
+            let hobbyChip = viewModel.displayedHobbyChips[indexPath.item]
             viewModel.selectHobbyChip(hobbyChip)
         } else {
             let sticker = viewModel.stickers[indexPath.item]

@@ -18,6 +18,12 @@ class ActivityRecordViewModel {
     @Published var hobbyChips: [HobbyChip] = []
     @Published var selectedHobbyId: Int?
     @Published var selectedActivity: Activity?
+
+    /// 화면에 표시할 취미 칩 목록 (수정 모드: 선택된 것만, 생성 모드: 전체)
+    var displayedHobbyChips: [HobbyChip] {
+        // 수정 모드에서는 loadExistingData()에서 이미 1개만 설정했으므로 전체 반환
+        return hobbyChips
+    }
     @Published var selectedSticker: Sticker?
     @Published var memo: String = ""
     @Published var privacy: Privacy = .public
@@ -131,6 +137,14 @@ class ActivityRecordViewModel {
         if !detail.imageUrl.isEmpty {
             originalImageUrl = detail.imageUrl
         }
+
+        // 수정 모드: 현재 취미 칩만 생성
+        let currentHobbyChip = HobbyChip(
+            hobbyId: detail.hobbyId,
+            hobbyName: detail.hobbyName,
+            todayRecorded: false  // 수정 모드에서는 의미 없음
+        )
+        hobbyChips = [currentHobbyChip]
 
         // Note: selectedActivity and selectedSticker will be set after fetching activity list
         // We'll match them by activityId and sticker filename
