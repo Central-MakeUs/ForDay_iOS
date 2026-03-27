@@ -600,11 +600,13 @@ extension ActivityRecordViewController: UICollectionViewDelegate, UICollectionVi
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        // Hobby chip은 automaticSize 사용, sticker는 고정 크기
         if collectionView == recordView.stickerCollectionView {
             return CGSize(width: 64, height: 64)
         }
-        return CGSize(width: 64, height: 64)
+
+        // Hobby chip: Cell이 텍스트 길이에 따라 크기 계산
+        let hobbyChip = viewModel.displayedHobbyChips[indexPath.item]
+        return HobbyChipCell.size(for: hobbyChip)
     }
 }
 

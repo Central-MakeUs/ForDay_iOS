@@ -33,6 +33,18 @@ class HobbyChipCell: UICollectionViewCell {
         return CGSize(width: labelSize.width + 24, height: 32)
     }
 
+    // Size Calculation
+
+    static func size(for hobbyChip: HobbyChip) -> CGSize {
+        let label = UILabel()
+        label.setTextWithTypography(hobbyChip.hobbyName, style: .body14)
+        label.sizeToFit()
+
+        // 좌우 패딩 12 * 2 = 24
+        let width = label.frame.width + 24
+        return CGSize(width: width, height: 32)
+    }
+
     // Setup
 
     private func style() {
