@@ -15,7 +15,15 @@ class ActivityRecordViewModel {
 
     // Published Properties
 
+    @Published var hobbyChips: [HobbyChip] = []
+    @Published var selectedHobbyId: Int?
     @Published var selectedActivity: Activity?
+
+    /// 화면에 표시할 취미 칩 목록 (수정 모드: 선택된 것만, 생성 모드: 전체)
+    var displayedHobbyChips: [HobbyChip] {
+        // 수정 모드에서는 loadExistingData()에서 이미 1개만 설정했으므로 전체 반환
+        return hobbyChips
+    }
     @Published var selectedSticker: Sticker?
     @Published var memo: String = ""
     @Published var privacy: Privacy = .public
@@ -53,15 +61,16 @@ class ActivityRecordViewModel {
 
     // Mock Data
     let stickers: [Sticker] = [
-        Sticker(id: 1, image: .My.smileJpg, type: .smile),
-        Sticker(id: 2, image: .My.sadJpg, type: .sad),
         Sticker(id: 3, image: .My.laughJpg, type: .laugh),
-        Sticker(id: 4, image: .My.angryJpg, type: .angry)
+        Sticker(id: 1, image: .My.smileJpg, type: .smile),
+        Sticker(id: 4, image: .My.angryJpg, type: .angry),
+        Sticker(id: 2, image: .My.sadJpg, type: .sad)
     ]
 
     private var cancellables = Set<AnyCancellable>()
 
     // UseCase
+    private let fetchHobbyChipsUseCase: FetchHobbyChipsUseCase
     private let fetchActivityListUseCase: FetchActivityDropdownListUseCase
     private let uploadImageUseCase: UploadImageUseCase
     private let deleteImageUseCase: DeleteImageUseCase
@@ -90,6 +99,7 @@ class ActivityRecordViewModel {
         hobbyId: Int,
         activityDetail: ActivityDetail? = nil,
         preselectedActivityId: Int? = nil,
+        fetchHobbyChipsUseCase: FetchHobbyChipsUseCase = FetchHobbyChipsUseCase(),
         fetchActivityListUseCase: FetchActivityDropdownListUseCase = FetchActivityDropdownListUseCase(),
         uploadImageUseCase: UploadImageUseCase = UploadImageUseCase(),
         deleteImageUseCase: DeleteImageUseCase = DeleteImageUseCase(),
@@ -99,11 +109,13 @@ class ActivityRecordViewModel {
         self.hobbyId = hobbyId
         self.activityDetail = activityDetail
         self.preselectedActivityId = preselectedActivityId
+        self.fetchHobbyChipsUseCase = fetchHobbyChipsUseCase
         self.fetchActivityListUseCase = fetchActivityListUseCase
         self.uploadImageUseCase = uploadImageUseCase
         self.deleteImageUseCase = deleteImageUseCase
         self.createActivityRecordUseCase = createActivityRecordUseCase
         self.updateActivityRecordUseCase = updateActivityRecordUseCase
+        self.selectedHobbyId = hobbyId
         bind()
         loadExistingData()
     }
@@ -125,6 +137,14 @@ class ActivityRecordViewModel {
         if !detail.imageUrl.isEmpty {
             originalImageUrl = detail.imageUrl
         }
+
+        // 수정 모드: 현재 취미 칩만 생성
+        let currentHobbyChip = HobbyChip(
+            hobbyId: detail.hobbyId,
+            hobbyName: detail.hobbyName,
+            todayRecorded: false  // 수정 모드에서는 의미 없음
+        )
+        hobbyChips = [currentHobbyChip]
 
         // Note: selectedActivity and selectedSticker will be set after fetching activity list
         // We'll match them by activityId and sticker filename
@@ -159,8 +179,26 @@ class ActivityRecordViewModel {
         selectedSticker = sticker
     }
 
+    func fetchHobbyChips() async throws {
+        let fetchedChips = try await fetchHobbyChipsUseCase.execute(status: "IN_PROGRESS")
+        await MainActor.run {
+            self.hobbyChips = fetchedChips
+        }
+    }
+
+    func selectHobbyChip(_ hobbyChip: HobbyChip) {
+        // Don't allow selection of already recorded hobbies
+        guard !hobbyChip.todayRecorded else { return }
+
+        selectedHobbyId = hobbyChip.hobbyId
+        // Clear selected activity when hobby changes
+        selectedActivity = nil
+    }
+
     func fetchActivityList() async throws {
-        let fetchedActivities = try await fetchActivityListUseCase.execute(hobbyId: hobbyId)
+        // Use selected hobby ID from chip selection, fallback to initial hobbyId
+        let targetHobbyId = selectedHobbyId ?? hobbyId
+        let fetchedActivities = try await fetchActivityListUseCase.execute(hobbyId: targetHobbyId)
         await MainActor.run {
             self.activities = fetchedActivities
 

@@ -63,6 +63,11 @@ final class HobbyRepository: HobbyRepositoryInterface {
         return response.toDomain()
     }
 
+    func fetchHobbyChips(status: String = "IN_PROGRESS") async throws -> [HobbyChip] {
+        let response = try await activityService.fetchHobbyChips(status: status)
+        return response.toDomain()
+    }
+
     func fetchHobbySettings(hobbyStatus: HobbyStatus?) async throws -> HobbySettings {
         let response = try await activityService.fetchHobbySettings(hobbyStatus: hobbyStatus?.rawValue)
         return response.toDomain()

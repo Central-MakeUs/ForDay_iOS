@@ -13,10 +13,18 @@ import Then
 class ActivityRecordView: UIView {
     
     // Properties
-    
+
 //    private let scrollView = UIScrollView()
     private let contentView = UIView()
-    
+
+    // 취미 칩 선택
+    let hobbyChipCollectionView: UICollectionView
+
+    // 수정 모드 전용: 단일 취미 칩
+    private let singleHobbyChipContainer = UIView()
+    let singleHobbyChipView = UIView()
+    private let singleHobbyChipLabel = UILabel()
+
     // 활동 선택
     private let activityLabel = UILabel()
     let activityDropdownButton = UIButton()
@@ -47,14 +55,23 @@ class ActivityRecordView: UIView {
     // Initialization
     
     override init(frame: CGRect) {
-        // CollectionView Layout
-        let flowLayout = UICollectionViewFlowLayout()
-        flowLayout.scrollDirection = .horizontal
-        flowLayout.minimumInteritemSpacing = 12
-        flowLayout.minimumLineSpacing = 12
-        
-        stickerCollectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
-        
+        // Hobby Chip CollectionView Layout
+        let hobbyChipLayout = UICollectionViewFlowLayout()
+        hobbyChipLayout.scrollDirection = .horizontal
+        hobbyChipLayout.minimumInteritemSpacing = 6
+        hobbyChipLayout.minimumLineSpacing = 6
+        hobbyChipLayout.estimatedItemSize = UICollectionViewFlowLayout.automaticSize
+
+        hobbyChipCollectionView = UICollectionView(frame: .zero, collectionViewLayout: hobbyChipLayout)
+
+        // Sticker CollectionView Layout
+        let stickerLayout = UICollectionViewFlowLayout()
+        stickerLayout.scrollDirection = .horizontal
+        stickerLayout.minimumInteritemSpacing = 12
+        stickerLayout.minimumLineSpacing = 12
+
+        stickerCollectionView = UICollectionView(frame: .zero, collectionViewLayout: stickerLayout)
+
         super.init(frame: frame)
         style()
         layout()
@@ -70,6 +87,34 @@ class ActivityRecordView: UIView {
 extension ActivityRecordView {
     private func style() {
         backgroundColor = .neutralWhite
+
+        // 취미 칩 선택
+        hobbyChipCollectionView.do {
+            $0.backgroundColor = .clear
+            $0.showsHorizontalScrollIndicator = false
+            $0.register(HobbyChipCell.self, forCellWithReuseIdentifier: "HobbyChipCell")
+        }
+
+        // 수정 모드 전용: 단일 취미 칩
+        singleHobbyChipContainer.do {
+            $0.backgroundColor = .clear
+            $0.isHidden = true  // 기본적으로 숨김 (생성 모드)
+        }
+
+        singleHobbyChipView.do {
+            $0.backgroundColor = .action001
+            $0.layer.cornerRadius = 16
+            $0.layer.borderWidth = 1
+            $0.layer.borderColor = UIColor.action001.cgColor
+            $0.clipsToBounds = true
+        }
+
+        singleHobbyChipLabel.do {
+            $0.setTextWithTypography("", style: .body14)
+            $0.textColor = .neutralWhite
+            $0.textAlignment = .center
+            $0.numberOfLines = 1
+        }
 
         // 활동 (필수)
         activityLabel.do {
@@ -207,8 +252,13 @@ extension ActivityRecordView {
     
     private func layout() {
         addSubview(contentView)
-        
+
+        contentView.addSubview(hobbyChipCollectionView)
+        contentView.addSubview(singleHobbyChipContainer)
         contentView.addSubview(activityLabel)
+
+        singleHobbyChipContainer.addSubview(singleHobbyChipView)
+        singleHobbyChipView.addSubview(singleHobbyChipLabel)
         contentView.addSubview(activityDropdownButton)
         contentView.addSubview(addActivityButton)
         contentView.addSubview(stickerLabel)
@@ -232,10 +282,35 @@ extension ActivityRecordView {
         contentView.snp.makeConstraints {
             $0.edges.equalTo(layoutMarginsGuide)
         }
-        
+
+        // 취미 칩 (CollectionView)
+        hobbyChipCollectionView.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(16)
+            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.height.equalTo(32)
+        }
+
+        // 단일 취미 칩 (수정 모드)
+        singleHobbyChipContainer.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(16)
+            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.height.equalTo(32)
+        }
+
+        singleHobbyChipView.snp.makeConstraints {
+            $0.leading.equalToSuperview()
+            $0.centerY.equalToSuperview()
+            $0.height.equalTo(32)
+        }
+
+        singleHobbyChipLabel.snp.makeConstraints {
+            $0.top.bottom.equalToSuperview().inset(6)
+            $0.leading.trailing.equalToSuperview().inset(12)
+        }
+
         // 활동
         activityLabel.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(20)
+            $0.top.equalTo(hobbyChipCollectionView.snp.bottom).offset(20)
             $0.leading.equalToSuperview().offset(20)
         }
         
@@ -399,6 +474,12 @@ extension ActivityRecordView {
         var config = privacyButton.configuration
         config?.title = title
         privacyButton.configuration = config
+    }
+
+    func showSingleHobbyChip(_ hobbyName: String, show: Bool) {
+        singleHobbyChipContainer.isHidden = !show
+        hobbyChipCollectionView.isHidden = show
+        singleHobbyChipLabel.text = hobbyName
     }
 }
 

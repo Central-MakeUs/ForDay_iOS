@@ -13,6 +13,7 @@ final class MockHobbyRepository: HobbyRepositoryInterface {
     // MARK: - Stub Data
 
     var homeInfoToReturn: HomeInfo?
+    var hobbyChipsToReturn: [HobbyChip] = []
     var hobbySettingsToReturn: HobbySettings?
     var createHobbyIdToReturn: Int = 1
     var updateResultToReturn: String = "success"
@@ -23,6 +24,9 @@ final class MockHobbyRepository: HobbyRepositoryInterface {
 
     var fetchHomeInfoCallCount = 0
     var lastFetchHomeInfoHobbyId: Int?
+
+    var fetchHobbyChipsCallCount = 0
+    var lastFetchHobbyChipsStatus: String?
 
     var createHobbyCallCount = 0
     var lastCreateHobbyParams: (hobbyInfoId: Int?, hobbyName: String, hobbyTimeMinutes: Int, hobbyPurpose: String, executionCount: Int, isDurationSet: Bool)?
@@ -44,11 +48,14 @@ final class MockHobbyRepository: HobbyRepositoryInterface {
 
     func reset() {
         homeInfoToReturn = nil
+        hobbyChipsToReturn = []
         hobbySettingsToReturn = nil
         errorToThrow = nil
 
         fetchHomeInfoCallCount = 0
         lastFetchHomeInfoHobbyId = nil
+        fetchHobbyChipsCallCount = 0
+        lastFetchHobbyChipsStatus = nil
         createHobbyCallCount = 0
         lastCreateHobbyParams = nil
         updateHobbyCallCount = 0
@@ -72,6 +79,16 @@ final class MockHobbyRepository: HobbyRepositoryInterface {
             throw error
         }
         return homeInfoToReturn
+    }
+
+    func fetchHobbyChips(status: String) async throws -> [HobbyChip] {
+        fetchHobbyChipsCallCount += 1
+        lastFetchHobbyChipsStatus = status
+
+        if let error = errorToThrow {
+            throw error
+        }
+        return hobbyChipsToReturn
     }
 
     func createHobby(

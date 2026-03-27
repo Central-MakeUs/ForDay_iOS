@@ -29,6 +29,7 @@ protocol HobbyRepositoryInterface {
     ) async throws -> Int
 
     func fetchHomeInfo(hobbyId: Int?) async throws -> HomeInfo?
+    func fetchHobbyChips(status: String) async throws -> [HobbyChip]
 
     // Hobby Management
     func fetchHobbySettings(hobbyStatus: HobbyStatus?) async throws -> HobbySettings
