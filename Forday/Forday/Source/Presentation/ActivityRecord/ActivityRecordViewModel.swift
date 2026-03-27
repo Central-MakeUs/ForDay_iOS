@@ -61,10 +61,10 @@ class ActivityRecordViewModel {
 
     // Mock Data
     let stickers: [Sticker] = [
-        Sticker(id: 1, image: .My.smileJpg, type: .smile),
-        Sticker(id: 2, image: .My.sadJpg, type: .sad),
         Sticker(id: 3, image: .My.laughJpg, type: .laugh),
-        Sticker(id: 4, image: .My.angryJpg, type: .angry)
+        Sticker(id: 1, image: .My.smileJpg, type: .smile),
+        Sticker(id: 4, image: .My.angryJpg, type: .angry),
+        Sticker(id: 2, image: .My.sadJpg, type: .sad)
     ]
 
     private var cancellables = Set<AnyCancellable>()
