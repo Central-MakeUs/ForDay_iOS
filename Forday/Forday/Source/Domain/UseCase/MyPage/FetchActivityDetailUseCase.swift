@@ -15,7 +15,7 @@ final class FetchActivityDetailUseCase {
         self.repository = repository
     }
 
-    func execute(activityRecordId: Int) async throws -> ActivityDetail {
-        return try await repository.fetchActivityDetail(activityRecordId: activityRecordId)
+    func execute(activityRecordId: Int, context: ActivityDetailContext? = nil) async throws -> ActivityDetail {
+        return try await repository.fetchActivityDetail(activityRecordId: activityRecordId, context: context)
     }
 }

@@ -31,6 +31,7 @@ protocol ProfileViewModelProtocol: AnyObject {
 
     // MARK: - Properties
 
+    var userId: String? { get }  // nil이면 본인, 값이 있으면 다른 사용자
     var activities: [FeedItem] { get }
     var scraps: [FeedItem] { get }
     var isLoadingMore: Bool { get }

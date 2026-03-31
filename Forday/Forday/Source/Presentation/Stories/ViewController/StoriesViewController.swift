@@ -345,7 +345,30 @@ extension StoriesViewController: StoryCellDelegate {
     }
 
     func storyCellDidTapContent(_ cell: StoryCell, recordId: Int) {
-        coordinator?.showActivityDetail(activityRecordId: recordId)
+        // Create context for paging API
+        let contextType: ActivityDetailContext.ContextType
+        let hobbyIds: [Int]?
+
+        if let currentHobbyId = viewModel.currentHobbyId {
+            contextType = .storyHobby
+            hobbyIds = [currentHobbyId]
+        } else {
+            contextType = .storyAll
+            hobbyIds = nil
+        }
+
+        let context = ActivityDetailContext(
+            contextType: contextType,
+            userId: nil,
+            keyword: nil,
+            hobbyIds: hobbyIds
+        )
+
+        // Use PageViewController for swipe navigation
+        let pageVC = ActivityDetailPageViewController(recordId: recordId, context: context)
+        pageVC.coordinator = coordinator
+
+        navigationController?.pushViewController(pageVC, animated: true)
     }
 
     func storyCellDidTapProfile(_ cell: StoryCell, userId: String) {

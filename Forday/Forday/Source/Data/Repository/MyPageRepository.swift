@@ -28,8 +28,8 @@ final class MyPageRepository: MyPageRepositoryInterface {
         return response.toDomain()
     }
 
-    func fetchActivityDetail(activityRecordId: Int) async throws -> ActivityDetail {
-        let response = try await recordsService.fetchRecordDetail(recordId: activityRecordId)
+    func fetchActivityDetail(activityRecordId: Int, context: ActivityDetailContext? = nil) async throws -> ActivityDetail {
+        let response = try await recordsService.fetchRecordDetail(recordId: activityRecordId, context: context)
         return response.toDomain()
     }
 

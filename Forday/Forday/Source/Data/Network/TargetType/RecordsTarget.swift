@@ -10,7 +10,7 @@ import Moya
 import Alamofire
 
 enum RecordsTarget {
-    case fetchRecordDetail(recordId: Int)
+    case fetchRecordDetail(recordId: Int, context: ActivityDetailContext?)
     case updateRecord(recordId: Int, request: DTO.UpdateRecordRequest)
     case deleteRecord(recordId: Int)
     case addReaction(recordId: Int, reactionType: ReactionType)
@@ -25,7 +25,7 @@ extension RecordsTarget: BaseTargetType {
 
     var path: String {
         switch self {
-        case .fetchRecordDetail(let recordId):
+        case .fetchRecordDetail(let recordId, _):
             return RecordsAPI.fetchRecordDetail(recordId).endpoint
         case .updateRecord(let recordId, _):
             return RecordsAPI.updateRecord(recordId: recordId).endpoint
@@ -71,8 +71,15 @@ extension RecordsTarget: BaseTargetType {
 
     var task: Moya.Task {
         switch self {
-        case .fetchRecordDetail:
-            return .requestPlain
+        case .fetchRecordDetail(_, let context):
+            if let context = context {
+                return .requestParameters(
+                    parameters: context.toQueryParameters(),
+                    encoding: URLEncoding.queryString
+                )
+            } else {
+                return .requestPlain
+            }
         case .updateRecord(_, let request):
             return .requestJSONEncodable(request)
         case .deleteRecord:

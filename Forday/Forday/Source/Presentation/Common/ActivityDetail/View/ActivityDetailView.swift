@@ -48,7 +48,8 @@ final class ActivityDetailView: UIView {
     // 홈으로 가기 버튼 (기록 완료 후 모드에서만 표시)
     let goHomeButton = UIButton()
 
-    private let scrollView = UIScrollView()
+    // Public access for PageViewController to control paging
+    let scrollView = UIScrollView()
     private let contentView = UIView()
 
     // User info (profile + nickname)
@@ -73,10 +74,6 @@ final class ActivityDetailView: UIView {
     private let memoContainerView = UIView()
     let contentLabel = UILabel()
     private let memoStickerImageView = UIImageView() // 이미지 없을 때 메모 안 스티커
-
-    // Reactions
-    let reactionUsersScrollView = ReactionUsersScrollView()
-    let reactionButtonsView = ReactionButtonsView()
 
     private var currentLayoutType: LayoutType = .withImage
     private(set) var hasImage: Bool = false
@@ -158,9 +155,6 @@ final class ActivityDetailView: UIView {
         } else {
             saveButton.isHidden = true
         }
-
-        // Configure reaction buttons
-        reactionButtonsView.configure(with: detail)
 
         // Update layout based on type
         updateLayoutForType()
@@ -398,8 +392,6 @@ extension ActivityDetailView {
         addSubview(goHomeButton)
 
         addSubview(scrollView)
-        addSubview(reactionUsersScrollView)
-        addSubview(reactionButtonsView)
         scrollView.addSubview(contentView)
 
         // Navigation view constraints
@@ -431,24 +423,11 @@ extension ActivityDetailView {
             $0.center.equalToSuperview()
         }
 
-        // Scroll view constraints
+        // Scroll view constraints (이제 bottom까지 확장)
         scrollView.snp.makeConstraints {
             $0.top.equalTo(navigationView.snp.bottom)
             $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(reactionUsersScrollView.snp.top)
-        }
-
-        // Reaction users scroll view
-        reactionUsersScrollView.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(reactionButtonsView.snp.top)
-            $0.height.equalTo(60)
-        }
-
-        // Reaction buttons - safe area 고려
-        reactionButtonsView.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(safeAreaLayoutGuide).offset(-16)
+            $0.bottom.equalTo(safeAreaLayoutGuide)
         }
 
         // 홈으로 가기 버튼
@@ -479,9 +458,6 @@ extension ActivityDetailView {
         // Image container (with padding)
         imageContainerView.addSubview(imageView)
         imageView.addSubview(stickerImageView)
-
-        // Initially hide reaction users scroll view
-        reactionUsersScrollView.isHidden = true
 
         // User info view (profile + nickname)
         userInfoView.snp.makeConstraints {
@@ -591,30 +567,26 @@ extension ActivityDetailView {
     private func updateDisplayMode() {
         switch displayMode {
         case .normal:
-            // 일반 모드: 네비게이션 버튼 표시, 반응 버튼 표시, 홈으로 가기 숨김
+            // 일반 모드: 네비게이션 버튼 표시, 홈으로 가기 숨김
             backButton.isHidden = false
             moreButton.isHidden = false
             // saveButton visibility is controlled by configure(with:) based on recordOwner && hasImage
             navigationTitleLabel.isHidden = true
-            reactionButtonsView.isHidden = false
-            reactionUsersScrollView.isHidden = false
             goHomeButton.isHidden = true
 
-            // 스크롤뷰 하단 여백 조정
+            // 스크롤뷰는 safeArea까지 확장
             scrollView.snp.remakeConstraints {
                 $0.top.equalTo(navigationView.snp.bottom)
                 $0.leading.trailing.equalToSuperview()
-                $0.bottom.equalTo(reactionUsersScrollView.snp.top)
+                $0.bottom.equalTo(safeAreaLayoutGuide)
             }
 
         case .afterRecord:
-            // 기록 완료 후 모드: 네비게이션 버튼 숨김, 타이틀만 표시, 반응 버튼 숨김, 홈으로 가기 표시
+            // 기록 완료 후 모드: 네비게이션 버튼 숨김, 타이틀만 표시, 홈으로 가기 표시
             backButton.isHidden = true
             moreButton.isHidden = true
             saveButton.isHidden = true
             navigationTitleLabel.isHidden = false
-            reactionButtonsView.isHidden = true
-            reactionUsersScrollView.isHidden = true
             goHomeButton.isHidden = false
 
             // 스크롤뷰 하단 여백 조정 (홈으로 가기 버튼 위까지)

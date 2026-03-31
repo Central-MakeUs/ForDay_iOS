@@ -338,6 +338,7 @@ final class MyPageViewModel: ProfileViewModelProtocol {
 // MARK: - ProfileViewModelProtocol
 
 extension MyPageViewModel {
+    var userId: String? { return nil }  // 본인 프로필이므로 nil
     var activitiesPublisher: Published<[FeedItem]>.Publisher { $activities }
     var totalActivityCountPublisher: Published<Int>.Publisher { $totalActivityCount }
     var myHobbiesPublisher: Published<[MyPageHobby]>.Publisher { $myHobbies }

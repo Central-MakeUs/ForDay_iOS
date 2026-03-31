@@ -21,7 +21,7 @@ enum RecordsAPI {
     var endpoint: String {
         switch self {
         case .fetchRecordDetail(let recordId):
-            return "/records/\(recordId)"
+            return "/api/v2/records/\(recordId)"
         case .updateRecord(let recordId):
             return "/records/\(recordId)"
         case .deleteRecord(let recordId):

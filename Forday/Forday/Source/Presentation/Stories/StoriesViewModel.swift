@@ -29,7 +29,7 @@ final class StoriesViewModel {
     private let imageSizeCache = ImageSizeCache.shared
 
     private var lastRecordId: Int?
-    private var currentHobbyId: Int?
+    private(set) var currentHobbyId: Int?  // 스와이프 네비게이션 context 생성에 필요
     private var isLoadingMore = false
     private var isInitialLoad = true
 

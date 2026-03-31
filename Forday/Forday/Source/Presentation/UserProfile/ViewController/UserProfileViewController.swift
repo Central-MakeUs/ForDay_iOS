@@ -347,11 +347,12 @@ extension UserProfileViewController {
 
     private func performBlock() {
         Task { [weak self] in
-            guard let self = self else { return }
+            guard let self = self,
+                  let userId = self.viewModel.userId else { return }
 
             do {
                 let friendsService = FriendsService()
-                let response = try await friendsService.blockUser(userId: self.viewModel.userId)
+                let response = try await friendsService.blockUser(userId: userId)
 
                 await MainActor.run { [weak self] in
                     guard let self = self else { return }
@@ -378,10 +379,11 @@ extension UserProfileViewController {
     }
 
     private func showReportScreen() {
-        guard let profile = viewModel.userProfile else { return }
+        guard let profile = viewModel.userProfile,
+              let userId = viewModel.userId else { return }
 
         let reportVC = ReportViewController(
-            targetUserId: viewModel.userId,
+            targetUserId: userId,
             targetNickname: profile.nickname
         )
         reportVC.onReportCompleted = { [weak self] isBlocked in

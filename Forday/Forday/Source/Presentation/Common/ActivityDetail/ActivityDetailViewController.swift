@@ -18,7 +18,7 @@ final class ActivityDetailViewController: UIViewController {
         return view as! ActivityDetailView
     }
 
-    private let viewModel: ActivityDetailViewModel
+    let viewModel: ActivityDetailViewModel  // PageViewController에서 접근 필요
     private var cancellables = Set<AnyCancellable>()
     private var dropdownView: ActivityDetailDropdownView?
 
@@ -31,6 +31,25 @@ final class ActivityDetailViewController: UIViewController {
 
     // 수정 후 재조회 플래그
     private var needsRefreshAfterEdit = false
+
+    // MARK: - Paging Control Properties
+
+    var canPageToPrevious: Bool {
+        return detailView.scrollView.contentOffset.y <= 0
+    }
+
+    var canPageToNext: Bool {
+        let scrollView = detailView.scrollView
+        let offsetY = scrollView.contentOffset.y
+        let contentHeight = scrollView.contentSize.height
+        let frameHeight = scrollView.frame.height
+
+        // 컨텐츠가 화면보다 작으면 항상 페이징 가능, 아니면 바닥에 닿았을 때 페이징 가능
+        if contentHeight <= frameHeight {
+            return true
+        }
+        return offsetY >= (contentHeight - frameHeight - 1)
+    }
 
     // MARK: - Initialization
 
@@ -185,58 +204,6 @@ extension ActivityDetailViewController {
                 self?.handleActivityDetailError(error) {
                     self?.loadData()
                 }
-            }
-            .store(in: &cancellables)
-
-        // Reaction button single tapped (show users)
-        detailView.reactionButtonsView.reactionSingleTapped
-            .sink { [weak self] reactionType in
-                self?.handleReactionSingleTapped(reactionType)
-            }
-            .store(in: &cancellables)
-
-        // Reaction button double tapped (toggle reaction)
-        detailView.reactionButtonsView.reactionDoubleTapped
-            .sink { [weak self] reactionType in
-                self?.handleReactionDoubleTapped(reactionType)
-            }
-            .store(in: &cancellables)
-
-        // Reaction users
-        viewModel.$reactionUsers
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] users in
-                guard let self = self else { return }
-
-                if users.isEmpty {
-                    self.detailView.reactionUsersScrollView.isHidden = true
-                    self.detailView.reactionUsersScrollView.clear()
-
-                    // Collapse height when hidden
-                    self.detailView.reactionUsersScrollView.snp.updateConstraints {
-                        $0.height.equalTo(0)
-                    }
-                } else {
-                    self.detailView.reactionUsersScrollView.isHidden = false
-                    self.detailView.reactionUsersScrollView.configure(with: users)
-
-                    // Expand height when visible
-                    self.detailView.reactionUsersScrollView.snp.updateConstraints {
-                        $0.height.equalTo(60)
-                    }
-                }
-
-                // Animate layout change
-                UIView.animate(withDuration: 0.3) {
-                    self.view.layoutIfNeeded()
-                }
-            }
-            .store(in: &cancellables)
-
-        // Bookmark button tapped
-        detailView.reactionButtonsView.bookmarkTapped
-            .sink { [weak self] in
-                self?.handleBookmarkTapped()
             }
             .store(in: &cancellables)
     }
@@ -415,30 +382,6 @@ extension ActivityDetailViewController {
         )
         alert.addAction(UIAlertAction(title: "확인", style: .default))
         present(alert, animated: true)
-    }
-
-    private func handleReactionSingleTapped(_ reactionType: ReactionType) {
-        print("👆 \(reactionType.displayName) 반응 버튼 단일 탭 - 유저 목록 표시")
-
-        Task { [weak self] in
-            await self?.viewModel.fetchReactionUsers(for: reactionType)
-        }
-    }
-
-    private func handleReactionDoubleTapped(_ reactionType: ReactionType) {
-        print("👆👆 \(reactionType.displayName) 반응 버튼 더블 탭 - 반응 추가/삭제")
-
-        Task { [weak self] in
-            await self?.viewModel.toggleReaction(reactionType)
-        }
-    }
-
-    private func handleBookmarkTapped() {
-        print("🔖 북마크 버튼 탭 - 스크랩 추가/삭제")
-
-        Task { [weak self] in
-            await self?.viewModel.toggleScrap()
-        }
     }
 
     private func showReportScreen() {

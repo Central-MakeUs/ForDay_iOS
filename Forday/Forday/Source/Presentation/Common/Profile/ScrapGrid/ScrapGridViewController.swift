@@ -216,13 +216,21 @@ extension ScrapGridViewController: UICollectionViewDelegate {
         // 부모(MyPageViewController)에게 자식 뷰로 이동함을 알림 (필터 유지용)
         (parent as? MyPageViewController)?.willNavigateToChildView()
 
-        let detailViewModel = ActivityDetailViewModel(activityRecordId: activityRecordId)
-        let detailVC = ActivityDetailViewController(viewModel: detailViewModel)
-        detailVC.coordinator = coordinator
+        // Create context for paging API
+        let context = ActivityDetailContext(
+            contextType: .userScrap,
+            userId: viewModel.userId,
+            keyword: nil,
+            hobbyIds: nil  // 스크랩은 취미 필터 없음
+        )
+
+        // Use PageViewController for swipe navigation
+        let pageVC = ActivityDetailPageViewController(recordId: activityRecordId, context: context)
+        pageVC.coordinator = coordinator
 
         // Push to navigation stack
         if let navController = parent?.navigationController {
-            navController.pushViewController(detailVC, animated: true)
+            navController.pushViewController(pageVC, animated: true)
         }
     }
 
