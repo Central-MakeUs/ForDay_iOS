@@ -25,7 +25,7 @@ final class ReactionButtonsView: UIView {
 
     // Tap events
     let reactionSingleTapped = PassthroughSubject<ReactionType, Never>()
-    let reactionDoubleTapped = PassthroughSubject<ReactionType, Never>()
+    let reactionLongPressed = PassthroughSubject<ReactionType, Never>()
     let bookmarkTapped = PassthroughSubject<Void, Never>()
 
     // MARK: - Initialization
@@ -137,19 +137,16 @@ extension ReactionButtonsView {
         let singleTap = UITapGestureRecognizer(target: self, action: #selector(handleSingleTap(_:)))
         singleTap.numberOfTapsRequired = 1
 
-        // Double tap
-        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(handleDoubleTap(_:)))
-        doubleTap.numberOfTapsRequired = 2
-
-        // Single tap should wait for double tap to fail
-        singleTap.require(toFail: doubleTap)
+        // Long press
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+        longPress.minimumPressDuration = 0.5 // Default is 0.5s
 
         // Store reaction type in gesture recognizer
         singleTap.name = type.rawValue
-        doubleTap.name = type.rawValue
+        longPress.name = type.rawValue
 
         button.addGestureRecognizer(singleTap)
-        button.addGestureRecognizer(doubleTap)
+        button.addGestureRecognizer(longPress)
         button.isUserInteractionEnabled = true
     }
 
@@ -159,10 +156,11 @@ extension ReactionButtonsView {
         reactionSingleTapped.send(type)
     }
 
-    @objc private func handleDoubleTap(_ gesture: UITapGestureRecognizer) {
-        guard let typeName = gesture.name,
+    @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began,
+              let typeName = gesture.name,
               let type = ReactionType(rawValue: typeName) else { return }
-        reactionDoubleTapped.send(type)
+        reactionLongPressed.send(type)
     }
 
     @objc private func bookmarkButtonTapped() {

@@ -203,17 +203,17 @@ extension ActivityDetailViewController {
     }
 
     private func bindReactionViews() {
-        // Reaction button single tapped (show users)
+        // Reaction button single tapped (toggle reaction)
         detailView.reactionButtonsView.reactionSingleTapped
             .sink { [weak self] reactionType in
                 self?.handleReactionSingleTapped(reactionType)
             }
             .store(in: &cancellables)
 
-        // Reaction button double tapped (toggle reaction)
-        detailView.reactionButtonsView.reactionDoubleTapped
+        // Reaction button long pressed (show users)
+        detailView.reactionButtonsView.reactionLongPressed
             .sink { [weak self] reactionType in
-                self?.handleReactionDoubleTapped(reactionType)
+                self?.handleReactionLongPressed(reactionType)
             }
             .store(in: &cancellables)
 
@@ -277,13 +277,13 @@ extension ActivityDetailViewController: UIScrollViewDelegate {
 extension ActivityDetailViewController {
     private func handleReactionSingleTapped(_ reactionType: ReactionType) {
         Task { [weak self] in
-            await self?.viewModel.fetchReactionUsers(for: reactionType)
+            await self?.viewModel.toggleReaction(reactionType)
         }
     }
 
-    private func handleReactionDoubleTapped(_ reactionType: ReactionType) {
+    private func handleReactionLongPressed(_ reactionType: ReactionType) {
         Task { [weak self] in
-            await self?.viewModel.toggleReaction(reactionType)
+            await self?.viewModel.fetchReactionUsers(for: reactionType)
         }
     }
 

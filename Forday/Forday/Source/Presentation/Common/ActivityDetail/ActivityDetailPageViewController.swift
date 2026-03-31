@@ -223,15 +223,15 @@ extension ActivityDetailPageViewController {
         reactionButtonsView.reactionSingleTapped
             .sink { [weak self] type in
                 Task {
-                    await self?.currentDetailVC?.viewModel.fetchReactionUsers(for: type)
+                    await self?.currentDetailVC?.viewModel.toggleReaction(type)
                 }
             }
             .store(in: &cancellables)
 
-        reactionButtonsView.reactionDoubleTapped
+        reactionButtonsView.reactionLongPressed
             .sink { [weak self] type in
                 Task {
-                    await self?.currentDetailVC?.viewModel.toggleReaction(type)
+                    await self?.currentDetailVC?.viewModel.fetchReactionUsers(for: type)
                 }
             }
             .store(in: &cancellables)
