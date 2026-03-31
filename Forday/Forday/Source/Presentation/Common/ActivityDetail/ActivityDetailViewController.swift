@@ -47,7 +47,7 @@ final class ActivityDetailViewController: UIViewController {
         let contentHeight = scrollView.contentSize.height
         let frameHeight = scrollView.frame.height
 
-        // 컨텐츠가 화면보다 작으면 항상 페이징 가능, 아니면 바닥에 닿았을 때 페이징 가능
+        // 콘텐츠가 화면보다 작으면 항상 페이징 가능, 아니면 바닥에 닿았을 때 페이징 가능
         if contentHeight <= frameHeight {
             return true
         }
@@ -85,6 +85,7 @@ final class ActivityDetailViewController: UIViewController {
         setupGestures()
         setupDisplayMode()
         setupRefreshControl()
+        setupScrollView()
         bind()
         loadData()
     }
@@ -93,6 +94,10 @@ final class ActivityDetailViewController: UIViewController {
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
         detailView.setRefreshControl(refreshControl)
+    }
+
+    private func setupScrollView() {
+        detailView.scrollView.delegate = self
     }
 
     @objc private func handleRefresh() {
@@ -254,6 +259,16 @@ extension ActivityDetailViewController {
         detailView.userInfoView.onTap = { [weak self] in
             self?.coordinator?.showUserProfile(userId: userInfo.userId)
         }
+    }
+}
+
+// MARK: - UIScrollViewDelegate
+
+extension ActivityDetailViewController: UIScrollViewDelegate {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        // 페이징 모드일 때만 부모에게 알림 (필요 시)
+        // 여기서는 부모가 scrollViewDidScroll(_:)을 가로채고 있으므로, 
+        // 자식의 스크롤 위치에 따라 부모의 스크롤(페이징) 가능 여부를 결정하는 방식이 더 안정적입니다.
     }
 }
 

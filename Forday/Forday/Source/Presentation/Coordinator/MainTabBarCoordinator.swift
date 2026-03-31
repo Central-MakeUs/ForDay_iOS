@@ -244,19 +244,15 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
     }
 
     func showActivityDetail(activityRecordId: Int) {
-        // Create ViewModel (No context -> Single Mode)
-        let viewModel = ActivityDetailViewModel(activityRecordId: activityRecordId)
-
-        // Create ViewController (Single Mode)
-        let detailVC = ActivityDetailViewController(viewModel: viewModel)
-        detailVC.coordinator = self
-
-        // Push to current navigation stack
-        if let currentNav = tabBarController.selectedViewController as? UINavigationController {
-            currentNav.pushViewController(detailVC, animated: true)
-        } else if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
-            homeNav.pushViewController(detailVC, animated: true)
-        }
+        // Create context for current user's feed (matches MyPage/Home)
+        // This ensures the detail view has a navigation bar (via ActivityDetailPageViewController)
+        let context = ActivityDetailContext(
+            contextType: .userFeed,
+            userId: nil,
+            keyword: nil,
+            hobbyIds: nil
+        )
+        showActivityDetailWithContext(activityRecordId: activityRecordId, context: context)
     }
 
     /// 활동 기록 상세 보기 (스와이프 가능 모드)

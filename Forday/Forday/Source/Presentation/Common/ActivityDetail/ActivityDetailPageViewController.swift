@@ -116,7 +116,7 @@ extension ActivityDetailPageViewController {
         view.backgroundColor = .systemBackground
         pageViewController.view.backgroundColor = .systemBackground
         
-        // 내부 스크롤뷰 델리게이트 가로채기
+        // 내부 스크롤뷰 델리게이트 설정 (제스처 델리게이트는 설정하지 않음 - 크래시 방지)
         pageScrollView?.delegate = self
     }
 
@@ -124,7 +124,7 @@ extension ActivityDetailPageViewController {
         // 위쪽 로딩 인디케이터
         view.addSubview(topLoadingIndicator)
         topLoadingIndicator.snp.makeConstraints {
-            $0.top.equalTo(view.safeAreaLayoutGuide).offset(76) // 내비바 아래에 위치
+            $0.top.equalTo(view.safeAreaLayoutGuide).offset(76)
             $0.centerX.equalToSuperview()
         }
         topLoadingIndicator.hidesWhenStopped = true
@@ -132,7 +132,7 @@ extension ActivityDetailPageViewController {
         // 아래쪽 로딩 인디케이터
         view.addSubview(bottomLoadingIndicator)
         bottomLoadingIndicator.snp.makeConstraints {
-            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-92) // 반응바 위에 위치
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-92)
             $0.centerX.equalToSuperview()
         }
         bottomLoadingIndicator.hidesWhenStopped = true
@@ -175,16 +175,14 @@ extension ActivityDetailPageViewController {
             $0.isHidden = true
         }
 
-        // 내비게이션 뷰 배경을 최상단(상태바 포함)까지 확장
         navigationView.snp.makeConstraints {
             $0.top.leading.trailing.equalToSuperview()
             $0.bottom.equalTo(view.safeAreaLayoutGuide.snp.top).offset(56)
         }
 
-        // 버튼들은 Safe Area 기준으로 배치
         backButton.snp.makeConstraints {
             $0.leading.equalToSuperview().offset(20)
-            $0.bottom.equalToSuperview().offset(-16) // 56pt 높이 중 하단 기준 16pt 여백
+            $0.bottom.equalToSuperview().offset(-16)
             $0.width.height.equalTo(24)
         }
 
@@ -210,7 +208,6 @@ extension ActivityDetailPageViewController {
         view.addSubview(reactionUsersScrollView)
         view.addSubview(reactionButtonsView)
 
-        // 반응 버튼 뷰 배경을 최하단(홈 인디케이터 포함)까지 확장
         reactionButtonsView.snp.makeConstraints {
             $0.leading.trailing.bottom.equalToSuperview()
             $0.top.equalTo(view.safeAreaLayoutGuide.snp.bottom).offset(-72)
@@ -219,7 +216,7 @@ extension ActivityDetailPageViewController {
         reactionUsersScrollView.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview()
             $0.bottom.equalTo(reactionButtonsView.snp.top)
-            $0.height.equalTo(0) // 초기값 0
+            $0.height.equalTo(0)
         }
 
         // 반응 버튼 이벤트 연결
@@ -249,7 +246,6 @@ extension ActivityDetailPageViewController {
     }
 
     private func bindCurrentDetail() {
-        // 이전 자식 바인딩 제거
         childCancellables.removeAll()
         
         guard let detailVC = currentDetailVC else { return }
@@ -259,11 +255,7 @@ extension ActivityDetailPageViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] detail in
                 guard let self = self, let detail = detail else { return }
-                
-                // 내비게이션 바 업데이트
                 self.updateNavigationState(with: detail)
-                
-                // 하단 반응 버튼 업데이트
                 self.reactionButtonsView.configure(with: detail)
             }
             .store(in: &childCancellables)
@@ -292,11 +284,8 @@ extension ActivityDetailPageViewController {
     }
 
     private func updateNavigationState(with detail: ActivityDetail) {
-        // saveButton: 내가 쓴 글 + 이미지 있을 때만 표시
         let hasImage = !detail.imageUrl.isEmpty
         saveButton.isHidden = !(detail.recordOwner && hasImage)
-        
-        // title 및 기타 버튼 상태는 현재 모드가 .normal임을 가정 (PageVC는 보통 조회용이므로)
         navigationTitleLabel.isHidden = true
         backButton.isHidden = false
         moreButton.isHidden = false
@@ -322,12 +311,10 @@ extension ActivityDetailPageViewController {
     }
 
     @objc private func moreButtonTapped() {
-        // 현재 보여지는 자식 VC에게 드롭다운 표시 요청
         currentDetailVC?.handleMoreButtonTapped(sourceView: moreButton)
     }
 
     @objc private func saveButtonTapped() {
-        // 현재 보여지는 자식 VC에게 이미지 저장 요청
         currentDetailVC?.handleSaveButtonTapped()
     }
 }
@@ -335,7 +322,6 @@ extension ActivityDetailPageViewController {
 // MARK: - ViewController Creation
 
 extension ActivityDetailPageViewController {
-    /// 특정 recordId에 대한 ActivityDetailViewController 생성
     private func createDetailViewController(for recordId: Int) -> ActivityDetailViewController {
         let viewModel = ActivityDetailViewModel(activityRecordId: recordId, context: context)
         let detailVC = ActivityDetailViewController(viewModel: viewModel, isPagingMode: true)
@@ -377,17 +363,14 @@ extension ActivityDetailPageViewController: UIPageViewControllerDelegate {
     func pageViewController(
         _ pageViewController: UIPageViewController,
         willTransitionTo pendingViewControllers: [UIViewController]) {
-        // 전환 시작 시 로딩 인디케이터 표시
         if let detailVC = pendingViewControllers.first as? ActivityDetailViewController {
             let recordId = detailVC.viewModel.activityRecordId
 
-            // 이전 기록으로 이동 중
             if let currentVC = currentDetailVC,
                recordId == currentVC.viewModel.prevRecordId {
                 topLoadingIndicator.startAnimating()
                 isLoadingPrev = true
             }
-            // 다음 기록으로 이동 중
             else if let currentVC = currentDetailVC,
                     recordId == currentVC.viewModel.nextRecordId {
                 bottomLoadingIndicator.startAnimating()
@@ -401,7 +384,6 @@ extension ActivityDetailPageViewController: UIPageViewControllerDelegate {
         didFinishAnimating finished: Bool,
         previousViewControllers: [UIViewController],
         transitionCompleted completed: Bool) {
-        // 전환 완료 시
         if completed {
             if let detailVC = pageViewController.viewControllers?.first as? ActivityDetailViewController {
                 currentDetailVC = detailVC
@@ -409,7 +391,6 @@ extension ActivityDetailPageViewController: UIPageViewControllerDelegate {
             }
         }
 
-        // 로딩 인디케이터 숨김
         if isLoadingPrev {
             topLoadingIndicator.stopAnimating()
             isLoadingPrev = false
@@ -425,7 +406,6 @@ extension ActivityDetailPageViewController: UIPageViewControllerDelegate {
 
 extension ActivityDetailPageViewController: UIScrollViewDelegate {
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        // pageScrollView인 경우에만 로직 실행
         guard scrollView === pageScrollView else { return }
 
         let offsetY = scrollView.contentOffset.y
@@ -434,14 +414,14 @@ extension ActivityDetailPageViewController: UIScrollViewDelegate {
         // 위로 스와이프 (다음 글로 가기 시도)
         if offsetY > frameHeight {
             if let currentVC = currentDetailVC, !currentVC.canPageToNext {
-                // 더 이상 스크롤할 수 없는 상태가 아니면 페이징 막기
+                // 아직 콘텐츠가 더 남아있다면, 부모의 스크롤 위치를 고정하고 콘텐츠를 스크롤시킴
                 scrollView.contentOffset.y = frameHeight
             }
         }
         // 아래로 스와이프 (이전 글로 가기 시도)
         else if offsetY < frameHeight {
             if let currentVC = currentDetailVC, !currentVC.canPageToPrevious {
-                // 최상단이 아니면 페이징 막기
+                // 아직 최상단이 아니라면, 부모의 스크롤 위치를 고정하고 콘텐츠를 스크롤시킴
                 scrollView.contentOffset.y = frameHeight
             }
         }

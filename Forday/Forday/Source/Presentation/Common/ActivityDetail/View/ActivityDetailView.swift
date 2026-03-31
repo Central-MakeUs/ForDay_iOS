@@ -204,6 +204,8 @@ final class ActivityDetailView: UIView {
             $0.height.equalTo(imageHeight)
         }
 
+        // 이미지 높이가 변하면 전체 레이아웃 다시 계산하여 contentSize 갱신
+        setNeedsLayout()
         layoutIfNeeded()
     }
 
@@ -217,12 +219,12 @@ final class ActivityDetailView: UIView {
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.equalToSuperview().offset(-20)
             }
-            // 메모 컨테이너 전체 너비 (스티커가 이미지 위에 있으므로)
+            // 메모 컨테이너 전체 너비
             memoContainerView.snp.remakeConstraints {
                 $0.top.equalTo(dateLabel.snp.bottom).offset(16)
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.equalToSuperview().offset(-20)
-                $0.bottom.equalToSuperview().offset(-20) // 하단 여백 통일
+                $0.bottom.equalToSuperview().offset(-40) // 확실하게 바닥에 고정 (여백 40)
             }
 
         case .withoutImage:
@@ -237,26 +239,25 @@ final class ActivityDetailView: UIView {
                 $0.top.leading.equalTo(memoContainerView).offset(16)
                 $0.trailing.equalTo(memoContainerView).offset(-16)
             }
-            // 스티커를 contentView 기준으로 배치 (시각적으로 메모 컨테이너 안에 있는 것처럼)
+            // 스티커
             memoStickerImageView.snp.remakeConstraints {
                 $0.top.equalTo(contentLabel.snp.bottom).offset(20)
-                $0.trailing.equalToSuperview().offset(-36) // 20(컨테이너) + 16(내부 패딩)
+                $0.trailing.equalToSuperview().offset(-36)
                 $0.size.equalTo(80)
             }
-            // 메모 컨테이너 (스티커 아래까지 확장하고, contentView의 bottom과 연결)
+            // 메모 컨테이너
             memoContainerView.snp.remakeConstraints {
                 $0.top.equalTo(dateLabel.snp.bottom).offset(16)
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.equalToSuperview().offset(-20)
                 $0.bottom.equalTo(memoStickerImageView.snp.bottom).offset(16)
             }
-            // contentView의 bottom을 메모 컨테이너에 연결
+            // contentView 바닥과 연결
             memoContainerView.snp.makeConstraints {
-                $0.bottom.equalToSuperview().offset(-20)
+                $0.bottom.equalToSuperview().offset(-40)
             }
 
         case .withoutImageAndMemo:
-            // 이미지도 메모도 없을 때: 타이틀 아래 24px → 날짜, 날짜 아래 24px → 스티커 (contentView 기준)
             dateLabel.snp.remakeConstraints {
                 $0.top.equalTo(titleLabel.snp.bottom).offset(24)
                 $0.leading.equalToSuperview().offset(20)
@@ -266,7 +267,7 @@ final class ActivityDetailView: UIView {
                 $0.top.equalTo(dateLabel.snp.bottom).offset(24)
                 $0.trailing.equalToSuperview().offset(-20)
                 $0.size.equalTo(80)
-                $0.bottom.equalToSuperview().offset(-20)
+                $0.bottom.equalToSuperview().offset(-40)
             }
         }
     }
@@ -286,11 +287,12 @@ extension ActivityDetailView {
             config.background.cornerRadius = 12
             config.contentInsets = NSDirectionalEdgeInsets(top: 19, leading: 0, bottom: 19, trailing: 0)
             $0.configuration = config
-            $0.isHidden = true  // 기본적으로 숨김
+            $0.isHidden = true
         }
 
         scrollView.do {
             $0.showsVerticalScrollIndicator = true
+            $0.alwaysBounceVertical = true // 콘텐츠가 짧아도 바운스되어야 페이징 감지 가능
         }
 
         contentView.do {
@@ -298,7 +300,7 @@ extension ActivityDetailView {
         }
 
         userInfoView.do {
-            $0.isHidden = true  // 기본적으로 숨김 (userInfo가 있을 때만 표시)
+            $0.isHidden = true
         }
 
         hobbyNameContainerView.do {
@@ -325,7 +327,7 @@ extension ActivityDetailView {
         }
 
         imageView.do {
-            $0.contentMode = .scaleAspectFit // 원본 비율 유지
+            $0.contentMode = .scaleAspectFit
             $0.clipsToBounds = true
             $0.backgroundColor = .bg003
             $0.layer.cornerRadius = 12
@@ -355,20 +357,15 @@ extension ActivityDetailView {
     }
 
     private func layout() {
-        // 홈으로 가기 버튼
         addSubview(goHomeButton)
-
         addSubview(scrollView)
         scrollView.addSubview(contentView)
 
-        // 반응 버튼 (단일 보기 모드용)
         addSubview(reactionUsersScrollView)
         addSubview(reactionButtonsView)
 
-        // 초기 제약 조건 설정
         updateScrollViewConstraints()
 
-        // 반응 버튼 제약 (단일 보기 모드일 때만 활성화됨)
         reactionButtonsView.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview()
             $0.bottom.equalTo(safeAreaLayoutGuide)
@@ -381,20 +378,18 @@ extension ActivityDetailView {
             $0.height.equalTo(0)
         }
 
-        // 홈으로 가기 버튼
         goHomeButton.snp.makeConstraints {
             $0.leading.equalToSuperview().offset(16)
             $0.trailing.equalToSuperview().offset(-16)
             $0.bottom.equalTo(safeAreaLayoutGuide).offset(-16)
         }
 
-        // Content view
         contentView.snp.makeConstraints {
             $0.edges.equalToSuperview()
             $0.width.equalToSuperview()
+            // height는 내부 서브뷰들에 의해 자동 결정됨
         }
 
-        // Add subviews to content view
         contentView.addSubview(userInfoView)
         contentView.addSubview(hobbyNameContainerView)
         contentView.addSubview(titleLabel)
@@ -403,14 +398,10 @@ extension ActivityDetailView {
         contentView.addSubview(memoContainerView)
         contentView.addSubview(memoStickerImageView)
 
-        // Hobby name container and label
         hobbyNameContainerView.addSubview(hobbyNameLabel)
-
-        // Image container (with padding)
         imageContainerView.addSubview(imageView)
         imageView.addSubview(stickerImageView)
 
-        // User info view (profile + nickname)
         userInfoView.snp.makeConstraints {
             $0.top.equalToSuperview().offset(16)
             $0.leading.equalToSuperview().offset(20)
@@ -418,13 +409,11 @@ extension ActivityDetailView {
             $0.height.equalTo(24)
         }
 
-        // Hobby name container (category badge)
         hobbyNameContainerView.snp.makeConstraints {
             $0.top.equalTo(userInfoView.snp.bottom).offset(8)
             $0.leading.equalToSuperview().offset(20)
         }
 
-        // Hobby name label
         hobbyNameLabel.snp.makeConstraints {
             $0.top.equalToSuperview().offset(4)
             $0.leading.equalToSuperview().offset(6)
@@ -432,59 +421,50 @@ extension ActivityDetailView {
             $0.bottom.equalToSuperview().offset(-4)
         }
 
-        // Title at top left (below hobbyNameContainerView)
         titleLabel.snp.makeConstraints {
             $0.top.equalTo(hobbyNameContainerView.snp.bottom).offset(10)
             $0.leading.equalToSuperview().offset(20)
             $0.trailing.equalToSuperview().offset(-20)
         }
 
-        // Image container constraints (below title)
         imageContainerView.snp.makeConstraints {
             $0.top.equalTo(titleLabel.snp.bottom).offset(16)
             $0.leading.trailing.equalToSuperview()
         }
 
-        // Image with padding and corner radius (원본 비율)
         imageView.snp.makeConstraints {
             $0.top.equalToSuperview()
             $0.leading.equalToSuperview().offset(20)
             $0.trailing.equalToSuperview().offset(-20)
-            $0.height.equalTo(300) // 초기값, 이미지 로드 후 업데이트
+            $0.height.equalTo(300)
             $0.bottom.equalToSuperview()
         }
 
-        // Sticker on image (bottom-right with offset)
         stickerImageView.snp.makeConstraints {
             $0.trailing.equalToSuperview().offset(-16)
             $0.bottom.equalToSuperview().offset(-16)
             $0.size.equalTo(80)
         }
 
-        // Date label (below image by default)
         dateLabel.snp.makeConstraints {
             $0.top.equalTo(imageContainerView.snp.bottom).offset(16)
             $0.leading.equalToSuperview().offset(20)
             $0.trailing.equalToSuperview().offset(-20)
         }
 
-        // Memo container with background
         memoContainerView.addSubview(contentLabel)
-
         memoContainerView.snp.makeConstraints {
             $0.top.equalTo(dateLabel.snp.bottom).offset(16)
             $0.leading.equalToSuperview().offset(20)
             $0.trailing.equalToSuperview().offset(-20)
-            $0.bottom.lessThanOrEqualToSuperview().offset(-20)
+            // bottom은 updateLayoutForType에서 pinned됨
         }
 
-        // Content label inside memo container (텍스트만, bottom 제약 없음)
         contentLabel.snp.makeConstraints {
             $0.top.leading.equalToSuperview().offset(16)
             $0.trailing.equalToSuperview().offset(-16)
         }
 
-        // Memo sticker (when no image - contentView의 직접 자식, 제약으로만 위치 제어)
         memoStickerImageView.snp.makeConstraints {
             $0.top.equalTo(dateLabel.snp.bottom).offset(16)
             $0.trailing.equalToSuperview().offset(-20)
@@ -492,21 +472,14 @@ extension ActivityDetailView {
         }
     }
 
-    /// 스크롤뷰 제약 조건을 모드에 맞게 업데이트
     private func updateScrollViewConstraints() {
         scrollView.snp.remakeConstraints {
-            // 상단은 항상 내비바 높이만큼 여백 (Safe Area 기준)
             $0.top.equalTo(safeAreaLayoutGuide).offset(Layout.navBarHeight)
             $0.leading.trailing.equalToSuperview()
 
             if displayMode == .afterRecord {
-                // 기록 완료 모드: 홈 가기 버튼 위까지
                 $0.bottom.equalTo(goHomeButton.snp.top).offset(-16)
-            } else if isPagingMode {
-                // 페이징 모드: 부모의 반응 버튼 위까지 (Safe Area 기준)
-                $0.bottom.equalTo(safeAreaLayoutGuide).offset(-Layout.reactionBarHeight)
             } else {
-                // 단일 모드: 본인의 반응 버튼 위까지 (Safe Area 기준)
                 $0.bottom.equalTo(safeAreaLayoutGuide).offset(-Layout.reactionBarHeight)
             }
         }
@@ -516,24 +489,19 @@ extension ActivityDetailView {
 // MARK: - Public Methods
 
 extension ActivityDetailView {
-
-    /// RefreshControl 설정
     func setRefreshControl(_ refreshControl: UIRefreshControl) {
         scrollView.refreshControl = refreshControl
     }
 
-    /// RefreshControl 종료
     func endRefreshing() {
         scrollView.refreshControl?.endRefreshing()
     }
 
-    /// 화면 표시 모드 설정
     func setDisplayMode(_ mode: DisplayMode) {
         displayMode = mode
         updateScrollViewConstraints()
     }
 
-    /// 페이징 모드 설정 (부모에서 관리할 경우 버튼 숨김)
     func setPagingMode(_ enabled: Bool) {
         isPagingMode = enabled
         reactionButtonsView.isHidden = enabled
