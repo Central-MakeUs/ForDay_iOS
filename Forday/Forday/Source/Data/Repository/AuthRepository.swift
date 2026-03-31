@@ -64,7 +64,8 @@ final class AuthRepository: AuthRepositoryInterface {
             guestUserId: nil,
             onboardingCompleted: true,
             nicknameSet: true,
-            onboardingData: nil
+            onboardingData: nil,
+            termsConsentCompleted: true  // 토큰 재발급은 이미 약관 동의한 상태
         )
     }
     

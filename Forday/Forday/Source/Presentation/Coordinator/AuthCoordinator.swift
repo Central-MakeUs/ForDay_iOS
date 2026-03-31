@@ -9,16 +9,16 @@
 import UIKit
 
 class AuthCoordinator: Coordinator {
-    
+
     let navigationController: UINavigationController
     weak var parentCoordinator: AppCoordinator?
-    
+
     private var onboardingCoordinator: OnboardingCoordinator?
-    
+
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
     }
-    
+
     func start() {
         showLogin()
     }
@@ -29,15 +29,30 @@ class AuthCoordinator: Coordinator {
         vc.coordinator = self
         navigationController.setViewControllers([vc], animated: false)
     }
+
+    // 약관동의 화면
+    func showTermsAgreement() {
+        let vc = TermsAgreementViewController()
+        vc.coordinator = self
+        navigationController.pushViewController(vc, animated: true)
+    }
     
     // 로그인 성공 후 분기 처리
     func handleLoginSuccess(authToken: AuthToken) {
         print("🔵 handleLoginSuccess 호출됨")
         print("   - nicknameSet: \(authToken.nicknameSet)")
         print("   - onboardingCompleted: \(authToken.onboardingCompleted)")
+        print("   - termsConsentCompleted: \(authToken.termsConsentCompleted)")
         print("   - socialType: \(authToken.socialType)")
         print("   - guestUserId: \(authToken.guestUserId ?? "nil")")
         print("   - onboardingData: \(authToken.onboardingData != nil ? "있음" : "없음")")
+
+        // 케이스 0: 약관 동의 필요 (신규 유저만)
+        if !authToken.termsConsentCompleted && authToken.isNewUser {
+            print("   ➡️ 약관동의 화면으로 이동")
+            showTermsAgreement()
+            return
+        }
 
         // 케이스 1: 닉네임 설정 완료 → 홈
         if authToken.nicknameSet {
@@ -190,5 +205,25 @@ class AuthCoordinator: Coordinator {
                 }
             }
         }
+    }
+}
+
+// MARK: - TermsAgreementCoordinatorDelegate
+
+extension AuthCoordinator: TermsAgreementCoordinatorDelegate {
+    func termsAgreementDidComplete() {
+        print("✅ 약관동의 완료 → 온보딩 시작")
+        showOnboarding()
+    }
+
+    func termsAgreementDidRequestBack() {
+        print("🔙 약관동의 화면에서 뒤로가기")
+        navigationController.popViewController(animated: true)
+    }
+
+    func termsAgreementDidRequestTermsDetail(type: TermsType) {
+        print("📄 약관 상세 조회: \(type.title)")
+        let termsVC = TermsViewController(termsType: type)
+        navigationController.present(termsVC, animated: true)
     }
 }

@@ -22,6 +22,7 @@ extension DTO {
         let onboardingCompleted: Bool
         let nicknameSet: Bool
         let onboardingData: OnboardingHobbyData?
+        let termsConsentCompleted: Bool?  // Optional - 서버가 아직 반환 안 함
     }
 
     struct OnboardingHobbyData: Codable {
@@ -45,7 +46,8 @@ extension DTO.LoginData {
             guestUserId: guestUserId,
             onboardingCompleted: onboardingCompleted,
             nicknameSet: nicknameSet,
-            onboardingData: onboardingData?.toDomain()
+            onboardingData: onboardingData?.toDomain(),
+            termsConsentCompleted: termsConsentCompleted ?? false  // 서버가 없으면 false (약관동의 필요)
         )
     }
 }

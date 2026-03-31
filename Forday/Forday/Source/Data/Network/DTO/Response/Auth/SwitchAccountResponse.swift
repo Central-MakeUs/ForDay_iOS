@@ -30,7 +30,8 @@ extension DTO.SwitchAccountData {
             guestUserId: nil,
             onboardingCompleted: true,
             nicknameSet: true,
-            onboardingData: nil
+            onboardingData: nil,
+            termsConsentCompleted: true  // 계정 전환은 이미 약관 동의한 상태
         )
     }
 }
