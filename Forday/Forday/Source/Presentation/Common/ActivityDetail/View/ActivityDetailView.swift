@@ -30,20 +30,16 @@ final class ActivityDetailView: UIView {
     // MARK: - Constants
 
     private enum Layout {
-        /// ReactionButtonsView와 충돌하지 않도록 하는 하단 여백
-        static let bottomPadding: CGFloat = 80
+        /// 내비게이션 바 높이
+        static let navBarHeight: CGFloat = 56
+        /// 반응 버튼 바 높이
+        static let reactionBarHeight: CGFloat = 72
     }
 
     // MARK: - Properties
 
     private var displayMode: DisplayMode = .normal
-
-    // Custom Navigation
-    private let navigationView = UIView()
-    private let navigationTitleLabel = UILabel()
-    let backButton = UIButton()
-    let saveButton = UIButton()
-    let moreButton = UIButton()
+    private var isPagingMode: Bool = false
 
     // 홈으로 가기 버튼 (기록 완료 후 모드에서만 표시)
     let goHomeButton = UIButton()
@@ -74,6 +70,10 @@ final class ActivityDetailView: UIView {
     private let memoContainerView = UIView()
     let contentLabel = UILabel()
     private let memoStickerImageView = UIImageView() // 이미지 없을 때 메모 안 스티커
+
+    // Reaction Views (단일 보기 모드 전용)
+    let reactionUsersScrollView = ReactionUsersScrollView()
+    let reactionButtonsView = ReactionButtonsView()
 
     private var currentLayoutType: LayoutType = .withImage
     private(set) var hasImage: Bool = false
@@ -149,11 +149,9 @@ final class ActivityDetailView: UIView {
             memoStickerImageView.isHidden = false
         }
 
-        // Save button: 내가 쓴 글 + 이미지 있을 때만 표시 (afterRecord 모드에서는 숨김)
-        if displayMode == .normal {
-            saveButton.isHidden = !(detail.recordOwner && hasImage)
-        } else {
-            saveButton.isHidden = true
+        // 단일 보기 모드인 경우 버튼 구성
+        if !isPagingMode {
+            reactionButtonsView.configure(with: detail)
         }
 
         // Update layout based on type
@@ -224,7 +222,7 @@ final class ActivityDetailView: UIView {
                 $0.top.equalTo(dateLabel.snp.bottom).offset(16)
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.equalToSuperview().offset(-20)
-                $0.bottom.equalToSuperview().offset(-Layout.bottomPadding)
+                $0.bottom.equalToSuperview().offset(-20) // 하단 여백 통일
             }
 
         case .withoutImage:
@@ -252,9 +250,9 @@ final class ActivityDetailView: UIView {
                 $0.trailing.equalToSuperview().offset(-20)
                 $0.bottom.equalTo(memoStickerImageView.snp.bottom).offset(16)
             }
-            // contentView의 bottom을 메모 컨테이너에 연결 (충분한 패딩)
+            // contentView의 bottom을 메모 컨테이너에 연결
             memoContainerView.snp.makeConstraints {
-                $0.bottom.equalToSuperview().offset(-Layout.bottomPadding)
+                $0.bottom.equalToSuperview().offset(-20)
             }
 
         case .withoutImageAndMemo:
@@ -268,7 +266,7 @@ final class ActivityDetailView: UIView {
                 $0.top.equalTo(dateLabel.snp.bottom).offset(24)
                 $0.trailing.equalToSuperview().offset(-20)
                 $0.size.equalTo(80)
-                $0.bottom.equalToSuperview().offset(-Layout.bottomPadding)
+                $0.bottom.equalToSuperview().offset(-20)
             }
         }
     }
@@ -279,34 +277,6 @@ final class ActivityDetailView: UIView {
 extension ActivityDetailView {
     private func style() {
         backgroundColor = .systemBackground
-
-        // Custom Navigation
-        navigationView.do {
-            $0.backgroundColor = .systemBackground
-        }
-
-        backButton.do {
-            $0.setImage(.Icon.chevronLeft, for: .normal)
-            $0.tintColor = .neutral900
-        }
-
-        moreButton.do {
-            $0.setImage(.Icon.threeDotVertical, for: .normal)
-            $0.tintColor = .neutral900
-        }
-
-        saveButton.do {
-            $0.setImage(.Icon.save, for: .normal)
-            $0.tintColor = .neutral900
-            $0.isHidden = true  // 기본적으로 숨김 (내가 쓴 글 + 이미지 있을 때만 표시)
-        }
-
-        navigationTitleLabel.do {
-            $0.setTextWithTypography("내 활동 보기", style: .header16)
-            $0.textColor = .neutral800
-            $0.textAlignment = .center
-            $0.isHidden = true  // 기본적으로 숨김
-        }
 
         goHomeButton.do {
             var config = UIButton.Configuration.filled()
@@ -378,56 +348,37 @@ extension ActivityDetailView {
             $0.textColor = .neutral900
             $0.numberOfLines = 0
         }
+
+        reactionUsersScrollView.do {
+            $0.isHidden = true
+        }
     }
 
     private func layout() {
-        // Custom Navigation
-        addSubview(navigationView)
-        navigationView.addSubview(backButton)
-        navigationView.addSubview(saveButton)
-        navigationView.addSubview(moreButton)
-        navigationView.addSubview(navigationTitleLabel)
-
         // 홈으로 가기 버튼
         addSubview(goHomeButton)
 
         addSubview(scrollView)
         scrollView.addSubview(contentView)
 
-        // Navigation view constraints
-        navigationView.snp.makeConstraints {
-            $0.top.equalTo(safeAreaLayoutGuide)
-            $0.leading.trailing.equalToSuperview()
-            $0.height.equalTo(56)
-        }
+        // 반응 버튼 (단일 보기 모드용)
+        addSubview(reactionUsersScrollView)
+        addSubview(reactionButtonsView)
 
-        backButton.snp.makeConstraints {
-            $0.leading.equalToSuperview().offset(20)
-            $0.centerY.equalToSuperview()
-            $0.width.height.equalTo(24)
-        }
+        // 초기 제약 조건 설정
+        updateScrollViewConstraints()
 
-        saveButton.snp.makeConstraints {
-            $0.trailing.equalTo(moreButton.snp.leading).offset(-16)
-            $0.centerY.equalToSuperview()
-            $0.width.height.equalTo(24)
-        }
-
-        moreButton.snp.makeConstraints {
-            $0.trailing.equalToSuperview().offset(-20)
-            $0.centerY.equalToSuperview()
-            $0.width.height.equalTo(24)
-        }
-
-        navigationTitleLabel.snp.makeConstraints {
-            $0.center.equalToSuperview()
-        }
-
-        // Scroll view constraints (이제 bottom까지 확장)
-        scrollView.snp.makeConstraints {
-            $0.top.equalTo(navigationView.snp.bottom)
+        // 반응 버튼 제약 (단일 보기 모드일 때만 활성화됨)
+        reactionButtonsView.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview()
             $0.bottom.equalTo(safeAreaLayoutGuide)
+            $0.height.equalTo(Layout.reactionBarHeight)
+        }
+
+        reactionUsersScrollView.snp.makeConstraints {
+            $0.leading.trailing.equalToSuperview()
+            $0.bottom.equalTo(reactionButtonsView.snp.top)
+            $0.height.equalTo(0)
         }
 
         // 홈으로 가기 버튼
@@ -534,12 +485,30 @@ extension ActivityDetailView {
         }
 
         // Memo sticker (when no image - contentView의 직접 자식, 제약으로만 위치 제어)
-        // withoutImage: memoContainerView 안에 있는 것처럼 배치
-        // withoutImageAndMemo: dateLabel 아래에 배치
         memoStickerImageView.snp.makeConstraints {
             $0.top.equalTo(dateLabel.snp.bottom).offset(16)
             $0.trailing.equalToSuperview().offset(-20)
             $0.size.equalTo(80)
+        }
+    }
+
+    /// 스크롤뷰 제약 조건을 모드에 맞게 업데이트
+    private func updateScrollViewConstraints() {
+        scrollView.snp.remakeConstraints {
+            // 상단은 항상 내비바 높이만큼 여백 (Safe Area 기준)
+            $0.top.equalTo(safeAreaLayoutGuide).offset(Layout.navBarHeight)
+            $0.leading.trailing.equalToSuperview()
+
+            if displayMode == .afterRecord {
+                // 기록 완료 모드: 홈 가기 버튼 위까지
+                $0.bottom.equalTo(goHomeButton.snp.top).offset(-16)
+            } else if isPagingMode {
+                // 페이징 모드: 부모의 반응 버튼 위까지 (Safe Area 기준)
+                $0.bottom.equalTo(safeAreaLayoutGuide).offset(-Layout.reactionBarHeight)
+            } else {
+                // 단일 모드: 본인의 반응 버튼 위까지 (Safe Area 기준)
+                $0.bottom.equalTo(safeAreaLayoutGuide).offset(-Layout.reactionBarHeight)
+            }
         }
     }
 }
@@ -561,60 +530,14 @@ extension ActivityDetailView {
     /// 화면 표시 모드 설정
     func setDisplayMode(_ mode: DisplayMode) {
         displayMode = mode
-        updateDisplayMode()
+        updateScrollViewConstraints()
     }
 
-    private func updateDisplayMode() {
-        switch displayMode {
-        case .normal:
-            // 일반 모드: 네비게이션 버튼 표시, 홈으로 가기 숨김
-            backButton.isHidden = false
-            moreButton.isHidden = false
-            // saveButton visibility is controlled by configure(with:) based on recordOwner && hasImage
-            navigationTitleLabel.isHidden = true
-            goHomeButton.isHidden = true
-
-            // 스크롤뷰는 safeArea까지 확장
-            scrollView.snp.remakeConstraints {
-                $0.top.equalTo(navigationView.snp.bottom)
-                $0.leading.trailing.equalToSuperview()
-                $0.bottom.equalTo(safeAreaLayoutGuide)
-            }
-
-        case .afterRecord:
-            // 기록 완료 후 모드: 네비게이션 버튼 숨김, 타이틀만 표시, 홈으로 가기 표시
-            backButton.isHidden = true
-            moreButton.isHidden = true
-            saveButton.isHidden = true
-            navigationTitleLabel.isHidden = false
-            goHomeButton.isHidden = false
-
-            // 스크롤뷰 하단 여백 조정 (홈으로 가기 버튼 위까지)
-            scrollView.snp.remakeConstraints {
-                $0.top.equalTo(navigationView.snp.bottom)
-                $0.leading.trailing.equalToSuperview()
-                $0.bottom.equalTo(goHomeButton.snp.top).offset(-16)
-            }
-        }
+    /// 페이징 모드 설정 (부모에서 관리할 경우 버튼 숨김)
+    func setPagingMode(_ enabled: Bool) {
+        isPagingMode = enabled
+        reactionButtonsView.isHidden = enabled
+        reactionUsersScrollView.isHidden = enabled
+        updateScrollViewConstraints()
     }
 }
-
-#if DEBUG
-#Preview("ActivityDetailView - Basic") {
-    let view = ActivityDetailView()
-    view.configure(with: .preview)
-    return view
-}
-
-#Preview("ActivityDetailView - Scraped") {
-    let view = ActivityDetailView()
-    view.configure(with: .previewScraped)
-    return view
-}
-
-#Preview("ActivityDetailView - All Reactions") {
-    let view = ActivityDetailView()
-    view.configure(with: .previewWithAllReactions)
-    return view
-}
-#endif

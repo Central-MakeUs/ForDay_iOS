@@ -364,11 +364,8 @@ extension StoriesViewController: StoryCellDelegate {
             hobbyIds: hobbyIds
         )
 
-        // Use PageViewController for swipe navigation
-        let pageVC = ActivityDetailPageViewController(recordId: recordId, context: context)
-        pageVC.coordinator = coordinator
-
-        navigationController?.pushViewController(pageVC, animated: true)
+        // Coordinator를 통해 상세 화면(스와이프 모드) 표시
+        coordinator?.showActivityDetailWithContext(activityRecordId: recordId, context: context)
     }
 
     func storyCellDidTapProfile(_ cell: StoryCell, userId: String) {

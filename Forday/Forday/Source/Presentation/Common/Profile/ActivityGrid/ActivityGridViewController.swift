@@ -285,14 +285,8 @@ extension ActivityGridViewController: UICollectionViewDelegate {
             hobbyIds: viewModel.selectedHobbyIds.isEmpty ? nil : Array(viewModel.selectedHobbyIds)
         )
 
-        // Use PageViewController for swipe navigation
-        let pageVC = ActivityDetailPageViewController(recordId: activityRecordId, context: context)
-        pageVC.coordinator = coordinator
-
-        // Push to navigation stack
-        if let navController = parent?.navigationController {
-            navController.pushViewController(pageVC, animated: true)
-        }
+        // Coordinator를 통해 상세 화면(스와이프 모드) 표시
+        coordinator?.showActivityDetailWithContext(activityRecordId: activityRecordId, context: context)
     }
 
     /// Called by parent scrollView to trigger infinite scroll

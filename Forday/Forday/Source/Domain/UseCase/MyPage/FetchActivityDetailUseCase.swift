@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// 활동 기록 단일 상세 조회 UseCase (페이징 정보 없음)
 final class FetchActivityDetailUseCase {
 
     private let repository: MyPageRepositoryInterface
@@ -15,7 +16,7 @@ final class FetchActivityDetailUseCase {
         self.repository = repository
     }
 
-    func execute(activityRecordId: Int, context: ActivityDetailContext? = nil) async throws -> ActivityDetail {
-        return try await repository.fetchActivityDetail(activityRecordId: activityRecordId, context: context)
+    func execute(activityRecordId: Int) async throws -> ActivityDetail {
+        return try await repository.fetchActivityDetail(activityRecordId: activityRecordId)
     }
 }

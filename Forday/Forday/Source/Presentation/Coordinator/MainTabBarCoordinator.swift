@@ -244,10 +244,10 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
     }
 
     func showActivityDetail(activityRecordId: Int) {
-        // Create ViewModel
+        // Create ViewModel (No context -> Single Mode)
         let viewModel = ActivityDetailViewModel(activityRecordId: activityRecordId)
 
-        // Create ViewController
+        // Create ViewController (Single Mode)
         let detailVC = ActivityDetailViewController(viewModel: viewModel)
         detailVC.coordinator = self
 
@@ -256,6 +256,16 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
             currentNav.pushViewController(detailVC, animated: true)
         } else if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
             homeNav.pushViewController(detailVC, animated: true)
+        }
+    }
+
+    /// 활동 기록 상세 보기 (스와이프 가능 모드)
+    func showActivityDetailWithContext(activityRecordId: Int, context: ActivityDetailContext) {
+        let pageVC = ActivityDetailPageViewController(recordId: activityRecordId, context: context)
+        pageVC.coordinator = self
+
+        if let currentNav = tabBarController.selectedViewController as? UINavigationController {
+            currentNav.pushViewController(pageVC, animated: true)
         }
     }
 

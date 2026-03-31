@@ -28,8 +28,13 @@ final class MyPageRepository: MyPageRepositoryInterface {
         return response.toDomain()
     }
 
-    func fetchActivityDetail(activityRecordId: Int, context: ActivityDetailContext? = nil) async throws -> ActivityDetail {
-        let response = try await recordsService.fetchRecordDetail(recordId: activityRecordId, context: context)
+    func fetchActivityDetail(activityRecordId: Int) async throws -> ActivityDetail {
+        let response = try await recordsService.fetchRecordDetail(recordId: activityRecordId)
+        return response.toDomain()
+    }
+
+    func fetchActivityDetailV2(activityRecordId: Int, context: ActivityDetailContext) async throws -> ActivityDetail {
+        let response = try await recordsService.fetchRecordDetailV2(recordId: activityRecordId, context: context)
         return response.toDomain()
     }
 
@@ -68,4 +73,3 @@ final class MyPageRepository: MyPageRepositoryInterface {
         return response.toDomain()
     }
 }
-

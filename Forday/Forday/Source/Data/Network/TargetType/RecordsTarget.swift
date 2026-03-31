@@ -10,7 +10,8 @@ import Moya
 import Alamofire
 
 enum RecordsTarget {
-    case fetchRecordDetail(recordId: Int, context: ActivityDetailContext?)
+    case fetchRecordDetail(recordId: Int)                                   // v1: 단일 조회
+    case fetchRecordDetailV2(recordId: Int, context: ActivityDetailContext) // v2: 페이징 조회 (context 필수)
     case updateRecord(recordId: Int, request: DTO.UpdateRecordRequest)
     case deleteRecord(recordId: Int)
     case addReaction(recordId: Int, reactionType: ReactionType)
@@ -25,8 +26,10 @@ extension RecordsTarget: BaseTargetType {
 
     var path: String {
         switch self {
-        case .fetchRecordDetail(let recordId, _):
+        case .fetchRecordDetail(let recordId):
             return RecordsAPI.fetchRecordDetail(recordId).endpoint
+        case .fetchRecordDetailV2(let recordId, _):
+            return RecordsAPI.fetchRecordDetailV2(recordId).endpoint
         case .updateRecord(let recordId, _):
             return RecordsAPI.updateRecord(recordId: recordId).endpoint
         case .deleteRecord(let recordId):
@@ -48,7 +51,7 @@ extension RecordsTarget: BaseTargetType {
 
     var method: Moya.Method {
         switch self {
-        case .fetchRecordDetail:
+        case .fetchRecordDetail, .fetchRecordDetailV2:
             return .get
         case .updateRecord:
             return .put
@@ -71,15 +74,13 @@ extension RecordsTarget: BaseTargetType {
 
     var task: Moya.Task {
         switch self {
-        case .fetchRecordDetail(_, let context):
-            if let context = context {
-                return .requestParameters(
-                    parameters: context.toQueryParameters(),
-                    encoding: URLEncoding.queryString
-                )
-            } else {
-                return .requestPlain
-            }
+        case .fetchRecordDetail:
+            return .requestPlain
+        case .fetchRecordDetailV2(_, let context):
+            return .requestParameters(
+                parameters: context.toQueryParameters(),
+                encoding: URLEncoding.queryString
+            )
         case .updateRecord(_, let request):
             return .requestJSONEncodable(request)
         case .deleteRecord:

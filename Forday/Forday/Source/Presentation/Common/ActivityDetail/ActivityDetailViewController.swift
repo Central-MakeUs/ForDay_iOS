@@ -29,6 +29,9 @@ final class ActivityDetailViewController: UIViewController {
     private let nickname: String?
     private var successOverlayView: ActivityRecordSuccessOverlayView?
 
+    // 페이징 모드 여부 (부모 PageVC가 있으면 true)
+    private let isPagingMode: Bool
+
     // 수정 후 재조회 플래그
     private var needsRefreshAfterEdit = false
 
@@ -56,11 +59,13 @@ final class ActivityDetailViewController: UIViewController {
     init(
         viewModel: ActivityDetailViewModel,
         displayMode: ActivityDetailView.DisplayMode = .normal,
-        nickname: String? = nil
+        nickname: String? = nil,
+        isPagingMode: Bool = false
     ) {
         self.viewModel = viewModel
         self.displayMode = displayMode
         self.nickname = nickname
+        self.isPagingMode = isPagingMode
         super.init(nibName: nil, bundle: nil)
         hidesBottomBarWhenPushed = true
     }
@@ -77,7 +82,6 @@ final class ActivityDetailViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupCustomNavigationBar()
         setupGestures()
         setupDisplayMode()
         setupRefreshControl()
@@ -97,6 +101,7 @@ final class ActivityDetailViewController: UIViewController {
 
     private func setupDisplayMode() {
         detailView.setDisplayMode(displayMode)
+        detailView.setPagingMode(isPagingMode)
 
         if displayMode == .afterRecord {
             // 홈으로 가기 버튼 액션 연결
@@ -112,7 +117,7 @@ final class ActivityDetailViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // 기본 내비게이션 숨기기 (커스텀 내비게이션 사용)
+        // 기본 내비게이션 숨기기 (부모인 PageVC에서 커스텀 내비게이션 관리)
         navigationController?.setNavigationBarHidden(true, animated: animated)
 
         // 수정 후 돌아왔을 때 데이터 재조회
@@ -143,27 +148,6 @@ final class ActivityDetailViewController: UIViewController {
 // MARK: - Setup
 
 extension ActivityDetailViewController {
-    private func setupCustomNavigationBar() {
-        // 커스텀 내비게이션 버튼 액션 연결
-        detailView.backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
-        detailView.moreButton.addTarget(self, action: #selector(moreButtonTapped), for: .touchUpInside)
-        detailView.saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
-    }
-
-    @objc private func backButtonTapped() {
-        navigationController?.popViewController(animated: true)
-    }
-
-    @objc private func saveButtonTapped() {
-        guard let detail = viewModel.activityDetail else { return }
-
-        print("💾 Save button tapped - navigating to template selector")
-
-        let templateViewModel = ImageTemplateSelectorViewModel(activityDetail: detail)
-        let templateVC = ImageTemplateSelectorViewController(viewModel: templateViewModel)
-        navigationController?.pushViewController(templateVC, animated: true)
-    }
-
     private func setupGestures() {
         // Background tap to dismiss dropdown
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped))
@@ -206,6 +190,56 @@ extension ActivityDetailViewController {
                 }
             }
             .store(in: &cancellables)
+
+        // MARK: - Reaction Bindings (단일 보기 모드 전용)
+        if !isPagingMode {
+            bindReactionViews()
+        }
+    }
+
+    private func bindReactionViews() {
+        // Reaction button single tapped (show users)
+        detailView.reactionButtonsView.reactionSingleTapped
+            .sink { [weak self] reactionType in
+                self?.handleReactionSingleTapped(reactionType)
+            }
+            .store(in: &cancellables)
+
+        // Reaction button double tapped (toggle reaction)
+        detailView.reactionButtonsView.reactionDoubleTapped
+            .sink { [weak self] reactionType in
+                self?.handleReactionDoubleTapped(reactionType)
+            }
+            .store(in: &cancellables)
+
+        // Bookmark button tapped
+        detailView.reactionButtonsView.bookmarkTapped
+            .sink { [weak self] in
+                self?.handleBookmarkTapped()
+            }
+            .store(in: &cancellables)
+
+        // Reaction users scroll view visibility
+        viewModel.$reactionUsers
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] users in
+                guard let self = self else { return }
+
+                if users.isEmpty {
+                    self.detailView.reactionUsersScrollView.isHidden = true
+                    self.detailView.reactionUsersScrollView.clear()
+                    self.detailView.reactionUsersScrollView.snp.updateConstraints { $0.height.equalTo(0) }
+                } else {
+                    self.detailView.reactionUsersScrollView.isHidden = false
+                    self.detailView.reactionUsersScrollView.configure(with: users)
+                    self.detailView.reactionUsersScrollView.snp.updateConstraints { $0.height.equalTo(60) }
+                }
+
+                UIView.animate(withDuration: 0.3) {
+                    self.view.layoutIfNeeded()
+                }
+            }
+            .store(in: &cancellables)
     }
 
     private func loadData() {
@@ -226,7 +260,29 @@ extension ActivityDetailViewController {
 // MARK: - Actions
 
 extension ActivityDetailViewController {
-    @objc private func moreButtonTapped() {
+    private func handleReactionSingleTapped(_ reactionType: ReactionType) {
+        Task { [weak self] in
+            await self?.viewModel.fetchReactionUsers(for: reactionType)
+        }
+    }
+
+    private func handleReactionDoubleTapped(_ reactionType: ReactionType) {
+        Task { [weak self] in
+            await self?.viewModel.toggleReaction(reactionType)
+        }
+    }
+
+    private func handleBookmarkTapped() {
+        Task { [weak self] in
+            await self?.viewModel.toggleScrap()
+        }
+    }
+}
+
+// MARK: - Public Actions (Called from Parent PageVC)
+
+extension ActivityDetailViewController {
+    func handleMoreButtonTapped(sourceView: UIView) {
         print("⋯ More button tapped")
 
         // Dismiss dropdown if already showing
@@ -236,14 +292,24 @@ extension ActivityDetailViewController {
         }
 
         // Show custom dropdown
-        showDropdown()
+        showDropdown(sourceView: sourceView)
+    }
+
+    func handleSaveButtonTapped() {
+        guard let detail = viewModel.activityDetail else { return }
+
+        print("💾 Save button tapped - navigating to template selector")
+
+        let templateViewModel = ImageTemplateSelectorViewModel(activityDetail: detail)
+        let templateVC = ImageTemplateSelectorViewController(viewModel: templateViewModel)
+        navigationController?.pushViewController(templateVC, animated: true)
     }
 
     @objc private func backgroundTapped() {
         dismissDropdown()
     }
 
-    private func showDropdown() {
+    private func showDropdown(sourceView: UIView) {
         guard dropdownView == nil else { return }
 
         // 소유자 여부와 이미지 유무에 따라 드롭다운 옵션 구성
@@ -255,8 +321,8 @@ extension ActivityDetailViewController {
             self?.dismissDropdown()
         }
 
-        // 커스텀 내비게이션의 more 버튼 아래에 표시
-        dropdown.show(in: view, below: detailView.moreButton)
+        // 부모의 more 버튼 아래에 표시 (PageVC에서 전달받은 sourceView 사용)
+        dropdown.show(in: view, below: sourceView)
         dropdownView = dropdown
     }
 
@@ -313,14 +379,11 @@ extension ActivityDetailViewController {
 
         print("✏️ 수정하기")
 
-        // ActivityRecordViewController를 수정 모드로 열기
-        // hobbyName은 수정 모드에서는 크게 필요하지 않으므로 기본값 사용
         let recordVC = ActivityRecordViewController(hobbyId: viewModel.hobbyId, hobbyName: "취미", activityDetail: detail)
         let nav = BaseNavigationController(rootViewController: recordVC)
         nav.modalPresentationStyle = .fullScreen
 
         present(nav, animated: true) { [weak self] in
-            // 수정 화면이 dismiss될 때 데이터 재조회를 위한 플래그 설정
             self?.needsRefreshAfterEdit = true
         }
     }
@@ -352,12 +415,10 @@ extension ActivityDetailViewController {
                     guard let self = self else { return }
                     print("✅ 활동 기록 삭제 성공")
 
-                    // Notify observers that a record was deleted
                     if let detail = self.viewModel.activityDetail {
                         AppEventBus.shared.activityRecordCreated.send(detail.hobbyId)
                     }
 
-                    // Navigate back
                     self.navigationController?.popViewController(animated: true)
                 }
             } catch let appError as AppError {
@@ -396,7 +457,6 @@ extension ActivityDetailViewController {
             authorNickname: userInfo.nickname
         )
         reportVC.onReportCompleted = { [weak self] _ in
-            // 신고 완료 후 Stories 탭으로 이동
             self?.coordinator?.switchToStoriesTab()
             self?.navigationController?.popToRootViewController(animated: false)
         }
@@ -404,39 +464,3 @@ extension ActivityDetailViewController {
         navigationController?.pushViewController(reportVC, animated: true)
     }
 }
-
-#if DEBUG
-#Preview("ActivityDetailViewController - Basic") {
-    let viewModel = ActivityDetailViewModel(activityRecordId: 1)
-    let vc = ActivityDetailViewController(viewModel: viewModel)
-
-    // Manually configure view with mock data (bypass network call)
-    vc.loadViewIfNeeded()
-    (vc.view as? ActivityDetailView)?.configure(with: .preview)
-
-    let nav = UINavigationController(rootViewController: vc)
-    return nav
-}
-
-#Preview("ActivityDetailViewController - Scraped") {
-    let viewModel = ActivityDetailViewModel(activityRecordId: 2)
-    let vc = ActivityDetailViewController(viewModel: viewModel)
-
-    vc.loadViewIfNeeded()
-    (vc.view as? ActivityDetailView)?.configure(with: .previewScraped)
-
-    let nav = UINavigationController(rootViewController: vc)
-    return nav
-}
-
-#Preview("ActivityDetailViewController - All Reactions") {
-    let viewModel = ActivityDetailViewModel(activityRecordId: 3)
-    let vc = ActivityDetailViewController(viewModel: viewModel)
-
-    vc.loadViewIfNeeded()
-    (vc.view as? ActivityDetailView)?.configure(with: .previewWithAllReactions)
-
-    let nav = UINavigationController(rootViewController: vc)
-    return nav
-}
-#endif
