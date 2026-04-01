@@ -61,6 +61,9 @@ final class ActivityDetailPageViewController: UIViewController {
     private var isLoadingPrev = false
     private var isLoadingNext = false
 
+    // 페이징 전환 중 플래그 (제스처 충돌 방지용)
+    private var isTransitioning = false
+
     // MARK: - Initialization
 
     init(recordId: Int, context: ActivityDetailContext) {
@@ -115,8 +118,8 @@ extension ActivityDetailPageViewController {
         // 배경색
         view.backgroundColor = .systemBackground
         pageViewController.view.backgroundColor = .systemBackground
-        
-        // 내부 스크롤뷰 델리게이트 설정 (제스처 델리게이트는 설정하지 않음 - 크래시 방지)
+
+        // 내부 스크롤뷰 델리게이트 설정
         pageScrollView?.delegate = self
     }
 
@@ -247,7 +250,12 @@ extension ActivityDetailPageViewController {
 
     private func bindCurrentDetail() {
         childCancellables.removeAll()
-        
+
+        // 이전 기록의 UI 상태 초기화
+        saveButton.isHidden = true
+        reactionUsersScrollView.isHidden = true
+        reactionUsersScrollView.clear()
+
         guard let detailVC = currentDetailVC else { return }
 
         // 상세 정보 갱신 감지하여 UI 업데이트
@@ -363,6 +371,9 @@ extension ActivityDetailPageViewController: UIPageViewControllerDelegate {
     func pageViewController(
         _ pageViewController: UIPageViewController,
         willTransitionTo pendingViewControllers: [UIViewController]) {
+        // 페이징 전환 시작 - 내부 스크롤 로직 비활성화
+        isTransitioning = true
+
         if let detailVC = pendingViewControllers.first as? ActivityDetailViewController {
             let recordId = detailVC.viewModel.activityRecordId
 
@@ -384,6 +395,9 @@ extension ActivityDetailPageViewController: UIPageViewControllerDelegate {
         didFinishAnimating finished: Bool,
         previousViewControllers: [UIViewController],
         transitionCompleted completed: Bool) {
+        // 페이징 전환 완료 - 내부 스크롤 로직 재활성화
+        isTransitioning = false
+
         if completed {
             if let detailVC = pageViewController.viewControllers?.first as? ActivityDetailViewController {
                 currentDetailVC = detailVC
@@ -407,6 +421,9 @@ extension ActivityDetailPageViewController: UIPageViewControllerDelegate {
 extension ActivityDetailPageViewController: UIScrollViewDelegate {
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         guard scrollView === pageScrollView else { return }
+
+        // 페이징 전환 중에는 스크롤 로직 실행 안 함 (view hierarchy 충돌 방지)
+        guard !isTransitioning else { return }
 
         let offsetY = scrollView.contentOffset.y
         let frameHeight = scrollView.frame.height

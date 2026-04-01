@@ -194,6 +194,9 @@ class AppCoordinator: Coordinator {
             // 토큰만 삭제 (guestUserId는 유지)
             try TokenStorage.shared.deleteTokens()
 
+            // 약관 동의 정보 초기화 (사용자 격리)
+            TermsConsentStorage.shared.resetAllConsents()
+
             if isGuest {
                 print("🔧 [DEBUG] 게스트 토큰 삭제됨 (guestUserId 유지) - 로그인 화면으로 이동")
             } else {

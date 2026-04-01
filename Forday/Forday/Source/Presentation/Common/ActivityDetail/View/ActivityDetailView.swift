@@ -251,9 +251,6 @@ final class ActivityDetailView: UIView {
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.equalToSuperview().offset(-20)
                 $0.bottom.equalTo(memoStickerImageView.snp.bottom).offset(16)
-            }
-            // contentView 바닥과 연결
-            memoContainerView.snp.makeConstraints {
                 $0.bottom.equalToSuperview().offset(-40)
             }
 
