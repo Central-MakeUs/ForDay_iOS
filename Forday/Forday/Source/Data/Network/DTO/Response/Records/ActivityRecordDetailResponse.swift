@@ -30,6 +30,8 @@ extension DTO {
         let visibility: String
         let newReaction: NewReaction
         let userReaction: UserReaction
+        let prevRecordId: Int?  // 이전 기록 ID (페이징용)
+        let nextRecordId: Int?  // 다음 기록 ID (페이징용)
     }
 
     struct UserInfo: Codable {
@@ -72,7 +74,9 @@ extension DTO.ActivityRecordDetailResponse {
             userInfo: data.userInfo?.toDomain(),
             visibility: data.visibility,
             newReaction: data.newReaction.toDomain(),
-            userReaction: data.userReaction.toDomain()
+            userReaction: data.userReaction.toDomain(),
+            prevRecordId: data.prevRecordId,
+            nextRecordId: data.nextRecordId
         )
     }
 }

@@ -8,7 +8,8 @@
 import Foundation
 
 enum RecordsAPI {
-    case fetchRecordDetail(Int)  /// 활동 기록 상세 조회
+    case fetchRecordDetail(Int)      /// 활동 기록 상세 조회 (v1)
+    case fetchRecordDetailV2(Int)    /// 활동 기록 상세 조회 (v2 - 페이징용)
     case updateRecord(recordId: Int)  /// 활동 기록 수정
     case deleteRecord(Int)  /// 활동 기록 삭제
     case addReaction(recordId: Int)  /// 활동 기록에 반응 추가
@@ -22,6 +23,8 @@ enum RecordsAPI {
         switch self {
         case .fetchRecordDetail(let recordId):
             return "/records/\(recordId)"
+        case .fetchRecordDetailV2(let recordId):
+            return "/api/v2/records/\(recordId)"
         case .updateRecord(let recordId):
             return "/records/\(recordId)"
         case .deleteRecord(let recordId):

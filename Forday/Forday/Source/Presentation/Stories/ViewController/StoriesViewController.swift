@@ -345,7 +345,27 @@ extension StoriesViewController: StoryCellDelegate {
     }
 
     func storyCellDidTapContent(_ cell: StoryCell, recordId: Int) {
-        coordinator?.showActivityDetail(activityRecordId: recordId)
+        // Create context for paging API
+        let contextType: ActivityDetailContext.ContextType
+        let hobbyIds: [Int]?
+
+        if let currentHobbyId = viewModel.currentHobbyId {
+            contextType = .storyHobby
+            hobbyIds = [currentHobbyId]
+        } else {
+            contextType = .storyAll
+            hobbyIds = nil
+        }
+
+        let context = ActivityDetailContext(
+            contextType: contextType,
+            userId: nil,
+            keyword: nil,
+            hobbyIds: hobbyIds
+        )
+
+        // Coordinator를 통해 상세 화면(스와이프 모드) 표시
+        coordinator?.showActivityDetailWithContext(activityRecordId: recordId, context: context)
     }
 
     func storyCellDidTapProfile(_ cell: StoryCell, userId: String) {

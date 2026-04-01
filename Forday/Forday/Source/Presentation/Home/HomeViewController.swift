@@ -187,7 +187,17 @@ extension HomeViewController {
     private func setupStickerBoardCallbacks() {
         // 스티커판에서 활동 상세 화면으로 이동
         stickerBoardViewModel.onNavigateToActivityDetail = { [weak self] activityRecordId in
-            self?.coordinator?.showActivityDetail(activityRecordId: activityRecordId)
+            guard let self = self else { return }
+            
+            // 홈 스티커판에서 진입 시, 해당 취미의 활동들로 페이징 컨텍스트 생성
+            let context = ActivityDetailContext(
+                contextType: .userFeed,
+                userId: nil, // 본인
+                keyword: nil,
+                hobbyIds: self.viewModel.currentHobbyId.map { [$0] }
+            )
+            
+            self.coordinator?.showActivityDetailWithContext(activityRecordId: activityRecordId, context: context)
         }
 
         // 스티커판에서 활동 기록 화면으로 이동

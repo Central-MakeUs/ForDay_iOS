@@ -29,9 +29,14 @@ final class UserProfileViewModel: ProfileViewModelProtocol {
     @Published var isBlocked: Bool = false
     @Published var error: AppError?
 
-    // MARK: - Private Properties
+    // MARK: - Properties
 
-    let userId: String
+    private let _userId: String
+
+    // Public accessor (returns Optional for protocol conformance, but always has value)
+    var userId: String? { return _userId }
+
+    // MARK: - Private Properties
     private var lastRecordId: Int? = nil
     private var hasMoreActivities: Bool = true
     private var lastHobbyCardId: Int? = nil
@@ -56,7 +61,7 @@ final class UserProfileViewModel: ProfileViewModelProtocol {
         fetchHobbyCardsUseCase: FetchHobbyCardsUseCase = FetchHobbyCardsUseCase(),
         fetchScrapsUseCase: FetchScrapsUseCase = FetchScrapsUseCase()
     ) {
-        self.userId = userId
+        self._userId = userId
         self.fetchUserProfileUseCase = fetchUserProfileUseCase
         self.fetchMyActivitiesUseCase = fetchMyActivitiesUseCase
         self.fetchMyHobbiesUseCase = fetchMyHobbiesUseCase
@@ -70,21 +75,21 @@ final class UserProfileViewModel: ProfileViewModelProtocol {
         isLoading = true
 
         // 병렬로 모든 데이터 fetch (각각 독립적으로 실패 가능)
-        async let profile = try? await fetchUserProfileUseCase.execute(userId: userId)
-        async let hobbiesResult = try? await fetchMyHobbiesUseCase.execute(userId: userId)
+        async let profile = try? await fetchUserProfileUseCase.execute(userId: _userId)
+        async let hobbiesResult = try? await fetchMyHobbiesUseCase.execute(userId: _userId)
         async let activitiesResult = try? await fetchMyActivitiesUseCase.execute(
             hobbyIds: [],
             lastRecordId: nil,
-            userId: userId
+            userId: _userId
         )
         async let cardsResult = try? await fetchHobbyCardsUseCase.execute(
             lastHobbyCardId: nil,
             size: 20,
-            userId: userId
+            userId: _userId
         )
         async let scrapsResult = try? await fetchScrapsUseCase.execute(
             lastRecordId: nil,
-            userId: userId
+            userId: _userId
         )
 
         let (profileOpt, hobbiesOpt, activitiesOpt, cardsOpt, scrapsOpt) = await (
@@ -154,7 +159,7 @@ final class UserProfileViewModel: ProfileViewModelProtocol {
             let result = try await fetchMyActivitiesUseCase.execute(
                 hobbyIds: hobbyIdsArray,
                 lastRecordId: nil,
-                userId: userId
+                userId: _userId
             )
 
             self.activities = result.feedList
@@ -180,7 +185,7 @@ final class UserProfileViewModel: ProfileViewModelProtocol {
             let result = try await fetchMyActivitiesUseCase.execute(
                 hobbyIds: Array(selectedHobbyIds),
                 lastRecordId: lastRecordId,
-                userId: userId
+                userId: _userId
             )
 
             self.activities.append(contentsOf: result.feedList)
@@ -205,7 +210,7 @@ final class UserProfileViewModel: ProfileViewModelProtocol {
         do {
             let result = try await fetchScrapsUseCase.execute(
                 lastRecordId: nil,
-                userId: userId
+                userId: _userId
             )
 
             self.scraps = result.feedList
@@ -230,7 +235,7 @@ final class UserProfileViewModel: ProfileViewModelProtocol {
         do {
             let result = try await fetchScrapsUseCase.execute(
                 lastRecordId: lastScrapRecordId,
-                userId: userId
+                userId: _userId
             )
 
             self.scraps.append(contentsOf: result.feedList)
@@ -251,6 +256,8 @@ final class UserProfileViewModel: ProfileViewModelProtocol {
 // MARK: - ProfileViewModelProtocol
 
 extension UserProfileViewModel {
+    // Note: userId는 이미 let property로 존재하므로 별도 구현 불필요
+    // protocol은 Optional을 요구하지만, 실제 타입은 non-optional String이므로 자동으로 충족됨
     var activitiesPublisher: Published<[FeedItem]>.Publisher { $activities }
     var totalActivityCountPublisher: Published<Int>.Publisher { $totalActivityCount }
     var myHobbiesPublisher: Published<[MyPageHobby]>.Publisher { $myHobbies }

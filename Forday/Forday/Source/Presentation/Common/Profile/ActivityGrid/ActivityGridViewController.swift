@@ -277,14 +277,16 @@ extension ActivityGridViewController: UICollectionViewDelegate {
         // 부모(MyPageViewController)에게 자식 뷰로 이동함을 알림 (필터 유지용)
         (parent as? MyPageViewController)?.willNavigateToChildView()
 
-        let detailViewModel = ActivityDetailViewModel(activityRecordId: activityRecordId)
-        let detailVC = ActivityDetailViewController(viewModel: detailViewModel)
-        detailVC.coordinator = coordinator
+        // Create context for paging API
+        let context = ActivityDetailContext(
+            contextType: .userFeed,
+            userId: viewModel.userId,
+            keyword: nil,
+            hobbyIds: viewModel.selectedHobbyIds.isEmpty ? nil : Array(viewModel.selectedHobbyIds)
+        )
 
-        // Push to navigation stack
-        if let navController = parent?.navigationController {
-            navController.pushViewController(detailVC, animated: true)
-        }
+        // Coordinator를 통해 상세 화면(스와이프 모드) 표시
+        coordinator?.showActivityDetailWithContext(activityRecordId: activityRecordId, context: context)
     }
 
     /// Called by parent scrollView to trigger infinite scroll

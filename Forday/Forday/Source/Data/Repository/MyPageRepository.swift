@@ -33,6 +33,11 @@ final class MyPageRepository: MyPageRepositoryInterface {
         return response.toDomain()
     }
 
+    func fetchActivityDetailV2(activityRecordId: Int, context: ActivityDetailContext) async throws -> ActivityDetail {
+        let response = try await recordsService.fetchRecordDetailV2(recordId: activityRecordId, context: context)
+        return response.toDomain()
+    }
+
     func updateProfile(nickname: String, profileImageUrl: String) async throws -> UserInfo {
         // TODO: Implement API call when ready
         throw AppError.unknown(NSError(domain: "API", code: -1, userInfo: [NSLocalizedDescriptionKey: "프로필 업데이트 API가 아직 준비되지 않았습니다."]))
@@ -68,4 +73,3 @@ final class MyPageRepository: MyPageRepositoryInterface {
         return response.toDomain()
     }
 }
-

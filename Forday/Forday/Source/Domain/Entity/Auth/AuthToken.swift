@@ -17,6 +17,7 @@ struct AuthToken {
     let onboardingCompleted: Bool
     let nicknameSet: Bool
     let onboardingData: SavedOnboardingData?
+    let termsConsentCompleted: Bool
 }
 
 struct SavedOnboardingData {

@@ -20,8 +20,12 @@ final class ActivityDetailViewModel {
 
     // MARK: - Private Properties
 
-    private let activityRecordId: Int
+    let activityRecordId: Int  // PageViewController에서 접근 필요
+    private let context: ActivityDetailContext?  // 페이징을 위한 컨텍스트
+    
+    // UseCases
     private let fetchActivityDetailUseCase: FetchActivityDetailUseCase
+    private let fetchActivityDetailWithContextUseCase: FetchActivityDetailWithContextUseCase
     private let addReactionUseCase: AddReactionUseCase
     private let deleteReactionUseCase: DeleteReactionUseCase
     private let fetchReactionUsersUseCase: FetchReactionUsersUseCase
@@ -39,11 +43,21 @@ final class ActivityDetailViewModel {
         return activityDetail?.hobbyId ?? 0
     }
 
+    var prevRecordId: Int? {
+        return activityDetail?.prevRecordId
+    }
+
+    var nextRecordId: Int? {
+        return activityDetail?.nextRecordId
+    }
+
     // MARK: - Initialization
 
     init(
         activityRecordId: Int,
+        context: ActivityDetailContext? = nil,
         fetchActivityDetailUseCase: FetchActivityDetailUseCase = FetchActivityDetailUseCase(),
+        fetchActivityDetailWithContextUseCase: FetchActivityDetailWithContextUseCase = FetchActivityDetailWithContextUseCase(),
         addReactionUseCase: AddReactionUseCase = AddReactionUseCase(),
         deleteReactionUseCase: DeleteReactionUseCase = DeleteReactionUseCase(),
         fetchReactionUsersUseCase: FetchReactionUsersUseCase = FetchReactionUsersUseCase(),
@@ -53,7 +67,9 @@ final class ActivityDetailViewModel {
         deleteScrapUseCase: DeleteScrapUseCase = DeleteScrapUseCase()
     ) {
         self.activityRecordId = activityRecordId
+        self.context = context
         self.fetchActivityDetailUseCase = fetchActivityDetailUseCase
+        self.fetchActivityDetailWithContextUseCase = fetchActivityDetailWithContextUseCase
         self.addReactionUseCase = addReactionUseCase
         self.deleteReactionUseCase = deleteReactionUseCase
         self.fetchReactionUsersUseCase = fetchReactionUsersUseCase
@@ -71,7 +87,14 @@ final class ActivityDetailViewModel {
         }
 
         do {
-            let detail = try await fetchActivityDetailUseCase.execute(activityRecordId: activityRecordId)
+            let detail: ActivityDetail
+            
+            // context가 있으면 v2(페이징) 호출, 없으면 v1(단일) 호출
+            if let context = context {
+                detail = try await fetchActivityDetailWithContextUseCase.execute(activityRecordId: activityRecordId, context: context)
+            } else {
+                detail = try await fetchActivityDetailUseCase.execute(activityRecordId: activityRecordId)
+            }
 
             await MainActor.run {
                 self.activityDetail = detail

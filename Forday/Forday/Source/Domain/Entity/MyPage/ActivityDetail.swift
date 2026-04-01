@@ -23,6 +23,8 @@ struct ActivityDetail {
     let visibility: String
     let newReaction: ReactionStatus
     let userReaction: ReactionStatus
+    let prevRecordId: Int?  // 이전 기록 ID (페이징용)
+    let nextRecordId: Int?  // 다음 기록 ID (페이징용)
 }
 
 struct ActivityDetailUserInfo {
@@ -69,7 +71,9 @@ extension ActivityDetail {
             userInfo: .preview,
             visibility: "PUBLIC",
             newReaction: .previewNone,
-            userReaction: .preview
+            userReaction: .preview,
+            prevRecordId: nil,
+            nextRecordId: 2
         )
     }
 
@@ -89,7 +93,9 @@ extension ActivityDetail {
             userInfo: .previewWithImage,
             visibility: "FRIENDS_ONLY",
             newReaction: .preview,
-            userReaction: .previewNone
+            userReaction: .previewNone,
+            prevRecordId: 1,
+            nextRecordId: 3
         )
     }
 
@@ -109,7 +115,9 @@ extension ActivityDetail {
             userInfo: .preview,
             visibility: "PUBLIC",
             newReaction: .previewAll,
-            userReaction: .previewAll
+            userReaction: .previewAll,
+            prevRecordId: 2,
+            nextRecordId: 4
         )
     }
 
@@ -129,7 +137,9 @@ extension ActivityDetail {
             userInfo: .previewWithImage,
             visibility: "PRIVATE",
             newReaction: .preview,
-            userReaction: .previewNone
+            userReaction: .previewNone,
+            prevRecordId: 3,
+            nextRecordId: nil
         )
     }
 }
