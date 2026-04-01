@@ -121,9 +121,17 @@ final class StickerBoardViewModel {
                 }
             }
         } catch {
+            // 에러 발생 시 빈 스티커판 표시 (에러 메시지 대신 사용자 친화적으로 처리)
             await MainActor.run {
-                self.errorMessage = error.localizedDescription
-                self.viewState = .error
+                self.stickerBoard = nil
+                self.viewState = .noHobby
+
+                // 디버그용 로그 (사용자에게는 보이지 않음)
+                if let appError = error as? AppError {
+                    print("⚠️ 스티커판 로드 실패 (에러 메시지 표시 안 함): \(appError.userMessage)")
+                } else {
+                    print("⚠️ 스티커판 로드 실패: \(error.localizedDescription)")
+                }
             }
         }
     }
