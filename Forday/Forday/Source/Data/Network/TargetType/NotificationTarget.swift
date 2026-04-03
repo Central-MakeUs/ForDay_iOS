@@ -7,6 +7,7 @@
 
 import Foundation
 import Moya
+import Alamofire
 
 enum NotificationTarget {
     case updateFCMToken(request: DTO.FCMTokenUpdateRequest)
