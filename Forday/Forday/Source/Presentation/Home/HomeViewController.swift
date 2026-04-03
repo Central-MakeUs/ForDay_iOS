@@ -194,7 +194,8 @@ extension HomeViewController {
                 contextType: .userFeed,
                 userId: nil, // 본인
                 keyword: nil,
-                hobbyIds: self.viewModel.currentHobbyId.map { [$0] }
+                hobbyIds: self.viewModel.currentHobbyId.map { [$0] },
+                notificationId: nil
             )
             
             self.coordinator?.showActivityDetailWithContext(activityRecordId: activityRecordId, context: context)
@@ -662,7 +663,9 @@ extension HomeViewController {
                 userSummaryText: homeInfo.userSummaryText,
                 recommendMessage: homeInfo.recommendMessage,
                 aiCallRemaining: homeInfo.aiCallRemaining,
-                aiCallRemainingCount: homeInfo.aiCallRemainingCount
+                aiCallRemainingCount: homeInfo.aiCallRemainingCount,
+                unReadNotificationExists: homeInfo.unReadNotificationExists
+                
             )
 
             viewModel.homeInfo = updatedHomeInfo

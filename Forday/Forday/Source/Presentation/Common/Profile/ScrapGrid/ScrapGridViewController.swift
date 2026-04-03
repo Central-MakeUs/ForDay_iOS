@@ -221,7 +221,8 @@ extension ScrapGridViewController: UICollectionViewDelegate {
             contextType: .userScrap,
             userId: viewModel.userId,
             keyword: nil,
-            hobbyIds: nil  // 스크랩은 취미 필터 없음
+            hobbyIds: nil,  // 스크랩은 취미 필터 없음
+            notificationId: nil
         )
 
         // Coordinator를 통해 상세 화면(스와이프 모드) 표시

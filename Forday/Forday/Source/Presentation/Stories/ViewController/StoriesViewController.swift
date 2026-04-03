@@ -361,7 +361,8 @@ extension StoriesViewController: StoryCellDelegate {
             contextType: contextType,
             userId: nil,
             keyword: nil,
-            hobbyIds: hobbyIds
+            hobbyIds: hobbyIds,
+            notificationId: nil
         )
 
         // Coordinator를 통해 상세 화면(스와이프 모드) 표시

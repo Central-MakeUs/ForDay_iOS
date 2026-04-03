@@ -30,8 +30,12 @@ final class AuthRepository: AuthRepositoryInterface {
     
     // MARK: - Apple Login
 
-    func loginWithApple(appleIdentityToken: String) async throws -> AuthToken {
-        let request = DTO.AppleLoginRequest(code: appleIdentityToken)
+    func loginWithApple(appleIdentityToken: String, fcmToken: String, deviceId: String) async throws -> AuthToken {
+        let request = DTO.AppleLoginRequest(
+            code: appleIdentityToken,
+            fcmToken: fcmToken,
+            deviceId: deviceId
+        )
         let response = try await apiService.loginWithApple(request: request)
         return response.data.toDomain()
     }
@@ -82,8 +86,13 @@ final class AuthRepository: AuthRepositoryInterface {
 
     // MARK: - Switch Account (Guest → Social)
 
-    func switchAccount(socialType: SocialType, socialCode: String) async throws -> AuthToken {
-        let request = DTO.SwitchAccountRequest(socialType: socialType.rawValue, socialCode: socialCode)
+    func switchAccount(socialType: SocialType, socialCode: String, fcmToken: String, deviceId: String) async throws -> AuthToken {
+        let request = DTO.SwitchAccountRequest(
+            socialType: socialType.rawValue,
+            socialCode: socialCode,
+            fcmToken: fcmToken,
+            deviceId: deviceId
+        )
         let response = try await apiService.switchAccount(request: request)
         return response.data.toDomain()
     }

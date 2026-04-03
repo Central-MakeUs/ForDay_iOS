@@ -250,7 +250,8 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
             contextType: .userFeed,
             userId: nil,
             keyword: nil,
-            hobbyIds: nil
+            hobbyIds: nil,
+            notificationId: nil
         )
         showActivityDetailWithContext(activityRecordId: activityRecordId, context: context)
     }

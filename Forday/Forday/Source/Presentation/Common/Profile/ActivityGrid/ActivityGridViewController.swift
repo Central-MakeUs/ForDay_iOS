@@ -282,7 +282,8 @@ extension ActivityGridViewController: UICollectionViewDelegate {
             contextType: .userFeed,
             userId: viewModel.userId,
             keyword: nil,
-            hobbyIds: viewModel.selectedHobbyIds.isEmpty ? nil : Array(viewModel.selectedHobbyIds)
+            hobbyIds: viewModel.selectedHobbyIds.isEmpty ? nil : Array(viewModel.selectedHobbyIds),
+            notificationId: nil
         )
 
         // Coordinator를 통해 상세 화면(스와이프 모드) 표시
