@@ -18,8 +18,12 @@ final class AuthRepository: AuthRepositoryInterface {
     
     // MARK: - Kakao Login
     
-    func loginWithKakao(kakaoAccessToken: String) async throws -> AuthToken {
-        let request = DTO.KakaoLoginRequest(kakaoAccessToken: kakaoAccessToken)
+    func loginWithKakao(kakaoAccessToken: String, fcmToken: String, deviceId: String) async throws -> AuthToken {
+        let request = DTO.KakaoLoginRequest(
+            kakaoAccessToken: kakaoAccessToken,
+            fcmToken: fcmToken,
+            deviceId: deviceId
+        )
         let response = try await apiService.loginWithKakao(request: request)
         return response.data.toDomain()
     }
@@ -82,5 +86,8 @@ final class AuthRepository: AuthRepositoryInterface {
         let request = DTO.SwitchAccountRequest(socialType: socialType.rawValue, socialCode: socialCode)
         let response = try await apiService.switchAccount(request: request)
         return response.data.toDomain()
+    }
+}
+n()
     }
 }
