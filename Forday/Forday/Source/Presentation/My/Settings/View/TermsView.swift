@@ -27,11 +27,6 @@ final class TermsView: UIView {
 
     // MARK: - UI Components
 
-    // Custom Navigation Bar
-    private let navigationBarView = UIView()
-    private let titleLabel = UILabel()
-    let closeButton = UIButton(type: .system)
-
     // Content
     private let scrollView = UIScrollView()
     private let scrollContentView = UIView()
@@ -41,14 +36,9 @@ final class TermsView: UIView {
     // Loading
     private let loadingIndicator = UIActivityIndicatorView(style: .medium)
 
-    // MARK: - Properties
-
-    private let termsType: TermsType
-
     // MARK: - Initialization
 
-    init(termsType: TermsType) {
-        self.termsType = termsType
+    init() {
         super.init(frame: .zero)
         style()
         layout()
@@ -260,22 +250,6 @@ extension TermsView {
     private func style() {
         backgroundColor = .bg002
 
-        // Navigation Bar
-        navigationBarView.do {
-            $0.backgroundColor = .bg001
-        }
-
-        titleLabel.do {
-            $0.setTextWithTypography(termsType.title, style: .header16)
-            $0.textColor = .neutral800
-            $0.textAlignment = .center
-        }
-
-        closeButton.do {
-            $0.setImage(.Icon.xmark, for: .normal)
-            $0.tintColor = .neutral900
-        }
-
         // Scroll View
         scrollView.do {
             $0.backgroundColor = .bg002
@@ -308,10 +282,6 @@ extension TermsView {
     }
 
     private func layout() {
-        addSubview(navigationBarView)
-        navigationBarView.addSubview(titleLabel)
-        navigationBarView.addSubview(closeButton)
-
         addSubview(scrollView)
         scrollView.addSubview(scrollContentView)
         scrollContentView.addSubview(contentContainerView)
@@ -319,27 +289,9 @@ extension TermsView {
 
         addSubview(loadingIndicator)
 
-        // Navigation Bar Layout
-        navigationBarView.snp.makeConstraints {
-            $0.top.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(safeAreaLayoutGuide.snp.top).offset(44)
-        }
-
-        titleLabel.snp.makeConstraints {
-            $0.centerX.equalToSuperview()
-            $0.bottom.equalToSuperview().offset(-10)
-        }
-
-        closeButton.snp.makeConstraints {
-            $0.trailing.equalToSuperview().offset(-20)
-            $0.centerY.equalTo(titleLabel)
-            $0.width.height.equalTo(24)
-        }
-
         // Scroll View Layout
         scrollView.snp.makeConstraints {
-            $0.top.equalTo(navigationBarView.snp.bottom)
-            $0.leading.trailing.bottom.equalToSuperview()
+            $0.edges.equalTo(safeAreaLayoutGuide)
         }
 
         scrollContentView.snp.makeConstraints {
@@ -369,11 +321,7 @@ extension TermsView {
 }
 
 #if DEBUG
-#Preview("Terms of Service") {
-    TermsView(termsType: .termsOfService)
-}
-
-#Preview("Privacy Policy") {
-    TermsView(termsType: .privacyPolicy)
+#Preview("Terms View") {
+    TermsView()
 }
 #endif

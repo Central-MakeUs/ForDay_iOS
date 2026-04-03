@@ -23,7 +23,6 @@ final class TermsViewController: UIViewController {
     init(termsType: TermsType) {
         self.termsType = termsType
         super.init(nibName: nil, bundle: nil)
-        modalPresentationStyle = .fullScreen
     }
 
     required init?(coder: NSCoder) {
@@ -33,12 +32,12 @@ final class TermsViewController: UIViewController {
     // MARK: - Lifecycle
 
     override func loadView() {
-        view = TermsView(termsType: termsType)
+        view = TermsView()
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupActions()
+        setupNavigationBar()
         loadContent()
     }
 }
@@ -46,20 +45,9 @@ final class TermsViewController: UIViewController {
 // MARK: - Setup
 
 extension TermsViewController {
-    private func setupActions() {
-        termsView.closeButton.addTarget(
-            self,
-            action: #selector(dismissButtonTapped),
-            for: .touchUpInside
-        )
-    }
-}
-
-// MARK: - Actions
-
-extension TermsViewController {
-    @objc private func dismissButtonTapped() {
-        dismiss(animated: true)
+    private func setupNavigationBar() {
+        title = termsType.title
+        navigationController?.navigationBar.tintColor = .neutral900
     }
 }
 
