@@ -57,7 +57,8 @@ extension DTO.StoriesData {
             tabs: tabInfo?.map { $0.toDomain() } ?? [],
             stories: recordList.map { $0.toDomain() },
             lastRecordId: lastRecordId,
-            hasNext: hasNext
+            hasNext: hasNext,
+            unReadNotificationExists: unReadNotificationExists
         )
     }
 }

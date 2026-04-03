@@ -21,6 +21,7 @@ extension DTO {
             let recommendMessage: String
             let aiCallRemaining: Bool
             let aiCallRemainingCount: Int
+            let unReadNotificationExists: Bool
 
             struct InProgressHobby: Codable {
                 let hobbyId: Int
@@ -65,6 +66,10 @@ extension DTO.HomeInfoResponse {
             recommendMessage: data.recommendMessage,
             aiCallRemaining: data.aiCallRemaining,
             aiCallRemainingCount: data.aiCallRemainingCount
+        )
+    }
+}
+sts
         )
     }
 }

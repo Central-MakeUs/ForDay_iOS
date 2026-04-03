@@ -15,6 +15,7 @@ extension DTO {
             let profileImageUrl: String?
             let nickname: String
             let totalCollectedStickerCount: Int
+            let unReadNotificationExists: Bool
         }
     }
 }
@@ -24,7 +25,8 @@ extension DTO.UsersInfoResponse {
         return UserInfo(
             profileImageUrl: data.profileImageUrl,
             nickname: data.nickname,
-            totalCollectedStickerCount: data.totalCollectedStickerCount
+            totalCollectedStickerCount: data.totalCollectedStickerCount,
+            unReadNotificationExists: data.unReadNotificationExists
         )
     }
 }
