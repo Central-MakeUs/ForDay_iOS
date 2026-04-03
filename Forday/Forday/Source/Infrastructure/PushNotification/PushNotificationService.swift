@@ -99,12 +99,43 @@ extension PushNotificationService: UNUserNotificationCenterDelegate {
 // MARK: - MessagingDelegate
 
 extension PushNotificationService: MessagingDelegate {
-    
+
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         guard let token = fcmToken else { return }
         print("🔥 [Push] FCM Token 발급 완료: \(token)")
-        
-        // 여기서 FCM 토큰을 저장하거나 필요 시 서버로 갱신 API를 보낼 수 있음
-        // (보통 로그온 직후나 토큰 발급 직후에 보냄)
+
+        let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? ""
+        let storage = FCMTokenStorage.shared
+
+        // 1. 기존 토큰과 비교
+        let previousToken = storage.loadFCMToken()
+        let isTokenChanged = previousToken != token
+
+        // 2. 로컬에 저장
+        storage.saveTokenInfo(fcmToken: token, deviceId: deviceId)
+
+        // 3. 토큰이 변경되었거나 처음 발급된 경우 서버에 업데이트
+        if isTokenChanged {
+            print("🔄 [Push] FCM Token changed, updating server...")
+            updateFCMTokenToServer(fcmToken: token, deviceId: deviceId)
+        } else {
+            print("✅ [Push] FCM Token unchanged, skipping server update")
+        }
+    }
+
+    private func updateFCMTokenToServer(fcmToken: String, deviceId: String) {
+        Task {
+            do {
+                let useCase = UpdateFCMTokenUseCase()
+                let success = try await useCase.execute(fcmToken: fcmToken, deviceId: deviceId)
+                if success {
+                    print("✅ [Push] FCM Token updated to server successfully")
+                } else {
+                    print("⚠️ [Push] FCM Token update to server failed")
+                }
+            } catch {
+                print("❌ [Push] FCM Token update error: \(error)")
+            }
+        }
     }
 }
