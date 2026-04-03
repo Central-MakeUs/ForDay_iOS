@@ -57,6 +57,12 @@ final class AppEventBus {
     /// Published when scrap status changes (added or removed)
     let scrapDidUpdate = PassthroughSubject<Void, Never>()
 
+    // MARK: - Notification Events
+
+    /// Published when a push notification is tapped
+    /// Payload: landingUrl from the notification data
+    let pushNotificationReceived = PassthroughSubject<String, Never>()
+
     // MARK: - AI Recommendation Events
 
     /// Published when AI recommendation is completed (activity saved or selected)

@@ -16,6 +16,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         // Firebase 초기화
         FirebaseApp.configure()
+        
+        // Push 알림 초기화
+        PushNotificationService.shared.setup(application: application)
 
 #if DEBUG
 //        if ProcessInfo.processInfo.environment["CLEAR_TOKENS_ON_LAUNCH"] == "YES" {
