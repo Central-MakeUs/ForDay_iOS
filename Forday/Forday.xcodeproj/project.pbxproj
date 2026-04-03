@@ -17,6 +17,7 @@
 		6C8BB44A2F5973AB001D3B96 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 6C8BB4492F5973AB001D3B96 /* FirebaseAnalytics */; };
 		6C944CBA2F0ACF9F007D9AB5 /* Then in Frameworks */ = {isa = PBXBuildFile; productRef = 6C944CB92F0ACF9F007D9AB5 /* Then */; };
 		6C944CBD2F0AD02D007D9AB5 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6C944CBC2F0AD02D007D9AB5 /* SnapKit */; };
+		6CC00A102F7FE1B70087420B /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 6CC00A0F2F7FE1B70087420B /* FirebaseMessaging */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -81,6 +82,7 @@
 				6C698A092F0ECF2B001229A8 /* CombineMoya in Frameworks */,
 				6C698A702F10E9E6001229A8 /* KakaoSDKAuth in Frameworks */,
 				6C8BB44A2F5973AB001D3B96 /* FirebaseAnalytics in Frameworks */,
+				6CC00A102F7FE1B70087420B /* FirebaseMessaging in Frameworks */,
 				6C85871E2F1784F700A8AA1B /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -167,6 +169,7 @@
 				6C85871D2F1784F700A8AA1B /* Lottie */,
 				6C40ECED2F268FFC00FEFD60 /* Kingfisher */,
 				6C8BB4492F5973AB001D3B96 /* FirebaseAnalytics */,
+				6CC00A0F2F7FE1B70087420B /* FirebaseMessaging */,
 			);
 			productName = Forday;
 			productReference = 6C944CA02F0ACF42007D9AB5 /* Forday.app */;
@@ -657,6 +660,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 6C944CBB2F0AD02D007D9AB5 /* XCRemoteSwiftPackageReference "SnapKit" */;
 			productName = SnapKit;
+		};
+		6CC00A0F2F7FE1B70087420B /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6C8BB03A2F52C512001D3B96 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
