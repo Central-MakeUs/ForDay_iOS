@@ -7,6 +7,7 @@
 
 
 import UIKit
+import Combine
 
 class MainTabBarCoordinator: NSObject, Coordinator {
 
@@ -17,6 +18,7 @@ class MainTabBarCoordinator: NSObject, Coordinator {
     weak var parentCoordinator: AppCoordinator?
     private weak var homeViewController: HomeViewController?
     private var onboardingCoordinator: OnboardingCoordinator?
+    private var cancellables = Set<AnyCancellable>()
 
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
@@ -25,6 +27,7 @@ class MainTabBarCoordinator: NSObject, Coordinator {
 
     func start() {
         setupTabBar()
+        setupPushNotificationHandler()
     }
 
     private func setupTabBar() {
@@ -394,6 +397,17 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         }
     }
 
+    func showNotifications() {
+        let notificationVC = NotificationViewController()
+        notificationVC.coordinator = self
+        notificationVC.hidesBottomBarWhenPushed = true  // 탭바 숨김
+
+        // Push to Home navigation stack (스와이프 백 지원)
+        if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
+            homeNav.pushViewController(notificationVC, animated: true)
+        }
+    }
+
     func switchToHomeTab() {
         tabBarController.selectedIndex = 0
     }
@@ -409,5 +423,46 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
     /// 계정 전환 시 홈 상태 초기화 (이전 사용자의 hobbyId 제거)
     func resetHomeState() {
         homeViewController?.resetForAccountSwitch()
+    }
+
+    /// Push 알림 클릭 이벤트 처리 설정
+    private func setupPushNotificationHandler() {
+        AppEventBus.shared.pushNotificationReceived
+            .sink { [weak self] landingUrl in
+                self?.handlePushNotification(landingUrl: landingUrl)
+            }
+            .store(in: &cancellables)
+    }
+
+    /// Push 알림 클릭 시 해당 화면으로 네비게이션
+    /// - Parameter landingUrl: 백엔드에서 제공하는 딥링크 URL (예: "/activity-record/123")
+    private func handlePushNotification(landingUrl: String) {
+        print("🚀 [Push] Handling notification with landingUrl: \(landingUrl)")
+
+        // landingUrl 파싱 (예: "/activity-record/123" → recordId: 123)
+        // TODO: 백엔드에서 landingUrl 형식 확정 시 파싱 로직 구현
+        // 현재는 기본적으로 ActivityDetail로 네비게이션하는 예시
+
+        // URL 형식 예상: "/activity-record/{recordId}"
+        let components = landingUrl.split(separator: "/")
+        if components.count >= 2,
+           components[0] == "activity-record",
+           let recordId = Int(components[1]) {
+
+            // ActivityDetail로 네비게이션 (읽음 처리는 notificationId 없이는 불가)
+            let context = ActivityDetailContext(
+                contextType: .userFeed,
+                userId: nil,
+                keyword: nil,
+                hobbyIds: nil,
+                notificationId: nil  // Push 알림에서는 notificationId 없음
+            )
+
+            // Home 탭으로 전환 후 ActivityDetail push
+            tabBarController.selectedIndex = 0
+            showActivityDetailWithContext(activityRecordId: recordId, context: context)
+        } else {
+            print("⚠️ [Push] Unknown landingUrl format: \(landingUrl)")
+        }
     }
 }
