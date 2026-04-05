@@ -366,6 +366,9 @@ extension HomeViewController {
         // 활동 미리보기 업데이트 (버튼 텍스트도 함께 업데이트됨)
         homeView.updateActivityPreview(homeInfo.activityPreview)
 
+        // 알림 아이콘 업데이트
+        homeView.updateNotificationIcon(hasUnread: homeInfo.unReadNotificationExists)
+
         // 취미가 없을 때만 버튼 텍스트를 "취미 추가하기"로 변경
         if !hasHobbies {
             homeView.updateAddActivityButtonTitle(hasHobbies: false)
@@ -550,8 +553,7 @@ extension HomeViewController {
     }
 
     @objc private func notificationTapped() {
-        print("알림 탭")
-        // TODO: 알림 화면
+        coordinator?.showNotifications()
     }
     
     @objc private func myActivityChevronTapped() {
