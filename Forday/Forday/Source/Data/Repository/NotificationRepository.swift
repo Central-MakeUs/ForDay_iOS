@@ -67,7 +67,8 @@ extension DTO.PushInfoData {
 extension DTO.NotificationItemData {
     func toDomain() -> NotificationItem {
         return NotificationItem(
-            id: notificationId,
+            id: notificationId,  // Identifiable용
+            notificationId: notificationId,  // 실제 서버 필드
             imageUrl: URL(string: imageUrl ?? ""),
             message: message,
             type: NotificationType(rawValue: type) ?? .unknown,

@@ -20,7 +20,8 @@ struct PushInfo {
 }
 
 struct NotificationItem: Identifiable {
-    let id: Int
+    let id: Int  // Identifiable 프로토콜용
+    let notificationId: Int  // 서버 응답 필드
     let imageUrl: URL?
     let message: String
     let type: NotificationType
@@ -29,6 +30,17 @@ struct NotificationItem: Identifiable {
     let read: Bool
     let senderProfileUrl: URL?
     let createdAt: String
+
+    /// 알림 타입에 따라 recordId 반환 (ActivityDetail 네비게이션용)
+    var recordId: Int? {
+        if let reaction = reactionAlarm {
+            return reaction.recordId
+        }
+        if let comment = commentAlarm {
+            return comment.recordId
+        }
+        return nil
+    }
 }
 
 enum NotificationType: String {
