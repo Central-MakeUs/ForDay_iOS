@@ -45,6 +45,19 @@ extension GeneralSettingsViewController {
             for: .touchUpInside
         )
 
+        // Notification toggles
+        settingsView.postLikeNotificationRow.toggleSwitch.addTarget(
+            self,
+            action: #selector(postLikeNotificationToggled),
+            for: .valueChanged
+        )
+
+        settingsView.appPushNotificationRow.toggleSwitch.addTarget(
+            self,
+            action: #selector(appPushNotificationToggled),
+            for: .valueChanged
+        )
+
         // Row tap gestures
         let termsGesture = UITapGestureRecognizer(target: self, action: #selector(termsOfServiceTapped))
         settingsView.termsOfServiceRow.addGestureRecognizer(termsGesture)
@@ -80,6 +93,18 @@ extension GeneralSettingsViewController {
         } else {
             dismiss(animated: true)
         }
+    }
+
+    @objc private func postLikeNotificationToggled(_ sender: UISwitch) {
+        // TODO: API 연동 - 게시글 좋아요 알림 설정 토글
+        print("📱 [GeneralSettings] Post like notification toggled: \(sender.isOn)")
+        // toggleNotification(active: sender.isOn, toggleType: "RECORD_REACTION")
+    }
+
+    @objc private func appPushNotificationToggled(_ sender: UISwitch) {
+        // TODO: API 연동 - 앱 푸시 알림 설정 토글
+        print("📱 [GeneralSettings] App push notification toggled: \(sender.isOn)")
+        // toggleNotification(active: sender.isOn, toggleType: "PUSH")
     }
 
     @objc private func termsOfServiceTapped() {
