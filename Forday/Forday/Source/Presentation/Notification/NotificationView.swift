@@ -203,8 +203,9 @@ final class NotificationView: UIView {
         permissionBannerView.isHidden = false
 
         // TableView top constraint 조정
-        tableView.snp.updateConstraints {
+        tableView.snp.remakeConstraints {
             $0.top.equalTo(permissionBannerView.snp.bottom).offset(16)
+            $0.leading.trailing.bottom.equalToSuperview()
         }
     }
 
@@ -213,8 +214,9 @@ final class NotificationView: UIView {
         permissionBannerView.isHidden = true
 
         // TableView top constraint 원복
-        tableView.snp.updateConstraints {
+        tableView.snp.remakeConstraints {
             $0.top.equalTo(headerView.snp.bottom).offset(16)
+            $0.leading.trailing.bottom.equalToSuperview()
         }
     }
 
