@@ -8,6 +8,7 @@
 import UIKit
 import KakaoSDKCommon
 import FirebaseCore
+import FirebaseMessaging
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -40,6 +41,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         KakaoSDK.initSDK(appKey: kakaoAppKey)
         
         return true
+    }
+
+    // MARK: - Push Notifications
+    
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        // Firebase에 APNS 토큰 전달
+        Messaging.messaging().apnsToken = deviceToken
+    }
+    
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        print("❌ [Push] Failed to register for remote notifications: \(error.localizedDescription)")
     }
     
     // MARK: UISceneSession Lifecycle
