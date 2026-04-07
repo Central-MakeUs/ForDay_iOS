@@ -156,7 +156,6 @@ extension HomeView {
         notificationButton.do {
             $0.setImage(.Icon.notificationOff, for: .normal)
             $0.tintColor = .neutral500
-            $0.isHidden = true // TODO: 알림 기능 연결 시 활성화
         }
         
         // AI Recommendation Toast
@@ -334,7 +333,6 @@ extension HomeView {
             $0.width.height.equalTo(24)
         }
 
-        // TODO: 알림 기능 연결 시 활성화 후 settingsButton을 notificationButton 왼쪽으로 이동
         notificationButton.snp.makeConstraints {
             $0.trailing.equalTo(settingsButton.snp.leading).offset(-12)
             $0.centerY.equalTo(firstHobbyButton)
@@ -562,6 +560,11 @@ extension HomeView {
                 $0.bottom.equalToSuperview().offset(-24)
             }
         }
+    }
+
+    func updateNotificationIcon(hasUnread: Bool) {
+        let icon = hasUnread ? UIImage.Icon.notificationOn : UIImage.Icon.notificationOff
+        notificationButton.setImage(icon, for: .normal)
     }
 
     private func applyGradientToAddActivityButton() {

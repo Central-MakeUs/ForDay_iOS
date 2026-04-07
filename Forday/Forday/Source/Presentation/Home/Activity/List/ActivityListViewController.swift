@@ -95,6 +95,9 @@ extension ActivityListViewController {
 
     /// 공통 HobbyActivityInputViewController 생성 및 표시
     private func presentActivityInput(aiRecommendedContent: String? = nil) {
+        // Analytics: 활동 추가 버튼 클릭 (활동 목록 추가)
+        FirebaseAnalyticsService.shared.log(.activityAddEntryClicked(entryPoint: .activityListPlus, hobbyName: hobbyName))
+
         let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: hobbyName)
         inputVC.aiCallRemaining = aiCallRemaining
 

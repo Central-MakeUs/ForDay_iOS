@@ -23,6 +23,7 @@ extension DTO {
         let nicknameSet: Bool
         let onboardingData: OnboardingHobbyData?
         let termsConsentCompleted: Bool?  // Optional - 서버가 아직 반환 안 함
+        let fcmToken: String?
     }
 
     struct OnboardingHobbyData: Codable {

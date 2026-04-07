@@ -41,6 +41,10 @@ final class ActivityDetailView: UIView {
     private var displayMode: DisplayMode = .normal
     private var isPagingMode: Bool = false
 
+    // 커스텀 내비게이션 바 (afterRecord 모드에서만 표시)
+    private let customNavigationBar = UIView()
+    private let navigationTitleLabel = UILabel()
+
     // 홈으로 가기 버튼 (기록 완료 후 모드에서만 표시)
     let goHomeButton = UIButton()
 
@@ -72,7 +76,6 @@ final class ActivityDetailView: UIView {
     private let memoStickerImageView = UIImageView() // 이미지 없을 때 메모 안 스티커
 
     // Reaction Views (단일 보기 모드 전용)
-    let reactionUsersScrollView = ReactionUsersScrollView()
     let reactionButtonsView = ReactionButtonsView()
 
     private var currentLayoutType: LayoutType = .withImage
@@ -276,6 +279,17 @@ extension ActivityDetailView {
     private func style() {
         backgroundColor = .systemBackground
 
+        customNavigationBar.do {
+            $0.backgroundColor = .systemBackground
+            $0.isHidden = true
+        }
+
+        navigationTitleLabel.do {
+            $0.setTextWithTypography("내 활동 보기", style: .header18)
+            $0.textColor = .neutral900
+            $0.textAlignment = .center
+        }
+
         goHomeButton.do {
             var config = UIButton.Configuration.filled()
             config.title = "홈으로 가기"
@@ -347,19 +361,28 @@ extension ActivityDetailView {
             $0.textColor = .neutral900
             $0.numberOfLines = 0
         }
-
-        reactionUsersScrollView.do {
-            $0.isHidden = true
-        }
     }
 
     private func layout() {
+        addSubview(customNavigationBar)
         addSubview(goHomeButton)
         addSubview(scrollView)
         scrollView.addSubview(contentView)
 
-        addSubview(reactionUsersScrollView)
         addSubview(reactionButtonsView)
+
+        customNavigationBar.addSubview(navigationTitleLabel)
+
+        // 커스텀 내비게이션 바 레이아웃
+        customNavigationBar.snp.makeConstraints {
+            $0.top.equalTo(safeAreaLayoutGuide)
+            $0.leading.trailing.equalToSuperview()
+            $0.height.equalTo(Layout.navBarHeight)
+        }
+
+        navigationTitleLabel.snp.makeConstraints {
+            $0.centerX.centerY.equalToSuperview()
+        }
 
         updateScrollViewConstraints()
 
@@ -367,12 +390,6 @@ extension ActivityDetailView {
             $0.leading.trailing.equalToSuperview()
             $0.bottom.equalTo(safeAreaLayoutGuide)
             $0.height.equalTo(Layout.reactionBarHeight)
-        }
-
-        reactionUsersScrollView.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(reactionButtonsView.snp.top)
-            $0.height.equalTo(0)
         }
 
         goHomeButton.snp.makeConstraints {
@@ -471,12 +488,13 @@ extension ActivityDetailView {
 
     private func updateScrollViewConstraints() {
         scrollView.snp.remakeConstraints {
-            $0.top.equalTo(safeAreaLayoutGuide).offset(Layout.navBarHeight)
-            $0.leading.trailing.equalToSuperview()
-
             if displayMode == .afterRecord {
+                $0.top.equalTo(customNavigationBar.snp.bottom)
+                $0.leading.trailing.equalToSuperview()
                 $0.bottom.equalTo(goHomeButton.snp.top).offset(-16)
             } else {
+                $0.top.equalTo(safeAreaLayoutGuide).offset(Layout.navBarHeight)
+                $0.leading.trailing.equalToSuperview()
                 $0.bottom.equalTo(safeAreaLayoutGuide).offset(-Layout.reactionBarHeight)
             }
         }
@@ -496,13 +514,30 @@ extension ActivityDetailView {
 
     func setDisplayMode(_ mode: DisplayMode) {
         displayMode = mode
+
+        if mode == .afterRecord {
+            customNavigationBar.isHidden = false
+            reactionButtonsView.isHidden = true
+            goHomeButton.isHidden = false
+        } else {
+            customNavigationBar.isHidden = true
+            reactionButtonsView.isHidden = false
+            goHomeButton.isHidden = true
+        }
+
         updateScrollViewConstraints()
     }
 
     func setPagingMode(_ enabled: Bool) {
         isPagingMode = enabled
-        reactionButtonsView.isHidden = enabled
-        reactionUsersScrollView.isHidden = enabled
+
+        // afterRecord 모드일 때는 항상 반응 버튼 숨김
+        if displayMode == .afterRecord {
+            reactionButtonsView.isHidden = true
+        } else {
+            reactionButtonsView.isHidden = enabled
+        }
+
         updateScrollViewConstraints()
     }
 }

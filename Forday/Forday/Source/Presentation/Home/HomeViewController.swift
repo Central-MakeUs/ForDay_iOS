@@ -14,7 +14,7 @@ class HomeViewController: UIViewController {
     
     // Properties
 
-    private let homeView = HomeView()
+    let homeView = HomeView()
     let viewModel = HomeViewModel()
     private let stickerBoardViewModel = StickerBoardViewModel()
     private var cancellables = Set<AnyCancellable>()
@@ -188,21 +188,29 @@ extension HomeViewController {
         // 스티커판에서 활동 상세 화면으로 이동
         stickerBoardViewModel.onNavigateToActivityDetail = { [weak self] activityRecordId in
             guard let self = self else { return }
-            
+
             // 홈 스티커판에서 진입 시, 해당 취미의 활동들로 페이징 컨텍스트 생성
             let context = ActivityDetailContext(
                 contextType: .userFeed,
                 userId: nil, // 본인
                 keyword: nil,
-                hobbyIds: self.viewModel.currentHobbyId.map { [$0] }
+                hobbyIds: self.viewModel.currentHobbyId.map { [$0] },
+                notificationId: nil
             )
-            
+
             self.coordinator?.showActivityDetailWithContext(activityRecordId: activityRecordId, context: context)
         }
 
-        // 스티커판에서 활동 기록 화면으로 이동
+        // 스티커판에서 활동 기록 화면으로 이동 (빈 스티커 클릭)
         stickerBoardViewModel.onNavigateToActivityRecord = { [weak self] in
-            self?.coordinator?.showActivityRecord()
+            guard let self = self else { return }
+
+            // Analytics: 빈 스티커 클릭
+            let hobbyName = self.viewModel.homeInfo?.inProgressHobbies.first(where: { $0.currentHobby })?.hobbyName
+            let activityName = self.viewModel.homeInfo?.activityPreview?.content
+            FirebaseAnalyticsService.shared.log(.recordEntryClicked(entryPoint: .emptySticker, hobbyName: hobbyName, activityName: activityName))
+
+            self.coordinator?.showActivityRecord()
         }
     }
     
@@ -364,6 +372,9 @@ extension HomeViewController {
 
         // 활동 미리보기 업데이트 (버튼 텍스트도 함께 업데이트됨)
         homeView.updateActivityPreview(homeInfo.activityPreview)
+
+        // 알림 아이콘 업데이트
+        homeView.updateNotificationIcon(hasUnread: homeInfo.unReadNotificationExists)
 
         // 취미가 없을 때만 버튼 텍스트를 "취미 추가하기"로 변경
         if !hasHobbies {
@@ -549,8 +560,7 @@ extension HomeViewController {
     }
 
     @objc private func notificationTapped() {
-        print("알림 탭")
-        // TODO: 알림 화면
+        coordinator?.showNotifications()
     }
     
     @objc private func myActivityChevronTapped() {
@@ -662,7 +672,9 @@ extension HomeViewController {
                 userSummaryText: homeInfo.userSummaryText,
                 recommendMessage: homeInfo.recommendMessage,
                 aiCallRemaining: homeInfo.aiCallRemaining,
-                aiCallRemainingCount: homeInfo.aiCallRemainingCount
+                aiCallRemainingCount: homeInfo.aiCallRemainingCount,
+                unReadNotificationExists: homeInfo.unReadNotificationExists
+                
             )
 
             viewModel.homeInfo = updatedHomeInfo
@@ -700,6 +712,12 @@ extension HomeViewController {
         if homeInfo.activityPreview != nil {
             // 오늘의 스티커 붙이기 → ActivityRecord 화면으로 이동
             print("오늘의 스티커 붙이기 탭")
+
+            // Analytics: 스티커 CTA 클릭
+            let hobbyName = homeInfo.inProgressHobbies.first(where: { $0.currentHobby })?.hobbyName
+            let activityName = homeInfo.activityPreview?.content
+            FirebaseAnalyticsService.shared.log(.recordEntryClicked(entryPoint: .stickerCta, hobbyName: hobbyName, activityName: activityName))
+
             coordinator?.showActivityRecord()
         } else {
             // 취미활동 추가하기 → Activity 입력 화면으로 이동
@@ -719,6 +737,9 @@ extension HomeViewController {
         }
 
         let hobbyName = viewModel.homeInfo?.inProgressHobbies.first(where: { $0.currentHobby })?.hobbyName ?? "취미"
+
+        // Analytics: 활동 추가 버튼 클릭 (AI 배너)
+        FirebaseAnalyticsService.shared.log(.activityAddEntryClicked(entryPoint: .aiBanner, hobbyName: hobbyName))
 
         let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: hobbyName)
         inputVC.aiCallRemaining = viewModel.homeInfo?.aiCallRemaining ?? true
@@ -801,6 +822,9 @@ extension HomeViewController {
         }
 
         let hobbyName = viewModel.homeInfo?.inProgressHobbies.first(where: { $0.currentHobby })?.hobbyName ?? "취미"
+
+        // Analytics: 활동 추가 버튼 클릭 (홈 FAB)
+        FirebaseAnalyticsService.shared.log(.activityAddEntryClicked(entryPoint: .homeFab, hobbyName: hobbyName))
 
         let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: hobbyName)
         inputVC.aiCallRemaining = viewModel.homeInfo?.aiCallRemaining ?? true

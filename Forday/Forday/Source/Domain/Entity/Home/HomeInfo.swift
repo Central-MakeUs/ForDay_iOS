@@ -15,6 +15,7 @@ struct HomeInfo {
     let recommendMessage: String
     let aiCallRemaining: Bool
     let aiCallRemainingCount: Int
+    let unReadNotificationExists: Bool
 }
 
 struct InProgressHobby {

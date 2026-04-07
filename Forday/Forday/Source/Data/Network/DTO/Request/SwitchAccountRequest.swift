@@ -9,5 +9,8 @@ extension DTO {
     struct SwitchAccountRequest: BaseRequest {
         let socialType: String
         let socialCode: String
+        let fcmToken: String
+        let deviceId: String
+        let deviceType: String = "IOS"
     }
 }

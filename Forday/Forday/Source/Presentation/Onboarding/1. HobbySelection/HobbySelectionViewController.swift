@@ -202,7 +202,7 @@ extension HobbySelectionViewController: UICollectionViewDelegate {
         let hobby = viewModel.hobbies[indexPath.item]
 
         // Analytics: 선택한 취미 카드
-        FirebaseAnalyticsService.shared.log(.selectedHobbyCard(id: hobby.name))
+        FirebaseAnalyticsService.shared.log(.selectedHobbyCard(name: hobby.name))
 
         viewModel.selectHobby(at: indexPath.item)
         hobbyView.resetCustomInputButton()

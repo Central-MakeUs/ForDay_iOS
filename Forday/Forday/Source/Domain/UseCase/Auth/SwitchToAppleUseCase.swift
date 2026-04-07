@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import UIKit
+import FirebaseMessaging
 
 struct SwitchToAppleUseCase {
 
@@ -29,22 +31,34 @@ struct SwitchToAppleUseCase {
         // 1. Apple SDK로 authorization_code 받기
         let authorizationCode = try await appleAuthService.login()
 
-        // 2. authorization_code를 서버에 보내서 계정 전환
+        // 2. FCM 토큰 및 기기 ID 가져오기
+        // FCM 토큰 획득 우선순위:
+        // 1) 로컬 스토리지에 저장된 토큰 (이전 로그인 시 저장)
+        // 2) Firebase에서 현재 발급된 토큰
+        // 3) 둘 다 없으면 에러 throw (서버에서 fcmToken 필수 요구)
+        guard let fcmToken = FCMTokenStorage.shared.loadFCMToken() ?? Messaging.messaging().fcmToken else {
+            throw AppError.auth(.fcmTokenNotAvailable)
+        }
+        let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? ""
+
+        // 3. authorization_code 및 FCM 정보를 서버에 보내서 계정 전환
         let authToken = try await authRepository.switchAccount(
             socialType: .apple,
-            socialCode: authorizationCode
+            socialCode: authorizationCode,
+            fcmToken: fcmToken,
+            deviceId: deviceId
         )
 
-        // 3. 새로운 토큰을 KeyChain에 저장
+        // 4. 새로운 토큰을 KeyChain에 저장
         try tokenStorage.saveTokens(
             accessToken: authToken.accessToken,
             refreshToken: authToken.refreshToken
         )
 
-        // 4. 게스트 ID 삭제 (더 이상 게스트가 아님)
+        // 5. 게스트 ID 삭제 (더 이상 게스트가 아님)
         try tokenStorage.deleteGuestUserId()
 
-        // 5. 전체 AuthToken 반환
+        // 6. 전체 AuthToken 반환
         return authToken
     }
 }

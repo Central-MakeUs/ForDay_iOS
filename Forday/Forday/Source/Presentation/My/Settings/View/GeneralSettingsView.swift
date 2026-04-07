@@ -23,6 +23,18 @@ final class GeneralSettingsView: UIView {
     private let scrollView = UIScrollView()
     private let scrollContentView = UIView()
 
+    // Section 0: 알림
+    private let notificationSectionView = UIView()
+    private let notificationHeaderLabel = UILabel()
+    let postLikeNotificationRow = NotificationToggleRowView(
+        title: "게시글 좋아요 알림 설정",
+        subtitle: "내 게시글에 감정 기록이 달리면 알려드려요."
+    )
+    let appPushNotificationRow = NotificationToggleRowView(
+        title: "앱 푸시 알림 설정",
+        subtitle: nil
+    )
+
     // Section 1: 안내
     private let infoSectionView = UIView()
     private let infoHeaderLabel = UILabel()
@@ -86,6 +98,16 @@ extension GeneralSettingsView {
             $0.backgroundColor = .bg002
         }
 
+        // Section 0: 알림
+        notificationSectionView.do {
+            $0.backgroundColor = .bg001
+        }
+
+        notificationHeaderLabel.do {
+            $0.setTextWithTypography("알림", style: .body12)
+            $0.textColor = UIColor(hex: "9B9EA9")  // blue gray30
+        }
+
         // Section 1: 안내
         infoSectionView.do {
             $0.backgroundColor = .bg001
@@ -116,6 +138,12 @@ extension GeneralSettingsView {
 
         addSubview(scrollView)
         scrollView.addSubview(scrollContentView)
+
+        // Section 0: 알림
+        scrollContentView.addSubview(notificationSectionView)
+        notificationSectionView.addSubview(notificationHeaderLabel)
+        notificationSectionView.addSubview(postLikeNotificationRow)
+        notificationSectionView.addSubview(appPushNotificationRow)
 
         // Section 1: 안내
         scrollContentView.addSubview(infoSectionView)
@@ -158,9 +186,32 @@ extension GeneralSettingsView {
             $0.width.equalToSuperview()
         }
 
+        // Section 0: 알림
+        notificationSectionView.snp.makeConstraints {
+            $0.top.equalToSuperview()
+            $0.leading.trailing.equalToSuperview()
+        }
+
+        notificationHeaderLabel.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(16)
+            $0.leading.equalToSuperview().offset(20)
+            $0.trailing.equalToSuperview().offset(-20)
+        }
+
+        postLikeNotificationRow.snp.makeConstraints {
+            $0.top.equalTo(notificationHeaderLabel.snp.bottom).offset(16)
+            $0.leading.trailing.equalToSuperview()
+        }
+
+        appPushNotificationRow.snp.makeConstraints {
+            $0.top.equalTo(postLikeNotificationRow.snp.bottom)
+            $0.leading.trailing.equalToSuperview()
+            $0.bottom.equalToSuperview().offset(-16)
+        }
+
         // Section 1: 안내
         infoSectionView.snp.makeConstraints {
-            $0.top.equalToSuperview()
+            $0.top.equalTo(notificationSectionView.snp.bottom).offset(10)
             $0.leading.trailing.equalToSuperview()
         }
 
@@ -299,6 +350,107 @@ extension SettingsRowView {
             valueLabel.snp.makeConstraints {
                 $0.trailing.equalToSuperview().offset(-20)
                 $0.centerY.equalToSuperview()
+            }
+        }
+    }
+}
+
+// MARK: - NotificationToggleRowView
+
+final class NotificationToggleRowView: UIView {
+
+    // MARK: - UI Components
+
+    private let titleLabel = UILabel()
+    private let subtitleLabel = UILabel()
+    let toggleSwitch = UISwitch()
+
+    // MARK: - Properties
+
+    private let hasSubtitle: Bool
+
+    // MARK: - Initialization
+
+    init(title: String, subtitle: String?) {
+        self.hasSubtitle = subtitle != nil
+        super.init(frame: .zero)
+        style(title: title, subtitle: subtitle)
+        layout()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    // MARK: - Public Methods
+
+    func setToggle(_ isOn: Bool) {
+        toggleSwitch.isOn = isOn
+    }
+}
+
+// MARK: - Setup
+
+extension NotificationToggleRowView {
+    private func style(title: String, subtitle: String?) {
+        backgroundColor = .clear
+        isUserInteractionEnabled = true
+
+        titleLabel.do {
+            $0.setTextWithTypography(title, style: .body14)
+            $0.textColor = .neutral900
+        }
+
+        if let subtitle = subtitle {
+            subtitleLabel.do {
+                $0.setTextWithTypography(subtitle, style: .label10)
+                $0.textColor = .neutral600
+                $0.numberOfLines = 0
+            }
+        }
+
+        toggleSwitch.do {
+            $0.onTintColor = .action001
+            $0.isOn = false
+        }
+    }
+
+    private func layout() {
+        addSubview(titleLabel)
+        addSubview(toggleSwitch)
+
+        if hasSubtitle {
+            addSubview(subtitleLabel)
+        }
+
+        // Toggle switch (right side)
+        toggleSwitch.snp.makeConstraints {
+            $0.trailing.equalToSuperview().offset(-20)
+            $0.centerY.equalToSuperview()
+        }
+
+        if hasSubtitle {
+            // Title and subtitle stacked vertically
+            titleLabel.snp.makeConstraints {
+                $0.leading.equalToSuperview().offset(20)
+                $0.top.equalToSuperview().offset(12)
+                $0.trailing.equalTo(toggleSwitch.snp.leading).offset(-12)
+            }
+
+            subtitleLabel.snp.makeConstraints {
+                $0.leading.equalToSuperview().offset(20)
+                $0.top.equalTo(titleLabel.snp.bottom).offset(4)
+                $0.trailing.equalTo(toggleSwitch.snp.leading).offset(-12)
+                $0.bottom.equalToSuperview().offset(-12)
+            }
+        } else {
+            // Only title, centered vertically
+            titleLabel.snp.makeConstraints {
+                $0.leading.equalToSuperview().offset(20)
+                $0.centerY.equalToSuperview()
+                $0.trailing.equalTo(toggleSwitch.snp.leading).offset(-12)
+                $0.top.equalToSuperview().offset(12)
+                $0.bottom.equalToSuperview().offset(-12)
             }
         }
     }

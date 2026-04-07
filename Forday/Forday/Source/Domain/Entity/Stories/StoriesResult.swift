@@ -12,4 +12,5 @@ struct StoriesResult {
     let stories: [Story]
     let lastRecordId: Int?
     let hasNext: Bool
+    let unReadNotificationExists: Bool
 }

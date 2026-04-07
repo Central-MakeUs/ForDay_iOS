@@ -17,6 +17,7 @@ extension DTO {
         let socialType: String
         let accessToken: String
         let refreshToken: String
+        let fcmToken: String?
     }
 }
 

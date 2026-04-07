@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Combine
 
 final class GeneralSettingsViewController: UIViewController {
 
@@ -16,6 +17,19 @@ final class GeneralSettingsViewController: UIViewController {
     }
 
     weak var coordinator: MainTabBarCoordinator?
+    private let viewModel: GeneralSettingsViewModel
+    private var cancellables = Set<AnyCancellable>()
+
+    // MARK: - Initialization
+
+    init(viewModel: GeneralSettingsViewModel = GeneralSettingsViewModel()) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     // MARK: - Lifecycle
 
@@ -27,9 +41,24 @@ final class GeneralSettingsViewController: UIViewController {
         super.viewDidLoad()
         setupActions()
         setupAppVersion()
+        setupBindings()
 
         // Hide navigation bar immediately in viewDidLoad
         navigationController?.setNavigationBarHidden(true, animated: false)
+
+        // 초기 토글 상태 로드
+        Task {
+            await viewModel.loadToggleStatus()
+        }
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        // 시스템 알림 권한 확인 및 동기화
+        Task {
+            await viewModel.checkAndSyncSystemNotification()
+        }
     }
 
 }
@@ -43,6 +72,19 @@ extension GeneralSettingsViewController {
             self,
             action: #selector(backButtonTapped),
             for: .touchUpInside
+        )
+
+        // Notification toggles
+        settingsView.postLikeNotificationRow.toggleSwitch.addTarget(
+            self,
+            action: #selector(postLikeNotificationToggled),
+            for: .valueChanged
+        )
+
+        settingsView.appPushNotificationRow.toggleSwitch.addTarget(
+            self,
+            action: #selector(appPushNotificationToggled),
+            for: .valueChanged
         )
 
         // Row tap gestures
@@ -68,6 +110,33 @@ extension GeneralSettingsViewController {
             settingsView.updateAppVersion(version)
         }
     }
+
+    private func setupBindings() {
+        // 앱 푸시 토글 상태 바인딩
+        viewModel.$appPushEnabled
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isEnabled in
+                self?.settingsView.appPushNotificationRow.setToggle(isEnabled)
+            }
+            .store(in: &cancellables)
+
+        // 좋아요 알림 토글 상태 바인딩
+        viewModel.$recordPushEnabled
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isEnabled in
+                self?.settingsView.postLikeNotificationRow.setToggle(isEnabled)
+            }
+            .store(in: &cancellables)
+
+        // 에러 처리
+        viewModel.$error
+            .compactMap { $0 }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] error in
+                self?.showError(error.userMessage)
+            }
+            .store(in: &cancellables)
+    }
 }
 
 // MARK: - Actions
@@ -79,6 +148,20 @@ extension GeneralSettingsViewController {
             navController.popViewController(animated: true)
         } else {
             dismiss(animated: true)
+        }
+    }
+
+    @objc private func postLikeNotificationToggled(_ sender: UISwitch) {
+        print("📱 [GeneralSettings] Post like notification toggled: \(sender.isOn)")
+        Task {
+            await viewModel.toggleRecordPush(active: sender.isOn)
+        }
+    }
+
+    @objc private func appPushNotificationToggled(_ sender: UISwitch) {
+        print("📱 [GeneralSettings] App push notification toggled: \(sender.isOn)")
+        Task {
+            await viewModel.toggleAppPush(active: sender.isOn)
         }
     }
 

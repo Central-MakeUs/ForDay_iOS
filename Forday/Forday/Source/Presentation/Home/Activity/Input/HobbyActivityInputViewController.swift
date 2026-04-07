@@ -186,6 +186,18 @@ extension HobbyActivityInputViewController {
                     guard let self = self else { return }
                     print("✅ 활동 생성 완료! hobbyId: \(self.hobbyId)")
 
+                    // Analytics: 활동 추가 완료
+                    // TODO: entryPoint를 HobbyActivityInputViewController에 전달하여 정확한 진입점 로그
+                    for activity in activities {
+                        let source: ActivitySource = self.aiRecommendedContent != nil ? .aiRecommendation : .manual
+                        FirebaseAnalyticsService.shared.log(.activityAdded(
+                            entryPoint: .activityListPlus, // 임시: 실제 진입점 전달 필요
+                            source: source,
+                            hobbyName: self.hobbyName,
+                            activityName: activity.content
+                        ))
+                    }
+
                     // Call callback without dismissing
                     // Parent view controller will handle dismiss and navigation
                     self.onActivityCreated?()

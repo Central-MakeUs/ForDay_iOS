@@ -114,6 +114,18 @@ final class EmptyStateView: UIView {
         self.onActionTapped = nil
     }
 
+    /// Configure for notifications empty state
+    func configureForNotifications() {
+        resetToDefaultLayout()
+        iconImageView.image = .Icon.emptyBox
+        iconImageView.alpha = 0.4
+        titleLabel.setTextWithTypography("새로운 알림이 없어요.", style: .body14)
+        titleLabel.textColor = .neutral600
+        subtitleLabel.isHidden = true
+        actionButton.isHidden = true
+        self.onActionTapped = nil
+    }
+
     /// Configure for stories empty state (활동기록 없음)
     func configureForStories() {
         isStoriesLayout = true

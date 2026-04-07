@@ -11,4 +11,5 @@ struct UserInfo {
     let profileImageUrl: String?
     let nickname: String
     let totalCollectedStickerCount: Int
+    let unReadNotificationExists: Bool
 }

@@ -36,6 +36,7 @@ enum AuthError: Error {
     case unauthorized
     case tokenExpired
     case loginExpired
+    case fcmTokenNotAvailable
 
     var userMessage: String {
         switch self {
@@ -45,6 +46,8 @@ enum AuthError: Error {
             return "세션이 만료되었습니다."
         case .loginExpired:
             return "로그인이 만료되었습니다.\n다시 로그인해주세요."
+        case .fcmTokenNotAvailable:
+            return "알림 설정을 완료하는 중입니다.\n잠시 후 다시 시도해주세요."
         }
     }
 }

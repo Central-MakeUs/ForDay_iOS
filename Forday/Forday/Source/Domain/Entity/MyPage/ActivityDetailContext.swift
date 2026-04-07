@@ -14,6 +14,7 @@ struct ActivityDetailContext {
     let userId: String?
     let keyword: String?
     let hobbyIds: [Int]?
+    let notificationId: Int?
 
     enum ContextType: String {
         case storyAll = "STORY_ALL"          // 소식 전체 조회
@@ -38,6 +39,10 @@ struct ActivityDetailContext {
 
         if let hobbyIds = hobbyIds, !hobbyIds.isEmpty {
             parameters["hobbyIds"] = hobbyIds.map { String($0) }.joined(separator: ",")
+        }
+
+        if let notificationId = notificationId {
+            parameters["notificationId"] = notificationId
         }
 
         return parameters

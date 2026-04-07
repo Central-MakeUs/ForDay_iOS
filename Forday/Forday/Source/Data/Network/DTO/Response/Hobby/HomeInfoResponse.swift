@@ -14,6 +14,7 @@ extension DTO {
         let data: HomeInfoData?
 
         struct HomeInfoData: Codable {
+            let unReadNotificationExists: Bool
             let inProgressHobbies: [InProgressHobby]
             let activityPreview: ActivityPreview?
             let greetingMessage: String
@@ -64,7 +65,8 @@ extension DTO.HomeInfoResponse {
             userSummaryText: data.userSummaryText,
             recommendMessage: data.recommendMessage,
             aiCallRemaining: data.aiCallRemaining,
-            aiCallRemainingCount: data.aiCallRemainingCount
+            aiCallRemainingCount: data.aiCallRemainingCount,
+            unReadNotificationExists: data.unReadNotificationExists
         )
     }
 }

@@ -426,6 +426,21 @@ extension ActivityRecordViewController {
                     // 제출 성공 플래그 설정 (이미지 삭제 방지)
                     self.didSubmitSuccessfully = true
 
+                    // Analytics: 기록 작성 완료 (수정 모드가 아닐 때만)
+                    if !self.viewModel.isEditMode {
+                        // TODO: entryPoint를 ActivityRecordViewController에 전달하여 정확한 진입점 로그
+                        let activityName = self.viewModel.selectedActivity?.content ?? ""
+                        let hasPhoto = self.viewModel.selectedImage != nil
+                        let hasMemo = !self.viewModel.memo.isEmpty
+                        FirebaseAnalyticsService.shared.log(.recordCreated(
+                            entryPoint: .gnbRecord, // 임시: 실제 진입점 전달 필요
+                            hobbyName: self.hobbyName,
+                            activityName: activityName,
+                            hasPhoto: hasPhoto,
+                            hasMemo: hasMemo
+                        ))
+                    }
+
                     // Notify HomeViewController to refresh sticker board
                     AppEventBus.shared.activityRecordCreated.send(self.viewModel.currentHobbyId)
 

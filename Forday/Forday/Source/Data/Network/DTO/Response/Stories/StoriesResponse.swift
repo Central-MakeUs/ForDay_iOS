@@ -14,6 +14,7 @@ extension DTO {
     }
 
     struct StoriesData: Codable {
+        let unReadNotificationExists: Bool
         let tabInfo: [StoriesTabInfo]?
         let lastRecordId: Int?
         let recordList: [StoryInfo]
@@ -57,7 +58,8 @@ extension DTO.StoriesData {
             tabs: tabInfo?.map { $0.toDomain() } ?? [],
             stories: recordList.map { $0.toDomain() },
             lastRecordId: lastRecordId,
-            hasNext: hasNext
+            hasNext: hasNext,
+            unReadNotificationExists: unReadNotificationExists
         )
     }
 }
@@ -65,7 +67,7 @@ extension DTO.StoriesData {
 extension DTO.StoriesTabInfo {
     func toDomain() -> StoriesTab {
         return StoriesTab(
-            hobbyId: hobbyId,  // Int → Int? 자동 변환
+            hobbyId: hobbyId,
             hobbyName: hobbyName,
             currentHobby: currentHobby
         )
