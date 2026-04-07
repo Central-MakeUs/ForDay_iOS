@@ -37,7 +37,6 @@ final class ActivityDetailPageViewController: UIViewController {
     private let moreButton = UIButton()
 
     // UI Components - Bottom
-    private let reactionUsersScrollView = ReactionUsersScrollView()
     private let reactionButtonsView = ReactionButtonsView()
 
     private var cancellables = Set<AnyCancellable>()
@@ -208,18 +207,11 @@ extension ActivityDetailPageViewController {
     }
 
     private func setupReactionViews() {
-        view.addSubview(reactionUsersScrollView)
         view.addSubview(reactionButtonsView)
 
         reactionButtonsView.snp.makeConstraints {
             $0.leading.trailing.bottom.equalToSuperview()
             $0.top.equalTo(view.safeAreaLayoutGuide.snp.bottom).offset(-72)
-        }
-
-        reactionUsersScrollView.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(reactionButtonsView.snp.top)
-            $0.height.equalTo(0)
         }
 
         // 반응 버튼 이벤트 연결
@@ -233,9 +225,7 @@ extension ActivityDetailPageViewController {
 
         reactionButtonsView.reactionLongPressed
             .sink { [weak self] type in
-                Task {
-                    await self?.currentDetailVC?.viewModel.fetchReactionUsers(for: type)
-                }
+                self?.handleReactionLongPressed(type)
             }
             .store(in: &cancellables)
 
@@ -253,8 +243,6 @@ extension ActivityDetailPageViewController {
 
         // 이전 기록의 UI 상태 초기화
         saveButton.isHidden = true
-        reactionUsersScrollView.isHidden = true
-        reactionUsersScrollView.clear()
 
         guard let detailVC = currentDetailVC else { return }
 
@@ -265,28 +253,6 @@ extension ActivityDetailPageViewController {
                 guard let self = self, let detail = detail else { return }
                 self.updateNavigationState(with: detail)
                 self.reactionButtonsView.configure(with: detail)
-            }
-            .store(in: &childCancellables)
-
-        // 반응 유저 목록 업데이트
-        detailVC.viewModel.$reactionUsers
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] users in
-                guard let self = self else { return }
-
-                if users.isEmpty {
-                    self.reactionUsersScrollView.isHidden = true
-                    self.reactionUsersScrollView.clear()
-                    self.reactionUsersScrollView.snp.updateConstraints { $0.height.equalTo(0) }
-                } else {
-                    self.reactionUsersScrollView.isHidden = false
-                    self.reactionUsersScrollView.configure(with: users)
-                    self.reactionUsersScrollView.snp.updateConstraints { $0.height.equalTo(60) }
-                }
-
-                UIView.animate(withDuration: 0.3) {
-                    self.view.layoutIfNeeded()
-                }
             }
             .store(in: &childCancellables)
     }
@@ -324,6 +290,45 @@ extension ActivityDetailPageViewController {
 
     @objc private func saveButtonTapped() {
         currentDetailVC?.handleSaveButtonTapped()
+    }
+
+    private func handleReactionLongPressed(_ reactionType: ReactionType) {
+        Task { [weak self] in
+            guard let self = self, let currentDetailVC = self.currentDetailVC else { return }
+
+            do {
+                // Fetch reaction summary
+                let summary = try await currentDetailVC.viewModel.fetchReactionSummary()
+
+                await MainActor.run {
+                    // Create and present bottom sheet
+                    let bottomSheet = ReactionUsersBottomSheetViewController(recordId: currentDetailVC.viewModel.activityRecordId)
+                    bottomSheet.configure(with: summary)
+
+                    // Setup pagination callback
+                    bottomSheet.onLoadMore = { [weak currentDetailVC] reactionType, lastReactionId in
+                        guard let currentDetailVC = currentDetailVC else {
+                            return Fail(error: AppError.unknown(NSError(domain: "ViewModel", code: -1)))
+                                .eraseToAnyPublisher()
+                        }
+                        return currentDetailVC.viewModel.fetchMoreReactionUsers(
+                            for: reactionType,
+                            lastReactionId: lastReactionId
+                        )
+                    }
+
+                    self.present(bottomSheet, animated: true)
+                }
+            } catch let appError as AppError {
+                await MainActor.run {
+                    currentDetailVC.viewModel.error = appError
+                }
+            } catch {
+                await MainActor.run {
+                    currentDetailVC.viewModel.error = .unknown(error)
+                }
+            }
+        }
     }
 }
 
