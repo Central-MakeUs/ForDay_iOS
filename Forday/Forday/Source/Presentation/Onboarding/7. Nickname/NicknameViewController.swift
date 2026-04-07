@@ -155,7 +155,7 @@ extension NicknameViewController {
         }
 
         // Analytics: 닉네임 입력 이벤트 (닉네임은 PII이므로 파라미터로 전송하지 않음)
-        FirebaseAnalyticsService.shared.log(.currentInputNickname)
+//        FirebaseAnalyticsService.shared.log(.currentInputNickname)
 
         nicknameView.nicknameTextField.resignFirstResponder()
 

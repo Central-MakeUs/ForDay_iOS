@@ -146,7 +146,11 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         }
 
         let hobbyName = homeViewController?.getCurrentHobbyName() ?? "취미"
+        let activityName = homeViewController?.homeView.activityDropdownButton.titleLabel?.text
         let preselectedActivityId = homeViewController?.getCurrentActivityId()
+
+        // Analytics: GNB 기록 버튼 클릭
+        FirebaseAnalyticsService.shared.log(.recordEntryClicked(entryPoint: .gnbRecord, hobbyName: hobbyName, activityName: activityName))
 
         let recordVC = ActivityRecordViewController(
             hobbyId: hobbyId,
