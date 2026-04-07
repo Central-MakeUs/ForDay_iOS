@@ -223,28 +223,6 @@ extension ActivityDetailViewController {
                 self?.handleBookmarkTapped()
             }
             .store(in: &cancellables)
-
-        // Reaction users scroll view visibility
-        viewModel.$reactionUsers
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] users in
-                guard let self = self else { return }
-
-                if users.isEmpty {
-                    self.detailView.reactionUsersScrollView.isHidden = true
-                    self.detailView.reactionUsersScrollView.clear()
-                    self.detailView.reactionUsersScrollView.snp.updateConstraints { $0.height.equalTo(0) }
-                } else {
-                    self.detailView.reactionUsersScrollView.isHidden = false
-                    self.detailView.reactionUsersScrollView.configure(with: users)
-                    self.detailView.reactionUsersScrollView.snp.updateConstraints { $0.height.equalTo(60) }
-                }
-
-                UIView.animate(withDuration: 0.3) {
-                    self.view.layoutIfNeeded()
-                }
-            }
-            .store(in: &cancellables)
     }
 
     private func loadData() {
@@ -283,7 +261,40 @@ extension ActivityDetailViewController {
 
     private func handleReactionLongPressed(_ reactionType: ReactionType) {
         Task { [weak self] in
-            await self?.viewModel.fetchReactionUsers(for: reactionType)
+            guard let self = self else { return }
+
+            do {
+                // Fetch reaction summary
+                let summary = try await self.viewModel.fetchReactionSummary()
+
+                await MainActor.run {
+                    // Create and present bottom sheet
+                    let bottomSheet = ReactionUsersBottomSheetViewController(recordId: self.viewModel.activityRecordId)
+                    bottomSheet.configure(with: summary)
+
+                    // Setup pagination callback
+                    bottomSheet.onLoadMore = { [weak self] reactionType, lastReactionId in
+                        guard let self = self else {
+                            return Fail(error: AppError.unknown(NSError(domain: "ViewModel", code: -1)))
+                                .eraseToAnyPublisher()
+                        }
+                        return self.viewModel.fetchMoreReactionUsers(
+                            for: reactionType,
+                            lastReactionId: lastReactionId
+                        )
+                    }
+
+                    self.present(bottomSheet, animated: true)
+                }
+            } catch let appError as AppError {
+                await MainActor.run {
+                    self.viewModel.error = appError
+                }
+            } catch {
+                await MainActor.run {
+                    self.viewModel.error = .unknown(error)
+                }
+            }
         }
     }
 
