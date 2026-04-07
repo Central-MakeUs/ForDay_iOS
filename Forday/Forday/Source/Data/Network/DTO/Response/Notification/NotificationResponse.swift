@@ -66,8 +66,21 @@ extension DTO {
         let toggleType: String
     }
 
+    // MARK: - Toggle Status Response
+
+    struct NotificationToggleStatusResponse: BaseResponse {
+        let status: Int
+        let success: Bool
+        let data: NotificationToggleStatusData
+    }
+
+    struct NotificationToggleStatusData: Codable {
+        let appPushEnabled: Bool
+        let recordPushEnabled: Bool
+    }
+
     // MARK: - FCM Token Update Response
-    
+
     struct FCMTokenUpdateResponse: BaseResponse {
         let status: Int
         let success: Bool

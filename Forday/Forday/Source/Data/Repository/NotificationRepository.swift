@@ -34,11 +34,18 @@ final class NotificationRepository: NotificationRepositoryInterface {
     }
     
     // MARK: - Toggle Notification
-    
+
     func toggleNotification(active: Bool, toggleType: String) async throws -> Bool {
         let request = DTO.NotificationToggleRequest(active: active, toggleType: toggleType)
         let response: DTO.NotificationToggleResponse = try await provider.request(.toggleNotification(request: request))
         return response.success
+    }
+
+    // MARK: - Fetch Toggle Status
+
+    func fetchToggleStatus() async throws -> (appPushEnabled: Bool, recordPushEnabled: Bool) {
+        let response: DTO.NotificationToggleStatusResponse = try await provider.request(.fetchToggleStatus)
+        return (appPushEnabled: response.data.appPushEnabled, recordPushEnabled: response.data.recordPushEnabled)
     }
 }
 

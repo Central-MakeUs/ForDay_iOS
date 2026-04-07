@@ -13,6 +13,7 @@ enum NotificationTarget {
     case updateFCMToken(request: DTO.FCMTokenUpdateRequest)
     case fetchNotifications(filterType: String, lastNotificationId: String?, pageSize: Int)
     case toggleNotification(request: DTO.NotificationToggleRequest)
+    case fetchToggleStatus
 }
 
 extension NotificationTarget: BaseTargetType {
@@ -22,7 +23,7 @@ extension NotificationTarget: BaseTargetType {
             return "/app/fcm-token"
         case .fetchNotifications:
             return "/api/notifications"
-        case .toggleNotification:
+        case .toggleNotification, .fetchToggleStatus:
             return "/api/notifications/toggle"
         }
     }
@@ -31,7 +32,7 @@ extension NotificationTarget: BaseTargetType {
         switch self {
         case .updateFCMToken, .toggleNotification:
             return .patch
-        case .fetchNotifications:
+        case .fetchNotifications, .fetchToggleStatus:
             return .get
         }
     }
@@ -51,6 +52,8 @@ extension NotificationTarget: BaseTargetType {
             return .requestParameters(parameters: params, encoding: URLEncoding.queryString)
         case .toggleNotification(let request):
             return .requestJSONEncodable(request)
+        case .fetchToggleStatus:
+            return .requestPlain
         }
     }
 }
