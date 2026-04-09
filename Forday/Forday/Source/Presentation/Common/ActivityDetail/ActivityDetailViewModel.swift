@@ -29,6 +29,8 @@ final class ActivityDetailViewModel {
     private let addReactionUseCase: AddReactionUseCase
     private let deleteReactionUseCase: DeleteReactionUseCase
     private let fetchReactionUsersUseCase: FetchReactionUsersUseCase
+    private let fetchReactionSummaryUseCase: FetchReactionSummaryUseCase
+    private let fetchReactionTabDataUseCase: FetchReactionTabDataUseCase
     private let deleteActivityRecordUseCase: DeleteActivityRecordUseCase
     private let updateHobbyCoverUseCase: UpdateHobbyCoverUseCase
     private let addScrapUseCase: AddScrapUseCase
@@ -61,6 +63,8 @@ final class ActivityDetailViewModel {
         addReactionUseCase: AddReactionUseCase = AddReactionUseCase(),
         deleteReactionUseCase: DeleteReactionUseCase = DeleteReactionUseCase(),
         fetchReactionUsersUseCase: FetchReactionUsersUseCase = FetchReactionUsersUseCase(),
+        fetchReactionSummaryUseCase: FetchReactionSummaryUseCase = FetchReactionSummaryUseCase(),
+        fetchReactionTabDataUseCase: FetchReactionTabDataUseCase = FetchReactionTabDataUseCase(),
         deleteActivityRecordUseCase: DeleteActivityRecordUseCase = DeleteActivityRecordUseCase(),
         updateHobbyCoverUseCase: UpdateHobbyCoverUseCase = UpdateHobbyCoverUseCase(),
         addScrapUseCase: AddScrapUseCase = AddScrapUseCase(),
@@ -73,6 +77,8 @@ final class ActivityDetailViewModel {
         self.addReactionUseCase = addReactionUseCase
         self.deleteReactionUseCase = deleteReactionUseCase
         self.fetchReactionUsersUseCase = fetchReactionUsersUseCase
+        self.fetchReactionSummaryUseCase = fetchReactionSummaryUseCase
+        self.fetchReactionTabDataUseCase = fetchReactionTabDataUseCase
         self.deleteActivityRecordUseCase = deleteActivityRecordUseCase
         self.updateHobbyCoverUseCase = updateHobbyCoverUseCase
         self.addScrapUseCase = addScrapUseCase
@@ -217,6 +223,45 @@ final class ActivityDetailViewModel {
             self.lastUserId = nil
             self.hasMoreUsers = true
         }
+    }
+
+    // MARK: - Reaction Summary Methods (v2)
+
+    /// 감정 반응 요약 및 전체 탭 데이터를 조회합니다.
+    func fetchReactionSummary(size: Int = 20) async throws -> ReactionSummaryResponse {
+        return try await fetchReactionSummaryUseCase.execute(
+            recordId: activityRecordId,
+            size: size
+        )
+    }
+
+    /// 특정 감정 반응 탭의 추가 데이터를 조회합니다 (페이지네이션).
+    func fetchMoreReactionUsers(
+        for reactionType: ReactionType?,
+        lastReactionId: Int,
+        size: Int = 10
+    ) -> AnyPublisher<ReactionTabData, Error> {
+        return Future<ReactionTabData, Error> { [weak self] promise in
+            guard let self = self else {
+                promise(.failure(AppError.unknown(NSError(domain: "ViewModel", code: -1))))
+                return
+            }
+
+            Task {
+                do {
+                    let result = try await self.fetchReactionTabDataUseCase.execute(
+                        recordId: self.activityRecordId,
+                        reactionType: reactionType,
+                        lastReactionId: lastReactionId,
+                        size: size
+                    )
+                    promise(.success(result))
+                } catch {
+                    promise(.failure(error))
+                }
+            }
+        }
+        .eraseToAnyPublisher()
     }
 
     // MARK: - Activity Record Actions

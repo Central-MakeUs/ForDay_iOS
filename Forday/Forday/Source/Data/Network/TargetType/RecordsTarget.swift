@@ -17,6 +17,8 @@ enum RecordsTarget {
     case addReaction(recordId: Int, reactionType: ReactionType)
     case deleteReaction(recordId: Int, reactionType: ReactionType)
     case fetchReactionUsers(recordId: Int, reactionType: ReactionType, lastUserId: String?, size: Int)
+    case fetchReactionSummary(recordId: Int, size: Int)
+    case fetchReactionTabData(recordId: Int, reactionType: ReactionType?, lastReactionId: Int, size: Int)
     case addScrap(recordId: Int)
     case deleteScrap(recordId: Int)
     case reportRecord(recordId: Int, request: DTO.ReportRecordRequest)
@@ -40,6 +42,10 @@ extension RecordsTarget: BaseTargetType {
             return RecordsAPI.deleteReaction(recordId: recordId).endpoint
         case .fetchReactionUsers(let recordId, _, _, _):
             return RecordsAPI.fetchReactionUsers(recordId: recordId).endpoint
+        case .fetchReactionSummary(let recordId, _):
+            return RecordsAPI.fetchReactionSummary(recordId: recordId).endpoint
+        case .fetchReactionTabData(let recordId, _, _, _):
+            return RecordsAPI.fetchReactionTabData(recordId: recordId).endpoint
         case .addScrap(let recordId):
             return RecordsAPI.addScrap(recordId: recordId).endpoint
         case .deleteScrap(let recordId):
@@ -61,7 +67,7 @@ extension RecordsTarget: BaseTargetType {
             return .post
         case .deleteReaction:
             return .delete
-        case .fetchReactionUsers:
+        case .fetchReactionUsers, .fetchReactionSummary, .fetchReactionTabData:
             return .get
         case .addScrap:
             return .post
@@ -101,6 +107,25 @@ extension RecordsTarget: BaseTargetType {
 
             if let lastUserId = lastUserId {
                 parameters["lastUserId"] = lastUserId
+            }
+
+            return .requestParameters(
+                parameters: parameters,
+                encoding: URLEncoding.queryString
+            )
+        case .fetchReactionSummary(_, let size):
+            return .requestParameters(
+                parameters: ["size": size],
+                encoding: URLEncoding.queryString
+            )
+        case .fetchReactionTabData(_, let reactionType, let lastReactionId, let size):
+            var parameters: [String: Any] = [
+                "lastReactionId": lastReactionId,
+                "size": size
+            ]
+
+            if let reactionType = reactionType {
+                parameters["type"] = reactionType.rawValue
             }
 
             return .requestParameters(

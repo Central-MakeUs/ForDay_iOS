@@ -16,6 +16,8 @@ protocol MyPageRepositoryInterface {
     func addReaction(recordId: Int, reactionType: ReactionType) async throws -> AddReactionResult
     func deleteReaction(recordId: Int, reactionType: ReactionType) async throws -> DeleteReactionResult
     func fetchReactionUsers(recordId: Int, reactionType: ReactionType, lastUserId: String?, size: Int) async throws -> FetchReactionUsersResult
+    func fetchReactionSummary(recordId: Int, size: Int) async throws -> ReactionSummaryResponse
+    func fetchReactionTabData(recordId: Int, reactionType: ReactionType?, lastReactionId: Int, size: Int) async throws -> ReactionTabData
     func addScrap(recordId: Int) async throws -> ScrapResult
     func deleteScrap(recordId: Int) async throws -> ScrapResult
 }

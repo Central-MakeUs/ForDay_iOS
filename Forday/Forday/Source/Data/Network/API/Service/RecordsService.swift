@@ -75,6 +75,33 @@ final class RecordsService {
         ))
     }
 
+    // MARK: - 감정 반응 요약 및 전체 탭 데이터 조회 (v2)
+
+    /// 감정 반응 요약 및 전체 탭 데이터를 조회합니다.
+    func fetchReactionSummary(
+        recordId: Int,
+        size: Int = 20
+    ) async throws -> DTO.FetchReactionSummaryResponse {
+        return try await provider.request(.fetchReactionSummary(recordId: recordId, size: size))
+    }
+
+    // MARK: - 특정 감정 반응 탭 페이지네이션 (v2)
+
+    /// 특정 감정 반응 탭의 추가 데이터를 조회합니다.
+    func fetchReactionTabData(
+        recordId: Int,
+        reactionType: ReactionType?,
+        lastReactionId: Int,
+        size: Int = 10
+    ) async throws -> DTO.FetchReactionTabDataResponse {
+        return try await provider.request(.fetchReactionTabData(
+            recordId: recordId,
+            reactionType: reactionType,
+            lastReactionId: lastReactionId,
+            size: size
+        ))
+    }
+
     // MARK: - 활동 기록 스크랩 추가
 
     /// 활동 기록을 스크랩합니다.
