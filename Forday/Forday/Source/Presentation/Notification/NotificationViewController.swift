@@ -29,12 +29,26 @@ final class NotificationViewController: UIViewController {
         setupTableView()
         setupActions()
         bind()
-        loadInitialData()
+
+        // 권한 체크 후 데이터 로드
+        Task {
+            await viewModel.checkSystemNotificationPermission()
+            if viewModel.systemNotificationEnabled {
+                await viewModel.loadNotifications(reset: true)
+            }
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        checkNotificationPermission()
+
+        // 권한 체크 후 권한이 있으면 데이터 새로고침
+        Task {
+            await viewModel.checkSystemNotificationPermission()
+            if viewModel.systemNotificationEnabled {
+                await viewModel.loadNotifications(reset: true)
+            }
+        }
     }
 
     // MARK: - Setup
@@ -109,18 +123,6 @@ final class NotificationViewController: UIViewController {
             .store(in: &cancellables)
     }
 
-    private func loadInitialData() {
-        Task {
-            await viewModel.loadNotifications(reset: true)
-        }
-    }
-
-    private func checkNotificationPermission() {
-        Task {
-            await viewModel.checkSystemNotificationPermission()
-        }
-    }
-
     // MARK: - UI Updates
 
     private func updatePermissionBanner(enabled: Bool) {
@@ -129,9 +131,19 @@ final class NotificationViewController: UIViewController {
         } else {
             notificationView.showPermissionBanner()
         }
+
+        // 권한 상태 변경 시 EmptyState도 업데이트
+        updateEmptyState()
     }
 
     private func updateEmptyState() {
+        // 권한이 없으면 권한 거부 화면 표시
+        if !viewModel.systemNotificationEnabled {
+            notificationView.showPermissionDeniedState()
+            return
+        }
+
+        // 권한은 있는데 알림이 없으면 알림 없음 화면 표시
         let hasNotifications = !viewModel.notifications.isEmpty
         if hasNotifications {
             notificationView.hideEmptyState()
@@ -156,7 +168,14 @@ final class NotificationViewController: UIViewController {
 
     @objc private func refreshNotifications() {
         Task {
-            await viewModel.loadNotifications(reset: true)
+            // 권한 체크 후 권한이 있을 때만 데이터 로드
+            await viewModel.checkSystemNotificationPermission()
+            if viewModel.systemNotificationEnabled {
+                await viewModel.loadNotifications(reset: true)
+            } else {
+                // 권한이 없으면 refresh control만 종료
+                notificationView.refreshControl.endRefreshing()
+            }
         }
     }
 }

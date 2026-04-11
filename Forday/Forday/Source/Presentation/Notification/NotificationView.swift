@@ -220,13 +220,22 @@ final class NotificationView: UIView {
         }
     }
 
-    /// Empty State 표시
+    /// Empty State 표시 (알림 없음)
     func showEmptyState() {
         emptyStateView.isHidden = false
         tableView.isHidden = true
 
         // Empty state 설정 (알림 없음)
         emptyStateView.configureForNotifications()
+    }
+
+    /// Empty State 표시 (권한 거부)
+    func showPermissionDeniedState() {
+        emptyStateView.isHidden = false
+        tableView.isHidden = true
+
+        // Empty state 설정 (권한 거부)
+        emptyStateView.configureForNotificationPermissionDenied()
     }
 
     /// Empty State 숨김

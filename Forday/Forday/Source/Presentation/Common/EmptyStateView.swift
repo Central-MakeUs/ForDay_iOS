@@ -126,6 +126,20 @@ final class EmptyStateView: UIView {
         self.onActionTapped = nil
     }
 
+    /// Configure for notification permission denied state
+    func configureForNotificationPermissionDenied() {
+        resetToDefaultLayout()
+        iconImageView.image = .Icon.emptyBox
+        iconImageView.alpha = 0.4
+        titleLabel.setTextWithTypography("알림 권한이 꺼져있어요.", style: .body14)
+        titleLabel.textColor = .neutral600
+        subtitleLabel.setTextWithTypography("알림을 받으려면 설정에서 권한을 허용해주세요.", style: .label12)
+        subtitleLabel.textColor = .neutral500
+        subtitleLabel.isHidden = false
+        actionButton.isHidden = true
+        self.onActionTapped = nil
+    }
+
     /// Configure for stories empty state (활동기록 없음)
     func configureForStories() {
         isStoriesLayout = true
