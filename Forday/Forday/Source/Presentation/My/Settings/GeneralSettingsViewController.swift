@@ -54,11 +54,6 @@ final class GeneralSettingsViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-
-        // 시스템 알림 권한 확인 및 동기화
-        Task {
-            await viewModel.checkAndSyncSystemNotification()
-        }
     }
 
 }
