@@ -238,7 +238,7 @@ final class ActivityDetailViewModel {
     /// 특정 감정 반응 탭의 추가 데이터를 조회합니다 (페이지네이션).
     func fetchMoreReactionUsers(
         for reactionType: ReactionType?,
-        lastReactionId: Int,
+        lastReactionId: Int?,
         size: Int = 10
     ) -> AnyPublisher<ReactionTabData, Error> {
         return Future<ReactionTabData, Error> { [weak self] promise in

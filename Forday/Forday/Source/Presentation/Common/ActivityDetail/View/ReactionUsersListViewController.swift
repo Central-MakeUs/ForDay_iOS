@@ -26,7 +26,7 @@ final class ReactionUsersListViewController: UIViewController {
     private var hasNext: Bool = false
     private var isLoadingMore = false
 
-    var onLoadMore: ((ReactionType?, Int) -> Void)?
+    var onLoadMore: ((ReactionType?, Int?) -> Void)?
 
     // MARK: - Initialization
 

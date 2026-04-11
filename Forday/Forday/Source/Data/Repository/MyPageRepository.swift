@@ -68,7 +68,7 @@ final class MyPageRepository: MyPageRepositoryInterface {
         return response.toDomain(recordId: recordId)
     }
 
-    func fetchReactionTabData(recordId: Int, reactionType: ReactionType?, lastReactionId: Int, size: Int) async throws -> ReactionTabData {
+    func fetchReactionTabData(recordId: Int, reactionType: ReactionType?, lastReactionId: Int?, size: Int) async throws -> ReactionTabData {
         let response = try await recordsService.fetchReactionTabData(
             recordId: recordId,
             reactionType: reactionType,

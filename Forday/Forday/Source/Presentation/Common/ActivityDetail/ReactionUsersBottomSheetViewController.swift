@@ -39,7 +39,7 @@ final class ReactionUsersBottomSheetViewController: UIViewController {
     private var containerHeightConstraint: Constraint?
 
     // Callback for loading more users
-    var onLoadMore: ((ReactionType?, Int) -> AnyPublisher<ReactionTabData, Error>)?
+    var onLoadMore: ((ReactionType?, Int?) -> AnyPublisher<ReactionTabData, Error>)?
 
     // MARK: - Initialization
 
@@ -101,7 +101,7 @@ final class ReactionUsersBottomSheetViewController: UIViewController {
         }
     }
 
-    private func loadMoreUsers(for reactionType: ReactionType?, lastReactionId: Int) {
+    private func loadMoreUsers(for reactionType: ReactionType?, lastReactionId: Int?) {
         guard let onLoadMore = onLoadMore else { return }
 
         onLoadMore(reactionType, lastReactionId)
