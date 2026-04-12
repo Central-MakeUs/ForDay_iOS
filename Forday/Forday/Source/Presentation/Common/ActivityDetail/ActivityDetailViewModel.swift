@@ -108,11 +108,14 @@ final class ActivityDetailViewModel {
             }
 
         } catch let appError as AppError {
+            print("🔴 [ViewModel] AppError 발생: \(appError)")
             await MainActor.run {
                 self.error = appError
                 self.isLoading = false
+                print("🔴 [ViewModel] error 설정 완료: \(String(describing: self.error))")
             }
         } catch {
+            print("🔴 [ViewModel] Unknown Error 발생: \(error)")
             await MainActor.run {
                 self.error = .unknown(error)
                 self.isLoading = false

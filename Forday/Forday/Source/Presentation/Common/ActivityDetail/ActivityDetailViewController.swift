@@ -189,6 +189,7 @@ extension ActivityDetailViewController {
             .receive(on: DispatchQueue.main)
             .compactMap { $0 }
             .sink { [weak self] error in
+                print("🟠 [ViewController] error received: \(error)")
                 // Use common error handler with retry support
                 self?.handleActivityDetailError(error) {
                     self?.loadData()
