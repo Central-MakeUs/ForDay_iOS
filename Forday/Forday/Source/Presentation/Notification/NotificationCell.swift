@@ -189,10 +189,10 @@ final class NotificationCell: UITableViewCell {
 
         // 활동 사진
         if let imageUrl = notification.imageUrl {
+            thumbnailImageView.isHidden = false
             thumbnailImageView.setImage(with: imageUrl)
         } else {
-            thumbnailImageView.backgroundColor = .bg003
-            thumbnailImageView.image = nil
+            thumbnailImageView.isHidden = true
         }
 
         // 반응 알림 또는 댓글 알림에 따라 UI 설정
@@ -205,15 +205,31 @@ final class NotificationCell: UITableViewCell {
             configureDefaultNotification()
         }
 
-        // 시간 표시 여부에 따른 레이아웃 조정
+        // 시간 표시 및 썸네일 여부에 따른 레이아웃 조정
+        let trailingAnchor = thumbnailImageView.isHidden ?
+            containerView.snp.trailing.offset(-20) :
+            thumbnailImageView.snp.leading.offset(-8)
+
         if timeLabel.isHidden {
             messageLabel.snp.remakeConstraints {
                 $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
-                $0.trailing.equalTo(thumbnailImageView.snp.leading).offset(-8)
+                $0.trailing.equalTo(trailingAnchor)
                 $0.top.equalToSuperview().offset(10)
                 $0.bottom.equalToSuperview().offset(-10)
             }
+
+            timeLabel.snp.remakeConstraints {
+                $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
+                $0.trailing.equalTo(trailingAnchor)
+                $0.top.equalToSuperview().offset(10)
+            }
         } else {
+            timeLabel.snp.remakeConstraints {
+                $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
+                $0.trailing.equalTo(trailingAnchor)
+                $0.top.equalToSuperview().offset(10)
+            }
+
             messageLabel.snp.remakeConstraints {
                 $0.leading.equalTo(timeLabel)
                 $0.trailing.equalTo(timeLabel)
