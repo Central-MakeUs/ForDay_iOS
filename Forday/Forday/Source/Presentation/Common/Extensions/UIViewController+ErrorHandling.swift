@@ -48,6 +48,24 @@ extension UIViewController {
         _ error: AppError,
         onRetry: (() -> Void)? = nil
     ) {
+        // 에러별 ErrorViewController 표시
+        if case .server(let serverError) = error {
+            switch serverError.errorClassName {
+            case "ACTIVITY_RECORD_NOT_FOUND", "FRIEND_ONLY_ACCESS", "PRIVATE_RECORD":
+                // 404, 403: 조회 불가한 활동 기록
+                replaceWithErrorViewController(
+                    icon: .Icon.error,
+                    title: serverError.message,
+                    message: "이용에 불편을 드려 죄송합니다."
+                )
+                return
+
+            default:
+                // 그 외 서버 에러는 토스트로 처리
+                break
+            }
+        }
+
         handleAppError(error)
     }
 
@@ -73,5 +91,21 @@ extension UIViewController {
         customHandler: ((AppError) -> Bool)? = nil
     ) {
         handleAppError(error, customHandler: customHandler)
+    }
+
+    /// 현재 ViewController를 ErrorViewController로 교체
+    func replaceWithErrorViewController(
+        icon: UIImage,
+        title: String,
+        message: String
+    ) {
+        guard var viewControllers = navigationController?.viewControllers,
+              let currentIndex = viewControllers.firstIndex(of: self) else {
+            return
+        }
+
+        let errorVC = ErrorViewController(icon: icon, title: title, message: message)
+        viewControllers[currentIndex] = errorVC
+        navigationController?.setViewControllers(viewControllers, animated: false)
     }
 }
