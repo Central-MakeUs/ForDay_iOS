@@ -51,6 +51,8 @@ final class NotificationCell: UITableViewCell {
     private func setupStyle() {
         selectionStyle = .none
         backgroundColor = .clear
+
+        // contentView에 배경색 적용 (전체 너비)
         contentView.backgroundColor = .clear
 
         containerView.do {
@@ -102,28 +104,28 @@ final class NotificationCell: UITableViewCell {
     private func setupLayout() {
         contentView.addSubview(containerView)
         containerView.addSubview(profileImageView)
-        profileImageView.addSubview(reactionIconView)  // 프로필의 서브뷰로 추가
+        containerView.addSubview(reactionIconView)  // containerView의 직접 서브뷰로 변경
         containerView.addSubview(timeLabel)
         containerView.addSubview(messageLabel)
         containerView.addSubview(thumbnailImageView)
-        containerView.addSubview(separatorView)
+        contentView.addSubview(separatorView)  // contentView의 직접 서브뷰로 변경
 
+        // containerView는 전체 너비, 내부 컨텐츠만 패딩
         containerView.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview().inset(20)
-            $0.top.bottom.equalToSuperview()
+            $0.edges.equalToSuperview()
         }
 
-        // 원형 프로필 (왼쪽)
+        // 원형 프로필 (왼쪽, 20pt 패딩)
         profileImageView.snp.makeConstraints {
-            $0.leading.equalToSuperview()
+            $0.leading.equalToSuperview().offset(20)
             $0.centerY.equalToSuperview()
             $0.size.equalTo(36)
         }
 
-        // 감정 아이콘 (프로필 오른쪽 하단에 겹침)
+        // 감정 아이콘 (프로필 오른쪽 하단에 오버레이)
         reactionIconView.snp.makeConstraints {
-            $0.trailing.equalToSuperview().offset(4)
-            $0.bottom.equalToSuperview().offset(4)
+            $0.trailing.equalTo(profileImageView.snp.trailing).offset(4)
+            $0.bottom.equalTo(profileImageView.snp.bottom).offset(4)
             $0.size.equalTo(16)
         }
 
@@ -141,14 +143,14 @@ final class NotificationCell: UITableViewCell {
             $0.bottom.equalToSuperview().offset(-10)
         }
 
-        // 활동 사진 (오른쪽)
+        // 활동 사진 (오른쪽, 20pt 패딩)
         thumbnailImageView.snp.makeConstraints {
-            $0.trailing.equalToSuperview()
+            $0.trailing.equalToSuperview().offset(-20)
             $0.centerY.equalToSuperview()
             $0.size.equalTo(48)
         }
 
-        // 구분선
+        // 구분선 (전체 너비)
         separatorView.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview()
             $0.bottom.equalToSuperview()
@@ -203,7 +205,7 @@ final class NotificationCell: UITableViewCell {
             configureDefaultNotification()
         }
 
-        // 시간 표시 여부에 따른 메시지 레이아웃 조정
+        // 시간 표시 여부에 따른 레이아웃 조정
         if timeLabel.isHidden {
             messageLabel.snp.remakeConstraints {
                 $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
@@ -220,11 +222,11 @@ final class NotificationCell: UITableViewCell {
             }
         }
 
-        // 안 읽은 알림 배경색 적용
+        // 안 읽은 알림 배경색 적용 (contentView에 적용하여 전체 너비)
         if !notification.read {
-            containerView.backgroundColor = .bg004
+            contentView.backgroundColor = .bg004
         } else {
-            containerView.backgroundColor = .clear
+            contentView.backgroundColor = .clear
         }
     }
 
