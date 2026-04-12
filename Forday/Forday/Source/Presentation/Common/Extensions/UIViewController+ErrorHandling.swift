@@ -48,11 +48,16 @@ extension UIViewController {
         _ error: AppError,
         onRetry: (() -> Void)? = nil
     ) {
+        print("🟡 [ErrorHandling] handleActivityDetailError 호출됨: \(error)")
+
         // 에러별 ErrorViewController 표시
         if case .server(let serverError) = error {
+            print("🟡 [ErrorHandling] ServerError 감지: \(serverError.errorClassName)")
+
             switch serverError.errorClassName {
             case "ACTIVITY_RECORD_NOT_FOUND", "FRIEND_ONLY_ACCESS", "PRIVATE_RECORD":
                 // 404, 403: 조회 불가한 활동 기록
+                print("🟢 [ErrorHandling] ErrorViewController로 교체 시작")
                 replaceWithErrorViewController(
                     icon: .Icon.error,
                     title: serverError.message,
@@ -62,6 +67,7 @@ extension UIViewController {
 
             default:
                 // 그 외 서버 에러는 토스트로 처리
+                print("🟡 [ErrorHandling] 기타 서버 에러 - 토스트 표시")
                 break
             }
         }
@@ -99,13 +105,33 @@ extension UIViewController {
         title: String,
         message: String
     ) {
-        guard var viewControllers = navigationController?.viewControllers,
-              let currentIndex = viewControllers.firstIndex(of: self) else {
+        print("🔵 [ErrorHandling] replaceWithErrorViewController 호출됨")
+        print("🔵 self: \(type(of: self))")
+        print("🔵 navigationController: \(String(describing: navigationController))")
+
+        guard let navigationController = navigationController else {
+            print("❌ [ErrorHandling] navigationController가 없음")
             return
         }
 
+        print("🔵 [ErrorHandling] 현재 viewControllers: \(navigationController.viewControllers.map { type(of: $0) })")
+
         let errorVC = ErrorViewController(icon: icon, title: title, message: message)
-        viewControllers[currentIndex] = errorVC
-        navigationController?.setViewControllers(viewControllers, animated: false)
+
+        // 현재 navigation stack에서 마지막 VC 제거 후 ErrorVC push
+        var viewControllers = navigationController.viewControllers
+        if !viewControllers.isEmpty {
+            viewControllers.removeLast()
+        }
+        viewControllers.append(errorVC)
+
+        print("🔵 [ErrorHandling] 새 viewControllers: \(viewControllers.map { type(of: $0) })")
+
+        navigationController.setViewControllers(viewControllers, animated: false)
+
+        // ErrorViewController에서 navigation bar를 숨기므로 여기서 명시적으로 설정
+        navigationController.setNavigationBarHidden(true, animated: false)
+
+        print("✅ [ErrorHandling] ErrorViewController로 교체 완료")
     }
 }

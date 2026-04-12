@@ -124,8 +124,8 @@ final class NotificationCell: UITableViewCell {
 
         // 감정 아이콘 (프로필 오른쪽 하단에 오버레이)
         reactionIconView.snp.makeConstraints {
-            $0.trailing.equalTo(profileImageView.snp.trailing).offset(4)
-            $0.bottom.equalTo(profileImageView.snp.bottom).offset(4)
+            $0.trailing.equalTo(profileImageView.snp.trailing).offset(-2)
+            $0.bottom.equalTo(profileImageView.snp.bottom).offset(-2)
             $0.size.equalTo(16)
         }
 

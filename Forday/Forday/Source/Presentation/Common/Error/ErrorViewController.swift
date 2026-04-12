@@ -50,12 +50,21 @@ final class ErrorViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        print("🟢 [ErrorViewController] viewWillAppear 호출됨")
         navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        print("🟢 [ErrorViewController] viewDidAppear 호출됨")
+        // 확실하게 숨기기
+        navigationController?.setNavigationBarHidden(true, animated: false)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        navigationController?.setNavigationBarHidden(false, animated: animated)
+        print("🟢 [ErrorViewController] viewWillDisappear 호출됨")
+        // navigation bar 상태는 이전 화면에서 관리하도록 복원하지 않음
     }
 
     // MARK: - Setup
