@@ -222,12 +222,17 @@ final class ActivityDetailView: UIView {
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.equalToSuperview().offset(-20)
             }
+            // 메모 텍스트
+            contentLabel.snp.remakeConstraints {
+                $0.top.leading.equalTo(memoContainerView).offset(16)
+                $0.trailing.bottom.equalTo(memoContainerView).offset(-16)
+            }
             // 메모 컨테이너 전체 너비
             memoContainerView.snp.remakeConstraints {
                 $0.top.equalTo(dateLabel.snp.bottom).offset(16)
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.equalToSuperview().offset(-20)
-                $0.bottom.equalToSuperview().offset(-40) // 확실하게 바닥에 고정 (여백 40)
+                $0.bottom.equalToSuperview().offset(-100) // ReactionButtonsView(72) + 여유 공간 고려
             }
 
         case .withoutImage:
@@ -254,7 +259,7 @@ final class ActivityDetailView: UIView {
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.equalToSuperview().offset(-20)
                 $0.bottom.equalTo(memoStickerImageView.snp.bottom).offset(16)
-                $0.bottom.equalToSuperview().offset(-40)
+                $0.bottom.equalToSuperview().offset(-100) // ReactionButtonsView(72) + 여유 공간 고려
             }
 
         case .withoutImageAndMemo:
@@ -267,7 +272,7 @@ final class ActivityDetailView: UIView {
                 $0.top.equalTo(dateLabel.snp.bottom).offset(24)
                 $0.trailing.equalToSuperview().offset(-20)
                 $0.size.equalTo(80)
-                $0.bottom.equalToSuperview().offset(-40)
+                $0.bottom.equalToSuperview().offset(-100) // ReactionButtonsView(72) + 여유 공간 고려
             }
         }
     }
