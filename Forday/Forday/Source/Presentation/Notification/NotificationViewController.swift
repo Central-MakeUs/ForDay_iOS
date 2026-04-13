@@ -7,6 +7,7 @@
 
 import UIKit
 import Combine
+import UserNotifications
 
 final class NotificationViewController: UIViewController {
 
@@ -163,7 +164,28 @@ final class NotificationViewController: UIViewController {
     }
 
     @objc private func permissionBannerTapped() {
-        viewModel.openSystemSettings()
+        showNotificationPermissionPopup()
+    }
+
+    /// 알림 권한 허용 팝업 표시
+    private func showNotificationPermissionPopup() {
+        let popup = CommonPopupViewController(
+            title: "알림 권한 허용",
+            message: "알림이 꺼져있으면 중요한 소식을 놓칠 수 있어요. 기기설정에서 알림을 허용해 주세요.",
+            primaryButtonTitle: "설정하기",
+            secondaryButtonTitle: "취소"
+        )
+
+        popup.onPrimaryAction = { [weak self] in
+            // 시스템 설정으로 이동
+            self?.viewModel.openSystemSettings()
+        }
+
+        popup.onSecondaryAction = {
+            // 팝업만 닫기
+        }
+
+        present(popup, animated: true)
     }
 
     @objc private func refreshNotifications() {
