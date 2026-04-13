@@ -100,7 +100,10 @@ final class NotificationViewController: UIViewController {
         viewModel.$isLoading
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isLoading in
-                if !isLoading {
+                if isLoading {
+                    self?.notificationView.showLoading()
+                } else {
+                    self?.notificationView.hideLoading()
                     self?.notificationView.refreshControl.endRefreshing()
                 }
             }

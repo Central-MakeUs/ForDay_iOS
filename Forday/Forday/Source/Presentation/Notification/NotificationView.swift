@@ -40,6 +40,9 @@ final class NotificationView: UIView {
     // Empty State
     let emptyStateView = EmptyStateView()
 
+    // Loading Indicator
+    private let loadingIndicator = UIActivityIndicatorView()
+
     // MARK: - Initialization
 
     override init(frame: CGRect) {
@@ -140,6 +143,14 @@ final class NotificationView: UIView {
         emptyStateView.do {
             $0.isHidden = true
         }
+
+        // Loading Indicator
+        loadingIndicator.do {
+            $0.style = .large
+            $0.color = .action001
+            $0.hidesWhenStopped = true
+            $0.isHidden = true
+        }
     }
 
     private func layout() {
@@ -147,6 +158,7 @@ final class NotificationView: UIView {
         addSubview(permissionBannerView)
         addSubview(tableView)
         addSubview(emptyStateView)
+        addSubview(loadingIndicator)
 
         // Header
         headerView.addSubview(backButton)
@@ -212,6 +224,11 @@ final class NotificationView: UIView {
             $0.center.equalToSuperview()
             $0.width.equalToSuperview().inset(20)
         }
+
+        // Loading Indicator Layout
+        loadingIndicator.snp.makeConstraints {
+            $0.center.equalToSuperview()
+        }
     }
 
     // MARK: - Public Methods
@@ -260,5 +277,19 @@ final class NotificationView: UIView {
     func hideEmptyState() {
         emptyStateView.isHidden = true
         tableView.isHidden = false
+    }
+
+    /// 로딩 인디케이터 표시
+    func showLoading() {
+        loadingIndicator.isHidden = false
+        loadingIndicator.startAnimating()
+        tableView.isHidden = true
+        emptyStateView.isHidden = true
+    }
+
+    /// 로딩 인디케이터 숨김
+    func hideLoading() {
+        loadingIndicator.stopAnimating()
+        loadingIndicator.isHidden = true
     }
 }
