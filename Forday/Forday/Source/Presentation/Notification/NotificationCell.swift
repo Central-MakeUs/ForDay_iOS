@@ -206,35 +206,61 @@ final class NotificationCell: UITableViewCell {
         }
 
         // 시간 표시 및 썸네일 여부에 따른 레이아웃 조정
-        let trailingAnchor = thumbnailImageView.isHidden ?
-            containerView.snp.trailing.offset(-20) :
-            thumbnailImageView.snp.leading.offset(-8)
-
         if timeLabel.isHidden {
-            messageLabel.snp.remakeConstraints {
-                $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
-                $0.trailing.equalTo(trailingAnchor)
-                $0.top.equalToSuperview().offset(10)
-                $0.bottom.equalToSuperview().offset(-10)
+            // 시간 라벨이 숨겨진 경우 - 메시지만 표시
+            if thumbnailImageView.isHidden {
+                // 썸네일도 없는 경우
+                messageLabel.snp.remakeConstraints {
+                    $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
+                    $0.trailing.equalToSuperview().offset(-20)
+                    $0.top.equalToSuperview().offset(10)
+                    $0.bottom.equalToSuperview().offset(-10)
+                }
+            } else {
+                // 썸네일이 있는 경우
+                messageLabel.snp.remakeConstraints {
+                    $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
+                    $0.trailing.equalTo(thumbnailImageView.snp.leading).offset(-8)
+                    $0.top.equalToSuperview().offset(10)
+                    $0.bottom.equalToSuperview().offset(-10)
+                }
             }
 
             timeLabel.snp.remakeConstraints {
                 $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
-                $0.trailing.equalTo(trailingAnchor)
+                $0.trailing.equalToSuperview().offset(-20)
                 $0.top.equalToSuperview().offset(10)
             }
         } else {
-            timeLabel.snp.remakeConstraints {
-                $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
-                $0.trailing.equalTo(trailingAnchor)
-                $0.top.equalToSuperview().offset(10)
-            }
+            // 시간 라벨이 표시되는 경우
+            if thumbnailImageView.isHidden {
+                // 썸네일이 없는 경우
+                timeLabel.snp.remakeConstraints {
+                    $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
+                    $0.trailing.equalToSuperview().offset(-20)
+                    $0.top.equalToSuperview().offset(10)
+                }
 
-            messageLabel.snp.remakeConstraints {
-                $0.leading.equalTo(timeLabel)
-                $0.trailing.equalTo(timeLabel)
-                $0.top.equalTo(timeLabel.snp.bottom).offset(4)
-                $0.bottom.equalToSuperview().offset(-10)
+                messageLabel.snp.remakeConstraints {
+                    $0.leading.equalTo(timeLabel)
+                    $0.trailing.equalTo(timeLabel)
+                    $0.top.equalTo(timeLabel.snp.bottom).offset(4)
+                    $0.bottom.equalToSuperview().offset(-10)
+                }
+            } else {
+                // 썸네일이 있는 경우
+                timeLabel.snp.remakeConstraints {
+                    $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
+                    $0.trailing.equalTo(thumbnailImageView.snp.leading).offset(-8)
+                    $0.top.equalToSuperview().offset(10)
+                }
+
+                messageLabel.snp.remakeConstraints {
+                    $0.leading.equalTo(timeLabel)
+                    $0.trailing.equalTo(timeLabel)
+                    $0.top.equalTo(timeLabel.snp.bottom).offset(4)
+                    $0.bottom.equalToSuperview().offset(-10)
+                }
             }
         }
 

@@ -20,6 +20,7 @@ final class StoriesViewModel {
     @Published private(set) var selectedFilterType: StoryFilterType = .all
     @Published private(set) var hasNext = false
     @Published private(set) var imageSizesUpdated = false  // 이미지 크기 프리페치 완료 시 토글
+    @Published private(set) var unReadNotificationExists = false
 
     // MARK: - Private Properties
 
@@ -69,6 +70,7 @@ final class StoriesViewModel {
             var allTabs = [StoriesTab.allTab]  // 전체 탭을 맨 앞에 추가
             if let result = result {
                 allTabs.append(contentsOf: result.tabs)
+                self.unReadNotificationExists = result.unReadNotificationExists
             }
             self.tabs = allTabs
 
@@ -172,6 +174,7 @@ final class StoriesViewModel {
                 }
                 self.lastRecordId = result.lastRecordId
                 self.hasNext = result.hasNext
+                self.unReadNotificationExists = result.unReadNotificationExists
 
                 // 이미지 크기 프리페치
                 prefetchImageSizes(for: result.stories)

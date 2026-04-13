@@ -150,12 +150,12 @@ extension HomeView {
 
         settingsButton.do {
             $0.setImage(.Icon.settings, for: .normal)
-            $0.tintColor = .neutral500
+            $0.tintColor = .neutral800
         }
 
         notificationButton.do {
             $0.setImage(.Icon.notificationOff, for: .normal)
-            $0.tintColor = .neutral500
+            $0.tintColor = .neutral800
         }
         
         // AI Recommendation Toast

@@ -83,6 +83,11 @@ final class StoriesView: UIView {
         collectionView.isHidden = false
     }
 
+    func updateNotificationIcon(hasUnread: Bool) {
+        let icon = hasUnread ? UIImage.Icon.notificationOn : UIImage.Icon.notificationOff
+        notificationButton.setImage(icon, for: .normal)
+    }
+
     // MARK: - Skeleton
 
     /// 스켈레톤 표시
@@ -182,7 +187,6 @@ extension StoriesView {
         notificationButton.do {
             $0.setImage(.Icon.notificationOff, for: .normal)
             $0.tintColor = .neutral500
-            $0.isHidden = true // TODO: 알림 기능 연결 시 활성화
         }
 
         tabSegmentControl.do {
@@ -246,15 +250,14 @@ extension StoriesView {
             $0.bottom.equalToSuperview().offset(-12)
         }
 
-        searchButton.snp.makeConstraints {
+        notificationButton.snp.makeConstraints {
             $0.trailing.equalToSuperview().offset(-20)
             $0.centerY.equalTo(titleLabel)
             $0.width.height.equalTo(24)
         }
 
-        // TODO: 알림 기능 연결 시 활성화 후 searchButton을 notificationButton 왼쪽으로 이동
-        notificationButton.snp.makeConstraints {
-            $0.trailing.equalTo(searchButton.snp.leading).offset(-12)
+        searchButton.snp.makeConstraints {
+            $0.trailing.equalTo(notificationButton.snp.leading).offset(-12)
             $0.centerY.equalTo(titleLabel)
             $0.width.height.equalTo(24)
         }

@@ -15,6 +15,7 @@ final class ProfileView: UIView {
 
     private let navigationView = UIView()
     private let titleLabel = UILabel()
+    let notificationButton = UIButton()
     let settingsButton = UIButton()
 
     let scrollView = UIScrollView()
@@ -75,6 +76,11 @@ extension ProfileView {
             $0.textColor = .neutral900
         }
 
+        notificationButton.do {
+            $0.setImage(.Icon.notificationOff, for: .normal)
+            $0.tintColor = .neutral500
+        }
+
         settingsButton.do {
             $0.setImage(.Icon.settings, for: .normal)
             $0.tintColor = .neutral900
@@ -125,6 +131,7 @@ extension ProfileView {
     private func layout() {
         addSubview(navigationView)
         navigationView.addSubview(titleLabel)
+        navigationView.addSubview(notificationButton)
         navigationView.addSubview(settingsButton)
 
         addSubview(scrollView)
@@ -162,6 +169,12 @@ extension ProfileView {
 
         settingsButton.snp.makeConstraints {
             $0.trailing.equalToSuperview().offset(-20)
+            $0.centerY.equalToSuperview()
+            $0.width.height.equalTo(24)
+        }
+
+        notificationButton.snp.makeConstraints {
+            $0.trailing.equalTo(settingsButton.snp.leading).offset(-12)
             $0.centerY.equalToSuperview()
             $0.width.height.equalTo(24)
         }
@@ -301,6 +314,11 @@ extension ProfileView {
         let minHeight = screenHeight - 56 - 80 - 44 - 100 // nav + header + segment + tabbar
         let finalHeight = max(height, minHeight)
         contentHeightConstraint?.update(offset: finalHeight)
+    }
+
+    func updateNotificationIcon(hasUnread: Bool) {
+        let icon = hasUnread ? UIImage.Icon.notificationOn : UIImage.Icon.notificationOff
+        notificationButton.setImage(icon, for: .normal)
     }
 
     // MARK: - Skeleton
