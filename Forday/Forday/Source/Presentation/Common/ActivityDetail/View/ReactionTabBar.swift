@@ -142,6 +142,7 @@ private final class ReactionTabButton: UIButton {
     // MARK: - UI Components
 
     private let iconImageView = UIImageView()
+    private let textLabel = UILabel()
     private let countLabel = UILabel()
     private let bottomIndicator = UIView()
 
@@ -174,15 +175,12 @@ private final class ReactionTabButton: UIButton {
             // Icon tab
             iconImageView.image = icon
             iconImageView.isHidden = false
-            setTitle(nil, for: .normal)
+            textLabel.isHidden = true
         } else {
             // Text tab (전체)
             iconImageView.isHidden = true
-            let attributedTitle = NSAttributedString(
-                string: title,
-                attributes: TypographyStyle.body14.attributes
-            )
-            setAttributedTitle(attributedTitle, for: .normal)
+            textLabel.isHidden = false
+            textLabel.setTextWithTypography(title, style: .body14)
         }
 
         countLabel.setTextWithTypography("\(count)", style: .label14)
@@ -195,17 +193,9 @@ private final class ReactionTabButton: UIButton {
             countLabel.textColor = selected ? .neutral800 : .neutral400
         } else {
             // Text tab
-            if let currentTitle = attributedTitle(for: .normal)?.string ?? titleLabel?.text {
-                let style: TypographyStyle = selected ? .body14 : .label14
-                var attributes = style.attributes
-                attributes[.foregroundColor] = selected ? UIColor.neutral800 : UIColor.neutral400
-
-                let attributedTitle = NSAttributedString(
-                    string: currentTitle,
-                    attributes: attributes
-                )
-                setAttributedTitle(attributedTitle, for: .normal)
-            }
+            let style: TypographyStyle = selected ? .body14 : .label14
+            textLabel.setTextWithTypography(textLabel.text ?? "", style: style)
+            textLabel.textColor = selected ? .neutral800 : .neutral400
             countLabel.textColor = selected ? .neutral800 : .neutral400
         }
 
@@ -220,6 +210,11 @@ private final class ReactionTabButton: UIButton {
             $0.isHidden = true
         }
 
+        textLabel.do {
+            $0.textColor = .neutral400
+            $0.isHidden = true
+        }
+
         countLabel.do {
             $0.textColor = .neutral400
         }
@@ -231,30 +226,30 @@ private final class ReactionTabButton: UIButton {
     }
 
     private func setupLayout() {
-        let containerView = UIView()
-        addSubview(containerView)
+        // StackView를 사용하여 간격을 일관되게 4px로 관리
+        let stackView = UIStackView().then {
+            $0.axis = .horizontal
+            $0.spacing = 4  // Figma 디자인에 따른 4px 간격
+            $0.alignment = .center
+            $0.distribution = .fill
+        }
+
+        addSubview(stackView)
         addSubview(bottomIndicator)
 
-        containerView.addSubview(iconImageView)
-        containerView.addSubview(countLabel)
+        stackView.addArrangedSubview(iconImageView)
+        stackView.addArrangedSubview(textLabel)
+        stackView.addArrangedSubview(countLabel)
 
-        containerView.snp.makeConstraints {
+        stackView.snp.makeConstraints {
             $0.center.equalToSuperview()
             $0.top.greaterThanOrEqualToSuperview().offset(8)
             $0.bottom.lessThanOrEqualTo(bottomIndicator.snp.top).offset(-8)
         }
 
-        // Icon tab layout
+        // Icon size
         iconImageView.snp.makeConstraints {
-            $0.leading.equalToSuperview()
-            $0.centerY.equalToSuperview()
             $0.size.equalTo(16)
-        }
-
-        countLabel.snp.makeConstraints {
-            $0.leading.equalTo(iconImageView.snp.trailing).offset(4)
-            $0.trailing.equalToSuperview()
-            $0.centerY.equalToSuperview()
         }
 
         bottomIndicator.snp.makeConstraints {

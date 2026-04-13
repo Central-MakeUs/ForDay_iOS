@@ -7,6 +7,7 @@
 
 import UIKit
 import Combine
+import UserNotifications
 
 final class GeneralSettingsViewController: UIViewController {
 
@@ -42,6 +43,7 @@ final class GeneralSettingsViewController: UIViewController {
         setupActions()
         setupAppVersion()
         setupBindings()
+        setupNotificationObserver()
 
         // Hide navigation bar immediately in viewDidLoad
         navigationController?.setNavigationBarHidden(true, animated: false)
@@ -52,13 +54,12 @@ final class GeneralSettingsViewController: UIViewController {
         }
     }
 
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-
-        // 시스템 알림 권한 확인 및 동기화
-        Task {
-            await viewModel.checkAndSyncSystemNotification()
-        }
     }
 
 }
@@ -137,6 +138,15 @@ extension GeneralSettingsViewController {
             }
             .store(in: &cancellables)
     }
+
+    private func setupNotificationObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAppWillEnterForeground),
+            name: UIApplication.willEnterForegroundNotification,
+            object: nil
+        )
+    }
 }
 
 // MARK: - Actions
@@ -160,8 +170,27 @@ extension GeneralSettingsViewController {
 
     @objc private func appPushNotificationToggled(_ sender: UISwitch) {
         print("📱 [GeneralSettings] App push notification toggled: \(sender.isOn)")
-        Task {
-            await viewModel.toggleAppPush(active: sender.isOn)
+
+        // off → on 전환 시에만 시스템 권한 체크
+        if sender.isOn {
+            Task {
+                let hasPermission = await checkSystemNotificationPermission()
+                if !hasPermission {
+                    // 권한 없으면 토글 off로 되돌리고 팝업 표시
+                    await MainActor.run {
+                        viewModel.appPushEnabled = false
+                        showNotificationPermissionAlert()
+                    }
+                } else {
+                    // 권한 있으면 API 호출
+                    await viewModel.toggleAppPush(active: true)
+                }
+            }
+        } else {
+            // on → off는 그냥 API 호출
+            Task {
+                await viewModel.toggleAppPush(active: false)
+            }
         }
     }
 
@@ -224,6 +253,43 @@ extension GeneralSettingsViewController {
 
     private func showError(_ message: String) {
         ToastView.showError(message: message)
+    }
+
+    /// 시스템 알림 권한 확인
+    private func checkSystemNotificationPermission() async -> Bool {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        return settings.authorizationStatus == .authorized
+    }
+
+    /// 알림 권한 허용 팝업 표시
+    private func showNotificationPermissionAlert() {
+        let popup = CommonPopupViewController(
+            title: "알림 권한 허용",
+            message: "알림이 꺼져있으면 중요한 소식을 놓칠 수 있어요. 기기설정에서 알림을 허용해 주세요.",
+            primaryButtonTitle: "설정하기",
+            secondaryButtonTitle: "취소"
+        )
+
+        popup.onPrimaryAction = { [weak self] in
+            // 시스템 설정으로 이동
+            if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsUrl)
+            }
+        }
+
+        popup.onSecondaryAction = { [weak self] in
+            // 토글 off로 복구
+            self?.viewModel.appPushEnabled = false
+        }
+
+        present(popup, animated: true)
+    }
+
+    /// 앱이 foreground로 돌아올 때 호출
+    @objc private func handleAppWillEnterForeground() {
+        Task {
+            await viewModel.checkAndSyncSystemNotification()
+        }
     }
 }
 

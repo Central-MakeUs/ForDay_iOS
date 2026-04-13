@@ -16,10 +16,13 @@ extension MoyaProvider {
     /// - Returns: Decoded response of type T
     /// - Throws: AppError with proper error classification
     func request<T: Decodable>(_ target: Target) async throws -> T {
+        print("🔵 [MoyaProvider+Async] request 메서드 호출됨")
         return try await withCheckedThrowingContinuation { continuation in
             self.request(target) { result in
+                print("🟢 [MoyaProvider+Async] completion handler 호출됨")
                 switch result {
                 case .success(let response):
+                    print("🟡 [MoyaProvider+Async] .success - statusCode: \(response.statusCode)")
                     _Concurrency.Task {
                         do {
                             // 401 에러 처리 - 토큰 재발급 시도
@@ -40,8 +43,15 @@ extension MoyaProvider {
                             // Check if response is an error (4xx, 5xx)
                             if (400...599).contains(response.statusCode) {
                                 // Try to parse server error
-                                if let serverError = try? response.map(ServerErrorResponse.self) {
+                                do {
+                                    let serverError = try response.map(ServerErrorResponse.self)
+                                    print("✅ ServerError 파싱 성공: \(serverError.data.errorClassName)")
                                     continuation.resume(throwing: AppError.server(serverError.toServerError()))
+                                    return
+                                } catch {
+                                    print("❌ ServerError 파싱 실패: \(error)")
+                                    // 파싱 실패 시에도 에러로 처리
+                                    continuation.resume(throwing: AppError.network(.unknown))
                                     return
                                 }
                             }
@@ -60,6 +70,29 @@ extension MoyaProvider {
                     }
 
                 case .failure(let error):
+                    print("🔴 [MoyaProvider+Async] .failure - error: \(error)")
+
+                    // MoyaError에서 response 추출 시도
+                    if let response = error.response {
+                        print("🟣 [MoyaProvider+Async] response 추출 성공 - statusCode: \(response.statusCode)")
+
+                        // 4xx, 5xx 에러면 ServerError로 파싱 시도
+                        if (400...599).contains(response.statusCode) {
+                            _Concurrency.Task {
+                                do {
+                                    let serverError = try response.map(ServerErrorResponse.self)
+                                    print("✅ ServerError 파싱 성공: \(serverError.data.errorClassName)")
+                                    continuation.resume(throwing: AppError.server(serverError.toServerError()))
+                                } catch {
+                                    print("❌ ServerError 파싱 실패: \(error)")
+                                    // 파싱 실패 시에도 에러로 처리
+                                    continuation.resume(throwing: AppError.network(.unknown))
+                                }
+                            }
+                            return
+                        }
+                    }
+
                     // Convert MoyaError to AppError
                     let appError = self.convertMoyaError(error)
                     continuation.resume(throwing: appError)

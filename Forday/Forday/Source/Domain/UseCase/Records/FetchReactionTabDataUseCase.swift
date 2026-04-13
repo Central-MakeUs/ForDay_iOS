@@ -18,7 +18,7 @@ final class FetchReactionTabDataUseCase {
     func execute(
         recordId: Int,
         reactionType: ReactionType?,
-        lastReactionId: Int,
+        lastReactionId: Int?,
         size: Int = 10
     ) async throws -> ReactionTabData {
         return try await repository.fetchReactionTabData(

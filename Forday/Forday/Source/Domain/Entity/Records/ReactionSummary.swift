@@ -32,7 +32,7 @@ struct ReactionSummary {
 extension ReactionSummary {
     static var preview: ReactionSummary {
         ReactionSummary(
-            totalCount: 9,
+            totalCount: 12,
             awesome: 3,
             great: 3,
             amazing: 3,

@@ -234,6 +234,7 @@ private final class ReactionButton: UIButton {
         // Border style
         layer.borderWidth = isPressed ? 1 : 0
         layer.borderColor = isPressed ? UIColor.action001.cgColor : nil
+        layer.backgroundColor = isPressed ? UIColor.primary002.cgColor : UIColor.bg002.cgColor
 
         // New reaction dot
         newReactionDot.isHidden = !hasNewReaction

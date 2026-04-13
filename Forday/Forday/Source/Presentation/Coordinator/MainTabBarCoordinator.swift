@@ -406,8 +406,11 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         notificationVC.coordinator = self
         notificationVC.hidesBottomBarWhenPushed = true  // 탭바 숨김
 
-        // Push to Home navigation stack (스와이프 백 지원)
-        if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
+        // Push to current navigation stack (스와이프 백 지원)
+        if let currentNav = tabBarController.selectedViewController as? UINavigationController {
+            currentNav.pushViewController(notificationVC, animated: true)
+        } else if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
+            // Fallback to Home navigation if current tab is not a navigation controller
             homeNav.pushViewController(notificationVC, animated: true)
         }
     }

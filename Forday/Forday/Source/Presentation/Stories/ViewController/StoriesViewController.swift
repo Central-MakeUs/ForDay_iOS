@@ -89,6 +89,13 @@ extension StoriesViewController {
     }
 
     private func setupCallbacks() {
+        // Notification button
+        storiesView.notificationButton.addTarget(
+            self,
+            action: #selector(notificationTapped),
+            for: .touchUpInside
+        )
+
         // Tab selection
         storiesView.tabSegmentControl.onTabSelected = { [weak self] index, _ in
             guard let self = self else { return }
@@ -200,12 +207,24 @@ extension StoriesViewController {
                 self?.storiesView.collectionView.reloadData()
             }
             .store(in: &cancellables)
+
+        // Unread notification status
+        viewModel.$unReadNotificationExists
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] hasUnread in
+                self?.storiesView.updateNotificationIcon(hasUnread: hasUnread)
+            }
+            .store(in: &cancellables)
     }
 }
 
 // MARK: - Actions
 
 extension StoriesViewController {
+    @objc private func notificationTapped() {
+        coordinator?.showNotifications()
+    }
+
     @objc private func handleRefresh() {
         Task { [weak self] in
             await self?.viewModel.loadStories(reset: true)

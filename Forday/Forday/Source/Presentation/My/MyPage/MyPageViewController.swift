@@ -141,6 +141,7 @@ final class MyPageViewController: UIViewController {
 extension MyPageViewController {
     private func setupCustomNavigationBar() {
         // Setup custom navigation buttons from ProfileView
+        myPageView.notificationButton.addTarget(self, action: #selector(notificationButtonTapped), for: .touchUpInside)
         myPageView.settingsButton.addTarget(self, action: #selector(settingsButtonTapped), for: .touchUpInside)
     }
 
@@ -203,6 +204,14 @@ extension MyPageViewController {
                 } else {
                     print("✅ MyPage data loaded")
                 }
+            }
+            .store(in: &cancellables)
+
+        // Unread notification status
+        viewModel.$unReadNotificationExists
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] hasUnread in
+                self?.myPageView.updateNotificationIcon(hasUnread: hasUnread)
             }
             .store(in: &cancellables)
 
@@ -350,6 +359,10 @@ extension MyPageViewController {
                 self?.myPageView.refreshControl.endRefreshing()
             }
         }
+    }
+
+    @objc private func notificationButtonTapped() {
+        coordinator?.showNotifications()
     }
 
     @objc private func settingsButtonTapped() {

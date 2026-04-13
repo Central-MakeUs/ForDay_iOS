@@ -108,11 +108,14 @@ final class ActivityDetailViewModel {
             }
 
         } catch let appError as AppError {
+            print("🔴 [ViewModel] AppError 발생: \(appError)")
             await MainActor.run {
                 self.error = appError
                 self.isLoading = false
+                print("🔴 [ViewModel] error 설정 완료: \(String(describing: self.error))")
             }
         } catch {
+            print("🔴 [ViewModel] Unknown Error 발생: \(error)")
             await MainActor.run {
                 self.error = .unknown(error)
                 self.isLoading = false
@@ -238,7 +241,7 @@ final class ActivityDetailViewModel {
     /// 특정 감정 반응 탭의 추가 데이터를 조회합니다 (페이지네이션).
     func fetchMoreReactionUsers(
         for reactionType: ReactionType?,
-        lastReactionId: Int,
+        lastReactionId: Int?,
         size: Int = 10
     ) -> AnyPublisher<ReactionTabData, Error> {
         return Future<ReactionTabData, Error> { [weak self] promise in

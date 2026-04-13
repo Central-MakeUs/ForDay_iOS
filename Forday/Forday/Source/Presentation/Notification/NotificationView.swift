@@ -21,8 +21,10 @@ final class NotificationView: UIView {
 
     // Permission Banner
     let permissionBannerView = UIView()
+    private let bannerTextStackView = UIStackView()
     private let bannerTitleLabel = UILabel()
     private let bannerMessageLabel = UILabel()
+    private let bannerChevronImageView = UIImageView()
 
     // TODO: 필터 버튼들 (전체, 소식글, 친구, 모임) - 확장성을 위해 나중에 추가
     // private let filterContainerView = UIView()
@@ -37,6 +39,9 @@ final class NotificationView: UIView {
 
     // Empty State
     let emptyStateView = EmptyStateView()
+
+    // Loading Indicator
+    private let loadingIndicator = UIActivityIndicatorView()
 
     // MARK: - Initialization
 
@@ -89,6 +94,12 @@ final class NotificationView: UIView {
             $0.textColor = .neutral800
         }
 
+        bannerTextStackView.do {
+            $0.axis = .vertical
+            $0.spacing = 8
+            $0.alignment = .leading
+        }
+
         bannerMessageLabel.do {
             $0.numberOfLines = 0
 
@@ -105,12 +116,18 @@ final class NotificationView: UIView {
             if let range = text.range(of: "알림 권한") {
                 let nsRange = NSRange(range, in: text)
                 attributedString.addAttributes([
-                    .font: TypographyStyle.label12.font,
+                    .font: UIFont(name: "Pretendard-Bold", size: 12) ?? TypographyStyle.label12.font,
                     .foregroundColor: UIColor.action001
                 ], range: nsRange)
             }
 
             $0.attributedText = attributedString
+        }
+
+        bannerChevronImageView.do {
+            $0.image = .Icon.chevronRight
+            $0.tintColor = .neutral600
+            $0.contentMode = .scaleAspectFit
         }
 
         // TableView
@@ -126,6 +143,14 @@ final class NotificationView: UIView {
         emptyStateView.do {
             $0.isHidden = true
         }
+
+        // Loading Indicator
+        loadingIndicator.do {
+            $0.style = .large
+            $0.color = .action001
+            $0.hidesWhenStopped = true
+            $0.isHidden = true
+        }
     }
 
     private func layout() {
@@ -133,6 +158,7 @@ final class NotificationView: UIView {
         addSubview(permissionBannerView)
         addSubview(tableView)
         addSubview(emptyStateView)
+        addSubview(loadingIndicator)
 
         // Header
         headerView.addSubview(backButton)
@@ -140,8 +166,10 @@ final class NotificationView: UIView {
         headerView.addSubview(settingsButton)
 
         // Permission Banner
-        permissionBannerView.addSubview(bannerTitleLabel)
-        permissionBannerView.addSubview(bannerMessageLabel)
+        permissionBannerView.addSubview(bannerTextStackView)
+        permissionBannerView.addSubview(bannerChevronImageView)
+        bannerTextStackView.addArrangedSubview(bannerTitleLabel)
+        bannerTextStackView.addArrangedSubview(bannerMessageLabel)
 
         // Header Layout
         headerView.snp.makeConstraints {
@@ -172,15 +200,17 @@ final class NotificationView: UIView {
             $0.leading.trailing.equalToSuperview().inset(20)
         }
 
-        bannerTitleLabel.snp.makeConstraints {
+        bannerTextStackView.snp.makeConstraints {
+            $0.leading.equalToSuperview().offset(12)
             $0.top.equalToSuperview().offset(12)
-            $0.leading.trailing.equalToSuperview().inset(12)
+            $0.bottom.equalToSuperview().offset(-12)
+            $0.trailing.equalTo(bannerChevronImageView.snp.leading).offset(-8)
         }
 
-        bannerMessageLabel.snp.makeConstraints {
-            $0.top.equalTo(bannerTitleLabel.snp.bottom).offset(8)
-            $0.leading.trailing.equalToSuperview().inset(12)
-            $0.bottom.equalToSuperview().offset(-12)
+        bannerChevronImageView.snp.makeConstraints {
+            $0.trailing.equalToSuperview().offset(-12)
+            $0.centerY.equalToSuperview()
+            $0.size.equalTo(24)
         }
 
         // TableView Layout
@@ -193,6 +223,11 @@ final class NotificationView: UIView {
         emptyStateView.snp.makeConstraints {
             $0.center.equalToSuperview()
             $0.width.equalToSuperview().inset(20)
+        }
+
+        // Loading Indicator Layout
+        loadingIndicator.snp.makeConstraints {
+            $0.center.equalToSuperview()
         }
     }
 
@@ -220,7 +255,7 @@ final class NotificationView: UIView {
         }
     }
 
-    /// Empty State 표시
+    /// Empty State 표시 (알림 없음)
     func showEmptyState() {
         emptyStateView.isHidden = false
         tableView.isHidden = true
@@ -229,9 +264,32 @@ final class NotificationView: UIView {
         emptyStateView.configureForNotifications()
     }
 
+    /// Empty State 표시 (권한 거부)
+    func showPermissionDeniedState() {
+        emptyStateView.isHidden = false
+        tableView.isHidden = true
+
+        // Empty state 설정 (권한 거부)
+        emptyStateView.configureForNotificationPermissionDenied()
+    }
+
     /// Empty State 숨김
     func hideEmptyState() {
         emptyStateView.isHidden = true
         tableView.isHidden = false
+    }
+
+    /// 로딩 인디케이터 표시
+    func showLoading() {
+        loadingIndicator.isHidden = false
+        loadingIndicator.startAnimating()
+        tableView.isHidden = true
+        emptyStateView.isHidden = true
+    }
+
+    /// 로딩 인디케이터 숨김
+    func hideLoading() {
+        loadingIndicator.stopAnimating()
+        loadingIndicator.isHidden = true
     }
 }

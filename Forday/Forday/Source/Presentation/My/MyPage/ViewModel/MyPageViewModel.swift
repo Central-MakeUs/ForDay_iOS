@@ -32,6 +32,7 @@ final class MyPageViewModel: ProfileViewModelProtocol {
     @Published var isLoading: Bool = false
     @Published var isLoadingMore: Bool = false
     @Published var error: AppError?
+    @Published var unReadNotificationExists: Bool = false
 
     // MARK: - Private Properties
 
@@ -84,6 +85,7 @@ final class MyPageViewModel: ProfileViewModelProtocol {
             await MainActor.run {
                 if let profile = profile {
                     self.userProfile = profile
+                    self.unReadNotificationExists = profile.unReadNotificationExists
                 }
                 self.isLoading = false
             }
@@ -109,6 +111,7 @@ final class MyPageViewModel: ProfileViewModelProtocol {
             // Update only successful results
             if let profile = profileOpt {
                 self.userProfile = profile
+                self.unReadNotificationExists = profile.unReadNotificationExists
             }
 
             if let hobbies = hobbiesOpt {
@@ -245,6 +248,7 @@ final class MyPageViewModel: ProfileViewModelProtocol {
             let profile = try await fetchUserProfileUseCase.execute()
             await MainActor.run {
                 self.userProfile = profile
+                self.unReadNotificationExists = profile.unReadNotificationExists
             }
         } catch {
             // Silently fail - user can refresh manually if needed

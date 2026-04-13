@@ -18,7 +18,7 @@ enum RecordsTarget {
     case deleteReaction(recordId: Int, reactionType: ReactionType)
     case fetchReactionUsers(recordId: Int, reactionType: ReactionType, lastUserId: String?, size: Int)
     case fetchReactionSummary(recordId: Int, size: Int)
-    case fetchReactionTabData(recordId: Int, reactionType: ReactionType?, lastReactionId: Int, size: Int)
+    case fetchReactionTabData(recordId: Int, reactionType: ReactionType?, lastReactionId: Int?, size: Int)
     case addScrap(recordId: Int)
     case deleteScrap(recordId: Int)
     case reportRecord(recordId: Int, request: DTO.ReportRecordRequest)
@@ -120,12 +120,15 @@ extension RecordsTarget: BaseTargetType {
             )
         case .fetchReactionTabData(_, let reactionType, let lastReactionId, let size):
             var parameters: [String: Any] = [
-                "lastReactionId": lastReactionId,
                 "size": size
             ]
 
             if let reactionType = reactionType {
                 parameters["type"] = reactionType.rawValue
+            }
+
+            if let lastReactionId = lastReactionId {
+                parameters["lastReactionId"] = lastReactionId
             }
 
             return .requestParameters(

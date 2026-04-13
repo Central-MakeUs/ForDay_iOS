@@ -91,7 +91,7 @@ final class RecordsService {
     func fetchReactionTabData(
         recordId: Int,
         reactionType: ReactionType?,
-        lastReactionId: Int,
+        lastReactionId: Int?,
         size: Int = 10
     ) async throws -> DTO.FetchReactionTabDataResponse {
         return try await provider.request(.fetchReactionTabData(

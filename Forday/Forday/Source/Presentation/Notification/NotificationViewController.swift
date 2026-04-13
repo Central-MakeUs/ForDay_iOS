@@ -7,6 +7,7 @@
 
 import UIKit
 import Combine
+import UserNotifications
 
 final class NotificationViewController: UIViewController {
 
@@ -29,12 +30,26 @@ final class NotificationViewController: UIViewController {
         setupTableView()
         setupActions()
         bind()
-        loadInitialData()
+
+        // 권한 체크 후 데이터 로드
+        Task {
+            await viewModel.checkSystemNotificationPermission()
+            if viewModel.systemNotificationEnabled {
+                await viewModel.loadNotifications(reset: true)
+            }
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        checkNotificationPermission()
+
+        // 권한 체크 후 권한이 있으면 데이터 새로고침
+        Task {
+            await viewModel.checkSystemNotificationPermission()
+            if viewModel.systemNotificationEnabled {
+                await viewModel.loadNotifications(reset: true)
+            }
+        }
     }
 
     // MARK: - Setup
@@ -85,7 +100,10 @@ final class NotificationViewController: UIViewController {
         viewModel.$isLoading
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isLoading in
-                if !isLoading {
+                if isLoading {
+                    self?.notificationView.showLoading()
+                } else {
+                    self?.notificationView.hideLoading()
                     self?.notificationView.refreshControl.endRefreshing()
                 }
             }
@@ -109,18 +127,6 @@ final class NotificationViewController: UIViewController {
             .store(in: &cancellables)
     }
 
-    private func loadInitialData() {
-        Task {
-            await viewModel.loadNotifications(reset: true)
-        }
-    }
-
-    private func checkNotificationPermission() {
-        Task {
-            await viewModel.checkSystemNotificationPermission()
-        }
-    }
-
     // MARK: - UI Updates
 
     private func updatePermissionBanner(enabled: Bool) {
@@ -129,9 +135,19 @@ final class NotificationViewController: UIViewController {
         } else {
             notificationView.showPermissionBanner()
         }
+
+        // 권한 상태 변경 시 EmptyState도 업데이트
+        updateEmptyState()
     }
 
     private func updateEmptyState() {
+        // 권한이 없으면 권한 거부 화면 표시
+        if !viewModel.systemNotificationEnabled {
+            notificationView.showPermissionDeniedState()
+            return
+        }
+
+        // 권한은 있는데 알림이 없으면 알림 없음 화면 표시
         let hasNotifications = !viewModel.notifications.isEmpty
         if hasNotifications {
             notificationView.hideEmptyState()
@@ -151,12 +167,40 @@ final class NotificationViewController: UIViewController {
     }
 
     @objc private func permissionBannerTapped() {
-        viewModel.openSystemSettings()
+        showNotificationPermissionPopup()
+    }
+
+    /// 알림 권한 허용 팝업 표시
+    private func showNotificationPermissionPopup() {
+        let popup = CommonPopupViewController(
+            title: "알림 권한 허용",
+            message: "알림이 꺼져있으면 중요한 소식을 놓칠 수 있어요. 기기설정에서 알림을 허용해 주세요.",
+            primaryButtonTitle: "설정하기",
+            secondaryButtonTitle: "취소"
+        )
+
+        popup.onPrimaryAction = { [weak self] in
+            // 시스템 설정으로 이동
+            self?.viewModel.openSystemSettings()
+        }
+
+        popup.onSecondaryAction = {
+            // 팝업만 닫기
+        }
+
+        present(popup, animated: true)
     }
 
     @objc private func refreshNotifications() {
         Task {
-            await viewModel.loadNotifications(reset: true)
+            // 권한 체크 후 권한이 있을 때만 데이터 로드
+            await viewModel.checkSystemNotificationPermission()
+            if viewModel.systemNotificationEnabled {
+                await viewModel.loadNotifications(reset: true)
+            } else {
+                // 권한이 없으면 refresh control만 종료
+                notificationView.refreshControl.endRefreshing()
+            }
         }
     }
 }

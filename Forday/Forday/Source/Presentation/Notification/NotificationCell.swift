@@ -26,10 +26,11 @@ final class NotificationCell: UITableViewCell {
     // MARK: - UI Components
 
     private let containerView = UIView()
-    private let thumbnailImageView = UIImageView()
+    private let profileImageView = UIImageView()
     private let reactionIconView = UIImageView()
+    private let timeLabel = UILabel()
     private let messageLabel = UILabel()
-    private let commentLabel = UILabel()
+    private let thumbnailImageView = UIImageView()
     private let separatorView = UIView()
 
     // MARK: - Initialization
@@ -50,10 +51,40 @@ final class NotificationCell: UITableViewCell {
     private func setupStyle() {
         selectionStyle = .none
         backgroundColor = .clear
+
+        // contentView에 배경색 적용 (전체 너비)
         contentView.backgroundColor = .clear
 
         containerView.do {
             $0.backgroundColor = .clear
+        }
+
+        profileImageView.do {
+            $0.contentMode = .scaleAspectFill
+            $0.clipsToBounds = true  // 원형으로 자르기
+            $0.layer.cornerRadius = 18  // 36 / 2 = 원형
+            $0.backgroundColor = .neutral100
+        }
+
+        reactionIconView.do {
+            $0.contentMode = .center
+            $0.backgroundColor = .primary002
+            $0.layer.cornerRadius = 8  // 16 / 2
+            $0.layer.borderWidth = 0.667
+            $0.layer.borderColor = UIColor.action001.cgColor
+            $0.clipsToBounds = true
+        }
+
+        timeLabel.do {
+            $0.font = TypographyStyle.label12.font
+            $0.textColor = .neutral400
+            $0.numberOfLines = 1
+        }
+
+        messageLabel.do {
+            $0.font = TypographyStyle.label14.font
+            $0.textColor = .neutral800
+            $0.numberOfLines = 0
         }
 
         thumbnailImageView.do {
@@ -65,27 +96,6 @@ final class NotificationCell: UITableViewCell {
             $0.backgroundColor = .neutral100
         }
 
-        reactionIconView.do {
-            $0.contentMode = .center
-            $0.backgroundColor = .primary002
-            $0.layer.cornerRadius = 12
-            $0.layer.borderWidth = 1
-            $0.layer.borderColor = UIColor.action001.cgColor
-            $0.clipsToBounds = true
-        }
-
-        messageLabel.do {
-            $0.font = TypographyStyle.label14.font
-            $0.textColor = .neutral800
-            $0.numberOfLines = 0
-        }
-
-        commentLabel.do {
-            $0.font = TypographyStyle.label14.font
-            $0.textColor = .neutral500
-            $0.numberOfLines = 1
-        }
-
         separatorView.do {
             $0.backgroundColor = .neutral100
         }
@@ -93,40 +103,54 @@ final class NotificationCell: UITableViewCell {
 
     private func setupLayout() {
         contentView.addSubview(containerView)
-        containerView.addSubview(thumbnailImageView)
-        containerView.addSubview(reactionIconView)
+        containerView.addSubview(profileImageView)
+        containerView.addSubview(reactionIconView)  // containerView의 직접 서브뷰로 변경
+        containerView.addSubview(timeLabel)
         containerView.addSubview(messageLabel)
-        containerView.addSubview(commentLabel)
-        containerView.addSubview(separatorView)
+        containerView.addSubview(thumbnailImageView)
+        contentView.addSubview(separatorView)  // contentView의 직접 서브뷰로 변경
 
+        // containerView는 전체 너비, 내부 컨텐츠만 패딩
         containerView.snp.makeConstraints {
-            $0.edges.equalToSuperview().inset(UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20))
+            $0.edges.equalToSuperview()
         }
 
-        thumbnailImageView.snp.makeConstraints {
-            $0.leading.equalToSuperview()
-            $0.top.equalToSuperview().offset(12)
-            $0.size.equalTo(48)
+        // 원형 프로필 (왼쪽, 20pt 패딩)
+        profileImageView.snp.makeConstraints {
+            $0.leading.equalToSuperview().offset(20)
+            $0.centerY.equalToSuperview()
+            $0.size.equalTo(36)
         }
 
+        // 감정 아이콘 (프로필 오른쪽 하단에 오버레이)
         reactionIconView.snp.makeConstraints {
-            $0.leading.equalTo(thumbnailImageView.snp.leading).offset(28)
-            $0.top.equalTo(thumbnailImageView.snp.top).offset(28)
-            $0.size.equalTo(24)
+            $0.trailing.equalTo(profileImageView.snp.trailing).offset(-2)
+            $0.bottom.equalTo(profileImageView.snp.bottom).offset(-2)
+            $0.size.equalTo(16)
+        }
+
+        // 텍스트 컨테이너 (시간 + 메시지)
+        timeLabel.snp.makeConstraints {
+            $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
+            $0.trailing.equalTo(thumbnailImageView.snp.leading).offset(-8)
+            $0.top.equalToSuperview().offset(10)
         }
 
         messageLabel.snp.makeConstraints {
-            $0.leading.equalTo(thumbnailImageView.snp.trailing).offset(12)
-            $0.trailing.equalToSuperview()
-            $0.top.equalToSuperview().offset(12)
+            $0.leading.equalTo(timeLabel)
+            $0.trailing.equalTo(timeLabel)
+            $0.top.equalTo(timeLabel.snp.bottom).offset(4)
+            $0.bottom.equalToSuperview().offset(-10)
         }
 
-        commentLabel.snp.makeConstraints {
-            $0.leading.equalTo(messageLabel)
-            $0.trailing.equalToSuperview()
-            $0.top.equalTo(messageLabel.snp.bottom).offset(4)
+        // 활동 사진 (오른쪽, 20pt 패딩)
+        thumbnailImageView.snp.makeConstraints {
+            $0.trailing.equalToSuperview().offset(-20)
+            $0.centerY.equalToSuperview()
+            $0.size.equalTo(48)
         }
 
+        // 구분선 (전체 너비)
         separatorView.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview()
             $0.bottom.equalToSuperview()
@@ -144,16 +168,32 @@ final class NotificationCell: UITableViewCell {
     func configure(with notification: NotificationItem) {
         self.notification = notification
 
-        // 썸네일 이미지
-        if let imageUrl = notification.imageUrl {
-            thumbnailImageView.setImage(with: imageUrl)
+        // 프로필 이미지
+        if let profileUrl = notification.senderProfileUrl {
+            profileImageView.setImage(with: profileUrl)
         } else {
-            thumbnailImageView.backgroundColor = .bg003
-            thumbnailImageView.image = nil
+            profileImageView.backgroundColor = .neutral100
+            profileImageView.image = nil
+        }
+
+        // 시간 (빈 문자열이 아닐 때만 표시)
+        if !notification.createdAt.isEmpty {
+            timeLabel.text = notification.createdAt
+            timeLabel.isHidden = false
+        } else {
+            timeLabel.isHidden = true
         }
 
         // 메시지
         messageLabel.text = notification.message
+
+        // 활동 사진
+        if let imageUrl = notification.imageUrl {
+            thumbnailImageView.isHidden = false
+            thumbnailImageView.setImage(with: imageUrl)
+        } else {
+            thumbnailImageView.isHidden = true
+        }
 
         // 반응 알림 또는 댓글 알림에 따라 UI 설정
         switch notification.type {
@@ -165,53 +205,90 @@ final class NotificationCell: UITableViewCell {
             configureDefaultNotification()
         }
 
-        // TODO: 읽지 않은 알림 표시 (read 필드 활용)
-        // if !notification.read {
-        //     // 읽지 않은 알림 스타일 적용 (예: 배경색, 폰트 등)
-        // }
+        // 시간 표시 및 썸네일 여부에 따른 레이아웃 조정
+        if timeLabel.isHidden {
+            // 시간 라벨이 숨겨진 경우 - 메시지만 표시
+            if thumbnailImageView.isHidden {
+                // 썸네일도 없는 경우
+                messageLabel.snp.remakeConstraints {
+                    $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
+                    $0.trailing.equalToSuperview().offset(-20)
+                    $0.top.equalToSuperview().offset(10)
+                    $0.bottom.equalToSuperview().offset(-10)
+                }
+            } else {
+                // 썸네일이 있는 경우
+                messageLabel.snp.remakeConstraints {
+                    $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
+                    $0.trailing.equalTo(thumbnailImageView.snp.leading).offset(-8)
+                    $0.top.equalToSuperview().offset(10)
+                    $0.bottom.equalToSuperview().offset(-10)
+                }
+            }
+
+            timeLabel.snp.remakeConstraints {
+                $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
+                $0.trailing.equalToSuperview().offset(-20)
+                $0.top.equalToSuperview().offset(10)
+            }
+        } else {
+            // 시간 라벨이 표시되는 경우
+            if thumbnailImageView.isHidden {
+                // 썸네일이 없는 경우
+                timeLabel.snp.remakeConstraints {
+                    $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
+                    $0.trailing.equalToSuperview().offset(-20)
+                    $0.top.equalToSuperview().offset(10)
+                }
+
+                messageLabel.snp.remakeConstraints {
+                    $0.leading.equalTo(timeLabel)
+                    $0.trailing.equalTo(timeLabel)
+                    $0.top.equalTo(timeLabel.snp.bottom).offset(4)
+                    $0.bottom.equalToSuperview().offset(-10)
+                }
+            } else {
+                // 썸네일이 있는 경우
+                timeLabel.snp.remakeConstraints {
+                    $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
+                    $0.trailing.equalTo(thumbnailImageView.snp.leading).offset(-8)
+                    $0.top.equalToSuperview().offset(10)
+                }
+
+                messageLabel.snp.remakeConstraints {
+                    $0.leading.equalTo(timeLabel)
+                    $0.trailing.equalTo(timeLabel)
+                    $0.top.equalTo(timeLabel.snp.bottom).offset(4)
+                    $0.bottom.equalToSuperview().offset(-10)
+                }
+            }
+        }
+
+        // 안 읽은 알림 배경색 적용 (contentView에 적용하여 전체 너비)
+        if !notification.read {
+            contentView.backgroundColor = .bg004
+        } else {
+            contentView.backgroundColor = .clear
+        }
     }
 
     private func configureReactionNotification(_ notification: NotificationItem) {
         // 감정 아이콘 표시
         reactionIconView.isHidden = false
-        commentLabel.isHidden = true
 
         if let reaction = notification.reactionAlarm {
             reactionIconView.image = getReactionIcon(for: reaction.reactionType)
         }
-
-        // 높이 조정
-        containerView.snp.remakeConstraints {
-            $0.edges.equalToSuperview().inset(UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20))
-            $0.height.equalTo(72)
-        }
     }
 
     private func configureCommentNotification(_ notification: NotificationItem) {
-        // 감정 아이콘 숨김, 댓글 내용 표시
+        // 감정 아이콘 숨김
         reactionIconView.isHidden = true
-        commentLabel.isHidden = false
-
-        if let comment = notification.commentAlarm {
-            commentLabel.text = comment.commentContent
-        }
-
-        // 높이 조정
-        containerView.snp.remakeConstraints {
-            $0.edges.equalToSuperview().inset(UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20))
-            $0.height.equalTo(72)
-        }
     }
 
     private func configureDefaultNotification() {
-        // 기본 알림 (친구, 기타)
+        // 기본 알림 (친구, 기타) - 감정 아이콘 숨김
         reactionIconView.isHidden = true
-        commentLabel.isHidden = true
-
-        containerView.snp.remakeConstraints {
-            $0.edges.equalToSuperview().inset(UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20))
-            $0.height.equalTo(72)
-        }
     }
 
     /// 감정 타입에 따른 아이콘 반환
