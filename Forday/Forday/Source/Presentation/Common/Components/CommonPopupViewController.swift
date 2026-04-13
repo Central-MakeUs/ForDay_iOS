@@ -74,7 +74,7 @@ extension CommonPopupViewController {
 
         dialogView.do {
             $0.backgroundColor = .neutralWhite
-            $0.layer.cornerRadius = 20
+            $0.layer.cornerRadius = 16
             $0.clipsToBounds = true
         }
 
@@ -93,7 +93,7 @@ extension CommonPopupViewController {
 
         buttonStackView.do {
             $0.axis = .horizontal
-            $0.spacing = 20
+            $0.spacing = 8
             $0.distribution = .fillEqually
         }
 
@@ -102,7 +102,7 @@ extension CommonPopupViewController {
             $0.titleLabel?.applyTypography(.header14)
             $0.setTitleColor(.neutral900, for: .normal)
             $0.backgroundColor = .action003
-            $0.layer.cornerRadius = 20
+            $0.layer.cornerRadius = 12
             $0.clipsToBounds = true
             $0.isHidden = secondaryButtonTitle == nil
         }
@@ -112,7 +112,7 @@ extension CommonPopupViewController {
             $0.titleLabel?.applyTypography(.header14)
             $0.setTitleColor(.white, for: .normal)
             $0.backgroundColor = .action001
-            $0.layer.cornerRadius = 20
+            $0.layer.cornerRadius = 12
             $0.clipsToBounds = true
         }
     }
@@ -146,7 +146,7 @@ extension CommonPopupViewController {
                 $0.top.equalTo(titleLabel.snp.bottom).offset(20)
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.equalToSuperview().offset(-20)
-                $0.height.equalTo(40)
+                $0.height.equalTo(44)
                 $0.bottom.equalToSuperview().offset(-24)
             }
         } else {
@@ -160,7 +160,7 @@ extension CommonPopupViewController {
                 $0.top.equalTo(messageLabel.snp.bottom).offset(20)
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.equalToSuperview().offset(-20)
-                $0.height.equalTo(40)
+                $0.height.equalTo(44)
                 $0.bottom.equalToSuperview().offset(-24)
             }
         }
