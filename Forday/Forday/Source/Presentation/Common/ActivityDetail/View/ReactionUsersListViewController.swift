@@ -92,7 +92,8 @@ extension ReactionUsersListViewController {
         view.addSubview(emptyLabel)
 
         tableView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
+            $0.top.bottom.equalToSuperview()
+            $0.leading.trailing.equalToSuperview().inset(20)
         }
 
         emptyLabel.snp.makeConstraints {

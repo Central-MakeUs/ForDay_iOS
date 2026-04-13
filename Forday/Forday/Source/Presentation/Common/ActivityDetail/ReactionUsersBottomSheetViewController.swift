@@ -16,7 +16,6 @@ final class ReactionUsersBottomSheetViewController: UIViewController {
 
     private let dimmerView = UIView()
     private let containerView = UIView()
-    private let dragIndicator = UIView()
     private let titleLabel = UILabel()
     private let tabBar = ReactionTabBar()
     private let pageViewController = UIPageViewController(
@@ -179,11 +178,6 @@ extension ReactionUsersBottomSheetViewController {
             $0.clipsToBounds = true
         }
 
-        dragIndicator.do {
-            $0.backgroundColor = .neutral300
-            $0.layer.cornerRadius = 2.5
-        }
-
         titleLabel.do {
             $0.setTextWithTypography("감정 남긴 친구 목록", style: .header18)
             $0.textColor = .neutral900
@@ -195,7 +189,6 @@ extension ReactionUsersBottomSheetViewController {
         view.addSubview(dimmerView)
         view.addSubview(containerView)
 
-        containerView.addSubview(dragIndicator)
         containerView.addSubview(titleLabel)
         containerView.addSubview(tabBar)
 
@@ -212,27 +205,20 @@ extension ReactionUsersBottomSheetViewController {
             self.containerHeightConstraint = $0.height.equalTo(minHeight).constraint
         }
 
-        dragIndicator.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(12)
-            $0.centerX.equalToSuperview()
-            $0.width.equalTo(36)
-            $0.height.equalTo(5)
-        }
-
         titleLabel.snp.makeConstraints {
-            $0.top.equalTo(dragIndicator.snp.bottom).offset(16)
+            $0.top.equalToSuperview().offset(16)
             $0.leading.trailing.equalToSuperview().inset(20)
         }
 
         tabBar.snp.makeConstraints {
             $0.top.equalTo(titleLabel.snp.bottom).offset(20)
-            $0.leading.trailing.equalToSuperview()
+            $0.leading.trailing.equalToSuperview().inset(20)
             $0.height.equalTo(40)
         }
 
         pageViewController.view.snp.makeConstraints {
             $0.top.equalTo(tabBar.snp.bottom).offset(20)
-            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.leading.trailing.equalToSuperview()
             $0.bottom.equalToSuperview().offset(-34)  // Home indicator space
         }
     }
