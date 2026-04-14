@@ -67,12 +67,7 @@ final class NotificationCell: UITableViewCell {
         }
 
         reactionIconView.do {
-            $0.contentMode = .center
-            $0.backgroundColor = .primary002
-            $0.layer.cornerRadius = 8  // 16 / 2
-            $0.layer.borderWidth = 0.667
-            $0.layer.borderColor = UIColor.action001.cgColor
-            $0.clipsToBounds = true
+            $0.contentMode = .scaleAspectFit
         }
 
         timeLabel.do {
@@ -124,8 +119,8 @@ final class NotificationCell: UITableViewCell {
 
         // 감정 아이콘 (프로필 오른쪽 하단에 오버레이)
         reactionIconView.snp.makeConstraints {
-            $0.trailing.equalTo(profileImageView.snp.trailing).offset(-4)
-            $0.bottom.equalTo(profileImageView.snp.bottom).offset(-4)
+            $0.trailing.equalTo(profileImageView.snp.trailing).offset(4)
+            $0.bottom.equalTo(profileImageView.snp.bottom).offset(-2)
             $0.size.equalTo(16)
         }
 
@@ -292,6 +287,7 @@ final class NotificationCell: UITableViewCell {
 
     /// 감정 타입에 따른 아이콘 반환
     private func getReactionIcon(for reactionType: String) -> UIImage? {
+        let icon: UIImage?
         switch reactionType {
         case "AWESOME":
             return .ReactionNotification.fire  // 멋져요 - 불
