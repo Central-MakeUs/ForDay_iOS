@@ -16,13 +16,19 @@ extension MoyaProvider {
     /// - Returns: Decoded response of type T
     /// - Throws: AppError with proper error classification
     func request<T: Decodable>(_ target: Target) async throws -> T {
+        #if DEBUG
         print("🔵 [MoyaProvider+Async] request 메서드 호출됨")
+        #endif
         return try await withCheckedThrowingContinuation { continuation in
             self.request(target) { result in
+                #if DEBUG
                 print("🟢 [MoyaProvider+Async] completion handler 호출됨")
+                #endif
                 switch result {
                 case .success(let response):
+                    #if DEBUG
                     print("🟡 [MoyaProvider+Async] .success - statusCode: \(response.statusCode)")
+                    #endif
                     _Concurrency.Task {
                         do {
                             // 401 에러 처리 - 토큰 재발급 시도
@@ -45,11 +51,15 @@ extension MoyaProvider {
                                 // Try to parse server error
                                 do {
                                     let serverError = try response.map(ServerErrorResponse.self)
+                                    #if DEBUG
                                     print("✅ ServerError 파싱 성공: \(serverError.data.errorClassName)")
+                                    #endif
                                     continuation.resume(throwing: AppError.server(serverError.toServerError()))
                                     return
                                 } catch {
-                                    print("❌ ServerError 파싱 실패: \(error)")
+                                    #if DEBUG
+                                    print("❌ ServerError 파싱 실패")
+                                    #endif
                                     // 파싱 실패 시에도 에러로 처리
                                     continuation.resume(throwing: AppError.network(.unknown))
                                     return
@@ -61,7 +71,9 @@ extension MoyaProvider {
                             continuation.resume(returning: decoded)
 
                         } catch let decodingError as DecodingError {
-                            print("❌ Decoding Error: \(decodingError)")
+                            #if DEBUG
+                            print("❌ Decoding Error occurred")
+                            #endif
                             continuation.resume(throwing: AppError.decoding(decodingError))
 
                         } catch {
@@ -70,21 +82,46 @@ extension MoyaProvider {
                     }
 
                 case .failure(let error):
-                    print("🔴 [MoyaProvider+Async] .failure - error: \(error)")
+                    #if DEBUG
+                    print("🔴 [MoyaProvider+Async] .failure")
+                    #endif
 
                     // MoyaError에서 response 추출 시도
                     if let response = error.response {
+                        #if DEBUG
                         print("🟣 [MoyaProvider+Async] response 추출 성공 - statusCode: \(response.statusCode)")
+                        #endif
+
+                        // 401 에러 처리 - 토큰 재발급 시도
+                        if response.statusCode == 401 {
+                            _Concurrency.Task {
+                                let result: Result<T, Error> = await self.handleUnauthorized(
+                                    response: response,
+                                    target: target
+                                )
+                                switch result {
+                                case .success(let decoded):
+                                    continuation.resume(returning: decoded)
+                                case .failure(let error):
+                                    continuation.resume(throwing: error)
+                                }
+                            }
+                            return
+                        }
 
                         // 4xx, 5xx 에러면 ServerError로 파싱 시도
                         if (400...599).contains(response.statusCode) {
                             _Concurrency.Task {
                                 do {
                                     let serverError = try response.map(ServerErrorResponse.self)
+                                    #if DEBUG
                                     print("✅ ServerError 파싱 성공: \(serverError.data.errorClassName)")
+                                    #endif
                                     continuation.resume(throwing: AppError.server(serverError.toServerError()))
                                 } catch {
-                                    print("❌ ServerError 파싱 실패: \(error)")
+                                    #if DEBUG
+                                    print("❌ ServerError 파싱 실패")
+                                    #endif
                                     // 파싱 실패 시에도 에러로 처리
                                     continuation.resume(throwing: AppError.network(.unknown))
                                 }

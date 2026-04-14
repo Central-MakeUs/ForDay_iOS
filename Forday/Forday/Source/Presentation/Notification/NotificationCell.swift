@@ -67,12 +67,7 @@ final class NotificationCell: UITableViewCell {
         }
 
         reactionIconView.do {
-            $0.contentMode = .center
-            $0.backgroundColor = .primary002
-            $0.layer.cornerRadius = 8  // 16 / 2
-            $0.layer.borderWidth = 0.667
-            $0.layer.borderColor = UIColor.action001.cgColor
-            $0.clipsToBounds = true
+            $0.contentMode = .scaleAspectFit
         }
 
         timeLabel.do {
@@ -124,7 +119,7 @@ final class NotificationCell: UITableViewCell {
 
         // 감정 아이콘 (프로필 오른쪽 하단에 오버레이)
         reactionIconView.snp.makeConstraints {
-            $0.trailing.equalTo(profileImageView.snp.trailing).offset(-2)
+            $0.trailing.equalTo(profileImageView.snp.trailing).offset(4)
             $0.bottom.equalTo(profileImageView.snp.bottom).offset(-2)
             $0.size.equalTo(16)
         }
@@ -133,14 +128,14 @@ final class NotificationCell: UITableViewCell {
         timeLabel.snp.makeConstraints {
             $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
             $0.trailing.equalTo(thumbnailImageView.snp.leading).offset(-8)
-            $0.top.equalToSuperview().offset(10)
+            $0.top.equalToSuperview().offset(15)
         }
 
         messageLabel.snp.makeConstraints {
             $0.leading.equalTo(timeLabel)
             $0.trailing.equalTo(timeLabel)
             $0.top.equalTo(timeLabel.snp.bottom).offset(4)
-            $0.bottom.equalToSuperview().offset(-10)
+            $0.bottom.equalToSuperview().offset(-15)
         }
 
         // 활동 사진 (오른쪽, 20pt 패딩)
@@ -152,7 +147,7 @@ final class NotificationCell: UITableViewCell {
 
         // 구분선 (전체 너비)
         separatorView.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview()
+            $0.leading.trailing.equalToSuperview().inset(-20)
             $0.bottom.equalToSuperview()
             $0.height.equalTo(1)
         }
@@ -172,8 +167,7 @@ final class NotificationCell: UITableViewCell {
         if let profileUrl = notification.senderProfileUrl {
             profileImageView.setImage(with: profileUrl)
         } else {
-            profileImageView.backgroundColor = .neutral100
-            profileImageView.image = nil
+            profileImageView.image = .Icon.defaultProfile
         }
 
         // 시간 (빈 문자열이 아닐 때만 표시)
@@ -293,6 +287,7 @@ final class NotificationCell: UITableViewCell {
 
     /// 감정 타입에 따른 아이콘 반환
     private func getReactionIcon(for reactionType: String) -> UIImage? {
+        let icon: UIImage?
         switch reactionType {
         case "AWESOME":
             return .ReactionNotification.fire  // 멋져요 - 불
