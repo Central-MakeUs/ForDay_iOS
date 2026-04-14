@@ -259,8 +259,17 @@ final class ActivityDetailViewModel {
                         size: size
                     )
                     promise(.success(result))
+                } catch let appError as AppError {
+                    await MainActor.run {
+                        self.error = appError
+                    }
+                    promise(.failure(appError))
                 } catch {
-                    promise(.failure(error))
+                    let wrappedError = AppError.unknown(error)
+                    await MainActor.run {
+                        self.error = wrappedError
+                    }
+                    promise(.failure(wrappedError))
                 }
             }
         }

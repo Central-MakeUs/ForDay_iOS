@@ -58,11 +58,14 @@ extension UIViewController {
             case "ACTIVITY_RECORD_NOT_FOUND", "FRIEND_ONLY_ACCESS", "PRIVATE_RECORD":
                 // 404, 403: 조회 불가한 활동 기록
                 print("🟢 [ErrorHandling] ErrorViewController로 교체 시작")
-                replaceWithErrorViewController(
+                if !replaceWithErrorViewController(
                     icon: .Icon.error,
                     title: serverError.message,
                     message: "이용에 불편을 드려 죄송합니다."
-                )
+                ) {
+                    // ErrorViewController 교체 실패 시 토스트로 fallback
+                    handleAppError(error)
+                }
                 return
 
             default:
@@ -100,18 +103,20 @@ extension UIViewController {
     }
 
     /// 현재 ViewController를 ErrorViewController로 교체
+    /// - Returns: 교체 성공 여부
+    @discardableResult
     func replaceWithErrorViewController(
         icon: UIImage,
         title: String,
         message: String
-    ) {
+    ) -> Bool {
         print("🔵 [ErrorHandling] replaceWithErrorViewController 호출됨")
         print("🔵 self: \(type(of: self))")
         print("🔵 navigationController: \(String(describing: navigationController))")
 
         guard let navigationController = navigationController else {
-            print("❌ [ErrorHandling] navigationController가 없음")
-            return
+            print("❌ [ErrorHandling] navigationController가 없음 - 토스트로 fallback")
+            return false
         }
 
         print("🔵 [ErrorHandling] 현재 viewControllers: \(navigationController.viewControllers.map { type(of: $0) })")
@@ -120,6 +125,14 @@ extension UIViewController {
 
         // 현재 navigation stack에서 마지막 VC 제거 후 ErrorVC push
         var viewControllers = navigationController.viewControllers
+
+        // 최소 하나의 VC는 남겨야 함 (ErrorVC로 교체될 것이므로)
+        guard viewControllers.count > 1 || viewControllers.isEmpty else {
+            // stack에 VC가 1개뿐이면 교체하지 않고 토스트로 fallback
+            print("❌ [ErrorHandling] navigation stack에 VC가 1개뿐 - 토스트로 fallback")
+            return false
+        }
+
         if !viewControllers.isEmpty {
             viewControllers.removeLast()
         }
@@ -133,5 +146,6 @@ extension UIViewController {
         navigationController.setNavigationBarHidden(true, animated: false)
 
         print("✅ [ErrorHandling] ErrorViewController로 교체 완료")
+        return true
     }
 }

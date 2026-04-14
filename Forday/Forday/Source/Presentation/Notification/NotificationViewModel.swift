@@ -88,7 +88,8 @@ final class NotificationViewModel: ObservableObject {
     func checkSystemNotificationPermission() async {
         let settings = await UNUserNotificationCenter.current().notificationSettings()
         await MainActor.run {
-            systemNotificationEnabled = settings.authorizationStatus == .authorized
+            let status = settings.authorizationStatus
+            systemNotificationEnabled = (status == .authorized || status == .provisional || status == .ephemeral)
         }
     }
 

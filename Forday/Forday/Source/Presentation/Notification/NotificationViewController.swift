@@ -16,6 +16,7 @@ final class NotificationViewController: UIViewController {
     private let notificationView = NotificationView()
     private let viewModel = NotificationViewModel()
     private var cancellables = Set<AnyCancellable>()
+    private var hasLoadedInitialData = false
 
     weak var coordinator: MainTabBarCoordinator?
 
@@ -36,6 +37,7 @@ final class NotificationViewController: UIViewController {
             await viewModel.checkSystemNotificationPermission()
             if viewModel.systemNotificationEnabled {
                 await viewModel.loadNotifications(reset: true)
+                hasLoadedInitialData = true
             }
         }
     }
@@ -43,7 +45,9 @@ final class NotificationViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
-        // 권한 체크 후 권한이 있으면 데이터 새로고침
+        // 첫 로드가 아닐 때만 권한 체크 후 데이터 새로고침
+        guard hasLoadedInitialData else { return }
+
         Task {
             await viewModel.checkSystemNotificationPermission()
             if viewModel.systemNotificationEnabled {
