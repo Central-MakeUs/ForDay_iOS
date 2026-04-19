@@ -23,14 +23,17 @@ final class PushNotificationService: NSObject {
     func setup(application: UIApplication) {
         UNUserNotificationCenter.current().delegate = self
         Messaging.messaging().delegate = self
-        
+
         // 1. 시스템에 알림 권한 요청 (최초 1회 팝업)
-        requestPermission { [weak self] authorized in
-            if authorized {
-                DispatchQueue.main.async {
-                    application.registerForRemoteNotifications()
-                }
-            }
+        // 사용자가 거부해도 앱 사용은 가능해야 함 (Apple Guideline 4.5.4)
+        requestPermission { authorized in
+            print("✅ [Push] Permission granted: \(authorized)")
+        }
+
+        // 2. 권한 여부와 무관하게 APNS 등록 (FCM 토큰 발급을 위해 필요)
+        // iOS는 권한 거부 시에도 토큰을 발급하며, 푸시만 표시하지 않음
+        DispatchQueue.main.async {
+            application.registerForRemoteNotifications()
         }
     }
     
