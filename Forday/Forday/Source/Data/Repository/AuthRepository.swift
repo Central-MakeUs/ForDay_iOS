@@ -80,8 +80,7 @@ final class AuthRepository: AuthRepositoryInterface {
     // MARK: - Logout
 
     func logout() async throws {
-        // TODO: 나중에 구현
-        fatalError("Logout not implemented yet")
+        _ = try await apiService.logout()
     }
 
     // MARK: - Switch Account (Guest → Social)
