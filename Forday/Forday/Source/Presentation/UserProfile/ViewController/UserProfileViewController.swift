@@ -380,13 +380,14 @@ extension UserProfileViewController {
 
     private func showReportScreen() {
         guard let profile = viewModel.userProfile,
-              let userId = viewModel.userId else { return }
+              let userId = viewModel.userId,
+              let nickname = profile.nickname else { return }
 
         let reportVC = ReportViewController(
             targetUserId: userId,
-            targetNickname: profile.nickname
+            targetNickname: nickname
         )
-        reportVC.onReportCompleted = { [weak self] isBlocked in
+        reportVC.onReportCompleted = { [weak self] (isBlocked: Bool) in
             if isBlocked {
                 self?.viewModel.isBlocked = true
                 self?.userProfileView.showBlockedState()

@@ -313,7 +313,7 @@ extension AIRecommendationContainerViewController {
         let nickname: String
         do {
             let userInfo = try await fetchUserProfileUseCase.execute()
-            nickname = userInfo.nickname
+            nickname = userInfo.nickname ?? "회원"
             await MainActor.run {
                 self.cachedNickname = nickname
             }
