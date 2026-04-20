@@ -40,7 +40,7 @@ final class ProfileHeaderView: UIView {
     // MARK: - Configuration
 
     func configure(with info: UserInfo) {
-        nicknameLabel.setTextWithTypography(info.nickname, style: .header18)
+        nicknameLabel.setTextWithTypography(info.nickname ?? "", style: .header18)
         stickerCountLabel.setTextWithTypography("\(info.totalCollectedStickerCount)개 스티커 수집 중", style: .label14)
 
         // Profile image (캐시 무시하고 항상 서버에서 새로 받아옴)

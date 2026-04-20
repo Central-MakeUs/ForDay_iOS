@@ -17,6 +17,7 @@ enum AuthTarget {
     case refreshToken(request: DTO.TokenRefreshRequest)
     case validateToken
     case switchAccount(request: DTO.SwitchAccountRequest)
+    case logout
     case withdraw
 }
 
@@ -42,6 +43,8 @@ extension AuthTarget: BaseTargetType {
             return AuthAPI.authValidate.endpoint
         case .switchAccount:
             return AuthAPI.switchAccount.endpoint
+        case .logout:
+            return AuthAPI.logout.endpoint
         case .withdraw:
             return AuthAPI.withdraw.endpoint
         }
@@ -55,7 +58,7 @@ extension AuthTarget: BaseTargetType {
             return .patch
         case .healthCheck, .validateToken:
             return .get
-        case .withdraw:
+        case .logout, .withdraw:
             return .delete
         }
     }
@@ -72,7 +75,7 @@ extension AuthTarget: BaseTargetType {
             return .requestJSONEncodable(request)
         case .switchAccount(let request):
             return .requestJSONEncodable(request)
-        case .healthCheck, .validateToken, .withdraw:
+        case .healthCheck, .validateToken, .logout, .withdraw:
             return .requestPlain
         }
     }
@@ -80,9 +83,9 @@ extension AuthTarget: BaseTargetType {
     var headers: [String: String]? {
         var headers = ["Content-Type": "application/json"]
 
-        // switchAccount, validateToken, withdraw는 인증 토큰 필요
+        // switchAccount, validateToken, logout, withdraw는 인증 토큰 필요
         switch self {
-        case .switchAccount, .validateToken, .withdraw:
+        case .switchAccount, .validateToken, .logout, .withdraw:
             if let token = try? TokenStorage.shared.loadAccessToken() {
                 headers["Authorization"] = "Bearer \(token)"
             }

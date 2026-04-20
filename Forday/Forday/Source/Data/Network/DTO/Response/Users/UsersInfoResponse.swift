@@ -13,7 +13,7 @@ extension DTO {
 
         struct UsersInfoData: Codable {
             let profileImageUrl: String?
-            let nickname: String
+            let nickname: String?
             let totalCollectedStickerCount: Int
             let unReadNotificationExists: Bool
         }

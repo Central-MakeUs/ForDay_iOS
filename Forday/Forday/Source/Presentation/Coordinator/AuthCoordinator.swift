@@ -185,8 +185,8 @@ class AuthCoordinator: Coordinator {
                 let userInfo = try await usersService.fetchUserInfo(userId: nil)
 
                 await MainActor.run { [weak self] in
-                    // nickname이 비어있으면 닉네임 설정 화면으로
-                    if userInfo.data.nickname.isEmpty {
+                    // nickname이 nil이거나 비어있으면 닉네임 설정 화면으로
+                    if userInfo.data.nickname == nil || userInfo.data.nickname?.isEmpty == true {
                         print("   ➡️ 닉네임 설정 화면으로 이동")
                         self?.showNicknameSetup()
                     } else {

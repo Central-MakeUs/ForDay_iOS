@@ -97,9 +97,10 @@ final class ProfileSettingsViewModel {
     // MARK: - Public Methods
 
     /// 초기 프로필 설정 (UserInfo 로드 후 호출)
-    func setInitialProfile(nickname: String, profileImageUrl: String?) {
-        self.initialNickname = nickname
-        self.nickname = nickname
+    func setInitialProfile(nickname: String?, profileImageUrl: String?) {
+        let validNickname = nickname ?? ""
+        self.initialNickname = validNickname
+        self.nickname = validNickname
         self.initialProfileImageUrl = profileImageUrl
         self.profileImageUrl = profileImageUrl
         self.isDuplicateChecked = true
