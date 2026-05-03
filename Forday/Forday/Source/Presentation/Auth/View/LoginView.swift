@@ -32,6 +32,9 @@ class LoginView: UIView {
 
     let guestLoginButton = UIButton()
 
+    // Debug button (테스트용)
+    let debugSignupButton = UIButton()
+
     // MARK: - Properties
 
     /// 로그인 진행 중 버튼 중복 탭 방지
@@ -176,6 +179,14 @@ extension LoginView {
             )
             $0.setAttributedTitle(attributedTitle, for: .normal)
         }
+
+        // Debug Signup Button
+        debugSignupButton.do {
+            $0.backgroundColor = .action001.withAlphaComponent(0.8)
+            $0.layer.cornerRadius = 8
+            $0.setTitleWithTypography("🧪 회원가입 테스트", style: .label12)
+            $0.setTitleColor(.neutralWhite, for: .normal)
+        }
     }
 
     private func layout() {
@@ -192,6 +203,15 @@ extension LoginView {
         dividerStackView.addArrangedSubview(orLabel)
         dividerStackView.addArrangedSubview(rightDividerLine)
         addSubview(guestLoginButton)
+        addSubview(debugSignupButton)
+
+        // Debug Signup Button (우측 상단)
+        debugSignupButton.snp.makeConstraints {
+            $0.top.equalTo(safeAreaLayoutGuide).offset(16)
+            $0.trailing.equalToSuperview().offset(-20)
+            $0.height.equalTo(32)
+            $0.width.greaterThanOrEqualTo(120)
+        }
 
         // Character Image
         characterImageView.snp.makeConstraints {

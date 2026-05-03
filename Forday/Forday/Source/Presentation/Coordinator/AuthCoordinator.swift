@@ -206,6 +206,36 @@ class AuthCoordinator: Coordinator {
             }
         }
     }
+
+    // MARK: - 새 온보딩 플로우 (테스트용)
+
+    /// 새 온보딩 플로우: 약관 동의 → 닉네임 → 취미 선택 → 포비 소개
+    func showNewOnboardingFlow() {
+        showTermsAgreement()
+    }
+
+    func showNewOnboardingNickname() {
+        let vc = NicknameViewController()
+        vc.authCoordinator = self
+        navigationController.pushViewController(vc, animated: true)
+    }
+
+    func showSimpleHobbySelection() {
+        let vc = SimpleHobbySelectionViewController()
+        vc.authCoordinator = self
+        navigationController.pushViewController(vc, animated: true)
+    }
+
+    func showPobyIntroduction() {
+        let vc = OnboardingCompleteViewController()
+        vc.authCoordinator = self
+        navigationController.pushViewController(vc, animated: true)
+    }
+
+    func finishNewOnboarding() {
+        print("🟢 새 온보딩 플로우 완료")
+        // 홈으로 이동하지 않음 (테스트용)
+    }
 }
 
 // MARK: - TermsAgreementCoordinatorDelegate
@@ -213,7 +243,11 @@ class AuthCoordinator: Coordinator {
 extension AuthCoordinator: TermsAgreementCoordinatorDelegate {
     func termsAgreementDidComplete() {
         print("✅ 약관동의 완료 → 온보딩 시작")
-        showOnboarding()
+        // 기존 플로우 (실제 서비스용)
+        // showOnboarding()
+
+        // 테스트용: 새 회원가입 플로우
+        showNewOnboardingNickname()
     }
 
     func termsAgreementDidRequestBack() {

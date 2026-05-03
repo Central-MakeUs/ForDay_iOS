@@ -61,16 +61,22 @@ extension LoginViewController {
             action: #selector(kakaoLoginButtonTapped),
             for: .touchUpInside
         )
-        
+
         loginView.appleLoginButton.addTarget(
             self,
             action: #selector(appleLoginButtonTapped),
             for: .touchUpInside
         )
-        
+
         loginView.guestLoginButton.addTarget(
             self,
             action: #selector(guestLoginButtonTapped),
+            for: .touchUpInside
+        )
+
+        loginView.debugSignupButton.addTarget(
+            self,
+            action: #selector(debugSignupButtonTapped),
             for: .touchUpInside
         )
     }
@@ -155,7 +161,12 @@ extension LoginViewController {
             }
         }
     }
-    
+
+    @objc private func debugSignupButtonTapped() {
+        // 새 온보딩 플로우 테스트 (약관 동의부터 시작)
+        coordinator?.showNewOnboardingFlow()
+    }
+
     // MARK: - Helper
 
     private func isUserCancellationError(_ error: Error) -> Bool {

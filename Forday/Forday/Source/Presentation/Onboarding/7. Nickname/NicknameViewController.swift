@@ -10,12 +10,15 @@ import UIKit
 import Combine
 
 class NicknameViewController: BaseOnboardingViewController {
-    
+
     // Properties
-    
+
     private let nicknameView = NicknameView()
     private let viewModel = NicknameViewModel()
-        
+
+    // Coordinator
+    weak var authCoordinator: AuthCoordinator?
+
     // Lifecycle
     
     override func loadView() {
@@ -59,8 +62,8 @@ class NicknameViewController: BaseOnboardingViewController {
     }
 
     @objc private func backToLogin() {
-        // 온보딩 dismiss하고 로그인 화면으로
-        coordinator?.dismissOnboarding()
+        // 뒤로가기
+        navigationController?.popViewController(animated: true)
     }
     
     // Actions
@@ -76,13 +79,11 @@ class NicknameViewController: BaseOnboardingViewController {
             guard let self = self else { return }
             do {
                 // 닉네임 설정 API 호출
-                try await self.viewModel.setNickname()
+                _ = try await self.viewModel.setNickname()
 
-                // 성공 시 홈으로
+                // 성공 시 취미 선택 화면으로
                 await MainActor.run { [weak self] in
-                    if let onboardingCoordinator = self?.coordinator as? OnboardingCoordinator {
-                        onboardingCoordinator.finishOnboarding()
-                    }
+                    self?.authCoordinator?.showSimpleHobbySelection()
                 }
             } catch {
                 // 실패 시 에러 처리

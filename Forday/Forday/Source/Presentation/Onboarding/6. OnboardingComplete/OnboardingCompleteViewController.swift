@@ -9,14 +9,15 @@
 import UIKit
 
 class OnboardingCompleteViewController: UIViewController {
-    
+
     // Properties
-    
+
     private let completeView = OnboardingCompleteView()
-    
+
     // Coordinator
     weak var coordinator: OnboardingCoordinator?
-    
+    weak var authCoordinator: AuthCoordinator?
+
     // Lifecycle
     
     override func loadView() {
@@ -62,7 +63,12 @@ extension OnboardingCompleteViewController {
     }
     
     @objc private func startButtonTapped() {
-        coordinator?.showNicknameSetup()
+        // 새 온보딩 플로우에서는 authCoordinator 사용
+        if let authCoordinator = authCoordinator {
+            authCoordinator.finishNewOnboarding()
+        } else {
+            coordinator?.showNicknameSetup()
+        }
     }
 }
 
