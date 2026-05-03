@@ -36,6 +36,14 @@ final class HobbyRepository: HobbyRepositoryInterface {
         return response.data.hobbyId
     }
 
+    func createHobbyV2(hobbies: [(hobbyInfoId: Int?, hobbyName: String)]) async throws -> [Int] {
+        let hobbyList = hobbies.map { DTO.CreateHobbyV2Request.HobbyItem(hobbyInfoId: $0.hobbyInfoId, hobbyName: $0.hobbyName) }
+        let request = DTO.CreateHobbyV2Request(hobbyList: hobbyList)
+
+        let response = try await activityService.createHobbyV2(request: request)
+        return response.data.createdHobbyInfoList.map { $0.hobbyId }
+    }
+
     func updateHobby(
         hobbyId: Int,
         hobbyInfoId: Int?,

@@ -11,6 +11,7 @@ import Alamofire
 
 enum HobbiesTarget {
     case createHobby(request: DTO.CreateHobbyRequest)
+    case createHobbyV2(request: DTO.CreateHobbyV2Request)
     case fetchHobbyInfoRecheck
     case fetchHomeInfo(hobbyId: Int?)
     case fetchStickerBoard(hobbyId: Int?, page: Int?, size: Int?)
@@ -39,6 +40,9 @@ extension HobbiesTarget: BaseTargetType {
         switch self {
         case .createHobby(_):
             return HobbiesAPI.createHobby.endpoint
+
+        case .createHobbyV2(_):
+            return HobbiesAPI.createHobbyV2.endpoint
 
         case .fetchHobbyInfoRecheck:
             return HobbiesAPI.fetchHobbyInfoRecheck.endpoint
@@ -106,6 +110,8 @@ extension HobbiesTarget: BaseTargetType {
         switch self {
         case .createHobby:
             return .post
+        case .createHobbyV2:
+            return .post
         case .fetchHobbyInfoRecheck:
             return .get
         case .fetchHomeInfo:
@@ -153,6 +159,9 @@ extension HobbiesTarget: BaseTargetType {
         switch self {
 
         case .createHobby(let request):
+            return .requestJSONEncodable(request)
+
+        case .createHobbyV2(let request):
             return .requestJSONEncodable(request)
 
         case .fetchHobbyInfoRecheck:

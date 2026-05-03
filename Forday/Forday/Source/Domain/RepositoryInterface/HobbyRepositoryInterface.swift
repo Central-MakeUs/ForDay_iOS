@@ -8,6 +8,7 @@
 import Foundation
 
 protocol HobbyRepositoryInterface {
+    /// v1 API: 취미 단건 생성
     func createHobby(
         hobbyInfoId: Int?,
         hobbyName: String,
@@ -16,6 +17,9 @@ protocol HobbyRepositoryInterface {
         executionCount: Int,
         isDurationSet: Bool
     ) async throws -> Int
+
+    /// v2 API: 취미 여러 개 한번에 생성 (새 회원가입 플로우용)
+    func createHobbyV2(hobbies: [(hobbyInfoId: Int?, hobbyName: String)]) async throws -> [Int]
 
     /// 온보딩 중 취미 수정 (nicknameSet: false && onboardingCompleted: true 상태)
     func updateHobby(

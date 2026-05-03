@@ -8,7 +8,8 @@
 import Foundation
 
 enum HobbiesAPI {
-    case createHobby                    /// 취미 생성
+    case createHobby                    /// 취미 생성 (v1)
+    case createHobbyV2                  /// 취미 생성 (v2 - 여러 개 한번에)
     case fetchHobbyInfoRecheck          /// 취미 정보 재조회 (취미 추가 시)
     case fetchHomeInfo                  /// 홈 진입 취미 정보 조회
     case fetchHomeStickerInfo           /// 홈 스티커판 조회
@@ -36,6 +37,9 @@ enum HobbiesAPI {
         switch self {
         case .createHobby:
             return "/hobbies/create"
+
+        case .createHobbyV2:
+            return "/v2/hobbies/create"
 
         case .fetchHobbyInfoRecheck:
             return "/hobbies/info/re-check"

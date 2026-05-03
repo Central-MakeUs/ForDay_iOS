@@ -17,10 +17,16 @@ final class ActivityService {
         self.provider = provider
     }
 
-    // MARK: - 취미 생성
+    // MARK: - 취미 생성 (v1)
 
     func createHobby(request: DTO.CreateHobbyRequest) async throws -> DTO.CreateHobbyResponse {
         return try await provider.request(.createHobby(request: request))
+    }
+
+    // MARK: - 취미 생성 (v2 - 여러 개 한번에)
+
+    func createHobbyV2(request: DTO.CreateHobbyV2Request) async throws -> DTO.CreateHobbyV2Response {
+        return try await provider.request(.createHobbyV2(request: request))
     }
 
     // MARK: - 취미 정보 재조회 (취미 추가 시)
