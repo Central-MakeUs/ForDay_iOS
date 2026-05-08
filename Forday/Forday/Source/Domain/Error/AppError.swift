@@ -12,6 +12,7 @@ enum AppError: Error {
     case server(ServerError)
     case auth(AuthError)
     case decoding(DecodingError)
+    case validation(String)
     case unknown(Error)
 
     var userMessage: String {
@@ -24,6 +25,8 @@ enum AppError: Error {
             return error.userMessage
         case .decoding:
             return "데이터를 불러오는 중 문제가 발생했습니다."
+        case .validation(let message):
+            return message
         case .unknown(let error):
             return error.localizedDescription
         }

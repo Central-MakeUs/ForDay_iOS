@@ -125,10 +125,13 @@ class AuthCoordinator: Coordinator {
     // 온보딩 완료 후 홈으로
     func completeOnboarding() {
         print("🟢 completeOnboarding 호출됨")
-        
+
+        // Firebase Analytics: 온보딩 완료 이벤트 로깅
+        OnboardingABTest.logOnboardingCompleted()
+
         // 온보딩 코디네이터 참조 정리
         onboardingCoordinator = nil
-        
+
         // ✅ dismiss 없이 바로 홈으로!
         parentCoordinator?.showMainTabBar()
     }
@@ -234,7 +237,12 @@ class AuthCoordinator: Coordinator {
 
     func finishNewOnboarding() {
         print("🟢 새 온보딩 플로우 완료")
-        // 홈으로 이동하지 않음 (테스트용)
+
+        // Firebase Analytics: 온보딩 완료 이벤트 로깅
+        OnboardingABTest.logOnboardingCompleted()
+
+        // 홈으로 이동
+        parentCoordinator?.showMainTabBar()
     }
 }
 
@@ -243,11 +251,20 @@ class AuthCoordinator: Coordinator {
 extension AuthCoordinator: TermsAgreementCoordinatorDelegate {
     func termsAgreementDidComplete() {
         print("✅ 약관동의 완료 → 온보딩 시작")
-        // 기존 플로우 (실제 서비스용)
-        // showOnboarding()
 
-        // 테스트용: 새 회원가입 플로우
-        showNewOnboardingNickname()
+        // AB 테스트: 기존 플로우 vs 신규 플로우 (Firebase Remote Config)
+        OnboardingABTest.getGroup { [weak self] abTestGroup in
+            DispatchQueue.main.async {
+                switch abTestGroup {
+                case .control:
+                    print("   🧪 [AB Test] 기존 플로우 진입")
+                    self?.showOnboarding()
+                case .variant:
+                    print("   🧪 [AB Test] 신규 플로우 진입")
+                    self?.showNewOnboardingNickname()
+                }
+            }
+        }
     }
 
     func termsAgreementDidRequestBack() {

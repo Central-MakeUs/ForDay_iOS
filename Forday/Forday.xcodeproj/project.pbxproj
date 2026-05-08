@@ -17,6 +17,7 @@
 		6C8BB44A2F5973AB001D3B96 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 6C8BB4492F5973AB001D3B96 /* FirebaseAnalytics */; };
 		6C944CBA2F0ACF9F007D9AB5 /* Then in Frameworks */ = {isa = PBXBuildFile; productRef = 6C944CB92F0ACF9F007D9AB5 /* Then */; };
 		6C944CBD2F0AD02D007D9AB5 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6C944CBC2F0AD02D007D9AB5 /* SnapKit */; };
+		6CA114312FADD95700D54900 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 6CA114302FADD95700D54900 /* FirebaseRemoteConfig */; };
 		6CC00A102F7FE1B70087420B /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 6CC00A0F2F7FE1B70087420B /* FirebaseMessaging */; };
 /* End PBXBuildFile section */
 
@@ -76,6 +77,7 @@
 				6C944CBA2F0ACF9F007D9AB5 /* Then in Frameworks */,
 				6C698A6E2F10E9E6001229A8 /* KakaoSDK in Frameworks */,
 				6C944CBD2F0AD02D007D9AB5 /* SnapKit in Frameworks */,
+				6CA114312FADD95700D54900 /* FirebaseRemoteConfig in Frameworks */,
 				6C40ECEE2F268FFC00FEFD60 /* Kingfisher in Frameworks */,
 				6C698A722F10E9E6001229A8 /* KakaoSDKUser in Frameworks */,
 				6C698A0B2F0ECF2B001229A8 /* Moya in Frameworks */,
@@ -170,6 +172,7 @@
 				6C40ECED2F268FFC00FEFD60 /* Kingfisher */,
 				6C8BB4492F5973AB001D3B96 /* FirebaseAnalytics */,
 				6CC00A0F2F7FE1B70087420B /* FirebaseMessaging */,
+				6CA114302FADD95700D54900 /* FirebaseRemoteConfig */,
 			);
 			productName = Forday;
 			productReference = 6C944CA02F0ACF42007D9AB5 /* Forday.app */;
@@ -668,6 +671,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 6C944CBB2F0AD02D007D9AB5 /* XCRemoteSwiftPackageReference "SnapKit" */;
 			productName = SnapKit;
+		};
+		6CA114302FADD95700D54900 /* FirebaseRemoteConfig */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FirebaseRemoteConfig;
 		};
 		6CC00A0F2F7FE1B70087420B /* FirebaseMessaging */ = {
 			isa = XCSwiftPackageProductDependency;

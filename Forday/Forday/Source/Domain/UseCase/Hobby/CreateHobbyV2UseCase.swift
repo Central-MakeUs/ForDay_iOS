@@ -19,7 +19,7 @@ struct CreateHobbyV2UseCase {
     /// 선택한 취미 목록으로 취미 생성
     /// - Parameter hobbies: [(hobbyInfoId, hobbyName)] 형태의 튜플 배열
     /// - Returns: 생성된 취미 ID 배열
-    func execute(hobbies: [(hobbyInfoId: Int?, hobbyName: String)]) async throws -> [Int] {
+    func execute(hobbies:     [(hobbyInfoId: Int?, hobbyName: String)]) async throws -> [Int] {
         guard !hobbies.isEmpty else {
             throw AppError.validation("최소 1개의 취미를 선택해야 합니다.")
         }
