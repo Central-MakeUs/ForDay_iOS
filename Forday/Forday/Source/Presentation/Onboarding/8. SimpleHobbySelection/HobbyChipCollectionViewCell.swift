@@ -75,7 +75,8 @@ extension HobbyChipCollectionViewCell {
         contentView.addSubview(titleLabel)
 
         titleLabel.snp.makeConstraints {
-            $0.center.equalToSuperview()
+            $0.top.equalToSuperview().offset(9)
+            $0.bottom.equalToSuperview().offset(-9)
             $0.leading.equalToSuperview().offset(12)
             $0.trailing.equalToSuperview().offset(-12)
         }

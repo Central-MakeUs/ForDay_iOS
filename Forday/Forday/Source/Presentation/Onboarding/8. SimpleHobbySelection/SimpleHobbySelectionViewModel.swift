@@ -60,6 +60,22 @@ class SimpleHobbySelectionViewModel {
 
     /// 커스텀 취미 추가
     func addCustomHobby(_ hobbyName: String) {
+        // 중복 체크
+        guard !hobbyCards.contains(where: { $0.name == hobbyName }) else {
+            return
+        }
+
+        // HobbyCard에 추가 (id는 nil, imageAsset은 한글명 매핑 시도 후 실패하면 default)
+        let imageAsset = HobbyImageAsset(hobbyName: hobbyName) ?? .default
+        let customHobbyCard = HobbyCard(
+            id: nil,
+            name: hobbyName,
+            description: "",
+            imageAsset: imageAsset
+        )
+        hobbyCards.append(customHobbyCard)
+
+        // 선택 상태로 추가
         selectedHobbies.insert(hobbyName)
     }
 

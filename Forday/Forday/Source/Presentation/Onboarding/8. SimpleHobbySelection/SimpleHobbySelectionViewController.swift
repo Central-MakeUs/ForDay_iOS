@@ -103,6 +103,7 @@ extension SimpleHobbySelectionViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.hobbyView.collectionView.reloadData()
+                self?.updateCollectionViewHeight()
             }
             .store(in: &cancellables)
 
@@ -118,8 +119,16 @@ extension SimpleHobbySelectionViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.hobbyView.collectionView.reloadData()
+                self?.updateCollectionViewHeight()
             }
             .store(in: &cancellables)
+    }
+
+    private func updateCollectionViewHeight() {
+        // CollectionView 레이아웃 강제 업데이트
+        hobbyView.collectionView.layoutIfNeeded()
+        // 높이 업데이트
+        hobbyView.updateCollectionViewHeight()
     }
 
     private func fetchHobbyInfo() {
