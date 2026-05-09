@@ -39,7 +39,7 @@ enum HobbiesAPI {
             return "/hobbies/create"
 
         case .createHobbyV2:
-            return "/v2/hobbies/create"
+            return "/api/v2/hobbies/create"
 
         case .fetchHobbyInfoRecheck:
             return "/hobbies/info/re-check"
