@@ -37,6 +37,8 @@ protocol HobbyRepositoryInterface {
 
     // Hobby Management
     func fetchHobbySettings(hobbyStatus: HobbyStatus?) async throws -> HobbySettings
+    func fetchHobbySettingsV2() async throws -> HobbySettingsV2
+    func updateHobbySettingsV2(progressHobbies: [(hobbyId: Int, sequence: Int)], hiddenHobbies: [(hobbyId: Int, sequence: Int)]) async throws -> HobbySettingsV2
     func updateHobbyTime(hobbyId: Int, minutes: Int) async throws -> String
     func updateExecutionCount(hobbyId: Int, executionCount: Int) async throws -> String
     func updateGoalDays(hobbyId: Int, isDurationSet: Bool) async throws -> String

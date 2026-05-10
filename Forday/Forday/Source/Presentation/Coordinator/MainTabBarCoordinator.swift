@@ -223,8 +223,18 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
     }
 
     func showNewHobbySettings() {
+        // Create UseCases
+        let fetchHobbySettingsV2UseCase = FetchHobbySettingsV2UseCase()
+        let updateHobbySettingsV2UseCase = UpdateHobbySettingsV2UseCase()
+
+        // Create ViewModel
+        let viewModel = NewHobbySettingsViewModel(
+            fetchUseCase: fetchHobbySettingsV2UseCase,
+            updateUseCase: updateHobbySettingsV2UseCase
+        )
+
         // Create ViewController
-        let newHobbySettingsVC = NewHobbySettingsViewController()
+        let newHobbySettingsVC = NewHobbySettingsViewController(viewModel: viewModel)
         newHobbySettingsVC.coordinator = self
         newHobbySettingsVC.hidesBottomBarWhenPushed = true  // 탭바 숨김
 

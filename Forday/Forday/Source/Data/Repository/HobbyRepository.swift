@@ -81,6 +81,19 @@ final class HobbyRepository: HobbyRepositoryInterface {
         return response.toDomain()
     }
 
+    func fetchHobbySettingsV2() async throws -> HobbySettingsV2 {
+        let response = try await activityService.fetchHobbySettingsV2()
+        return response.toDomain()
+    }
+
+    func updateHobbySettingsV2(progressHobbies: [(hobbyId: Int, sequence: Int)], hiddenHobbies: [(hobbyId: Int, sequence: Int)]) async throws -> HobbySettingsV2 {
+        let progressList = progressHobbies.map { DTO.UpdateHobbySettingsV2Request.ProgressHobbyItem(hobbyId: $0.hobbyId, sequence: $0.sequence) }
+        let hiddenList = hiddenHobbies.map { DTO.UpdateHobbySettingsV2Request.HiddenHobbyItem(hobbyId: $0.hobbyId, sequence: $0.sequence) }
+        let request = DTO.UpdateHobbySettingsV2Request(progressHobbyList: progressList, hiddenHobbyList: hiddenList)
+        let response = try await activityService.updateHobbySettingsV2(request: request)
+        return response.toDomain()
+    }
+
     func updateHobbyTime(hobbyId: Int, minutes: Int) async throws -> String {
         let request = DTO.UpdateHobbyTimeRequest(minutes: minutes)
         let response = try await activityService.updateHobbyTime(hobbyId: hobbyId, request: request)

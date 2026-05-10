@@ -26,6 +26,8 @@ enum HobbiesAPI {
     case createActivityRecord(Int)      /// 취미 활동 기록하기
 
     case fetchHobbySettings             /// 내 취미 관리 페이지 조회
+    case fetchHobbySettingsV2           /// 내 취미 설정 목록 조회 (v2)
+    case updateHobbySettingsV2          /// 내 취미 설정 목록 수정 (v2)
     case updateHobby(Int)               /// 온보딩 중 취미 수정 (nicknameSet: false && onboardingCompleted: true)
     case updateHobbyTime(Int)           /// 취미 시간 변경
     case updateExecutionCount(Int)      /// 실행 횟수 변경
@@ -82,6 +84,12 @@ enum HobbiesAPI {
 
         case .fetchHobbySettings:
             return "/hobbies/setting"
+
+        case .fetchHobbySettingsV2:
+            return "/api/v2/hobbies/setting"
+
+        case .updateHobbySettingsV2:
+            return "/api/v2/hobbies/setting"
 
         case .updateHobby(let hobbyId):
             return "/hobbies/\(hobbyId)/update"
