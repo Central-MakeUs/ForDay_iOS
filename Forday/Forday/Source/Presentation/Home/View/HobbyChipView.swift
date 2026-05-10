@@ -41,13 +41,26 @@ class HobbyChipView: UIButton {
     private func style() {
         layer.cornerRadius = 18
         clipsToBounds = true
-        contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
-        titleLabel?.font = TypographyStyle.body14.font
-        
+
+        // Figma 디자인과 일치하도록 Typography의 수직 패딩 추가
+        let typography = TypographyStyle.body14
+        let verticalInset = 6 + typography.topPadding
+        contentEdgeInsets = UIEdgeInsets(
+            top: verticalInset,
+            left: 12,
+            bottom: verticalInset,
+            right: 12
+        )
     }
 
     private func setTitle(_ title: String) {
-        setTitle(title, for: .normal)
+        // Typography 스타일을 attributed string으로 적용
+        let attributedString = NSMutableAttributedString(string: title)
+        attributedString.addAttributes(
+            TypographyStyle.body14.attributes,
+            range: NSRange(location: 0, length: title.utf16.count)
+        )
+        setAttributedTitle(attributedString, for: .normal)
     }
 
     private func updateAppearance() {
