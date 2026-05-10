@@ -19,16 +19,32 @@ struct TypographyStyle {
     let font: UIFont
     let lineHeight: CGFloat
     let letterSpacing: CGFloat
-    
+
+    /// Figma와 실제 폰트의 차이를 보정하기 위한 수직 여백
+    /// Figma의 행간과 실제 폰트 높이의 차이를 반으로 나눈 값
+    var verticalPadding: CGFloat {
+        return (lineHeight - font.lineHeight) / 2
+    }
+
+    /// 텍스트 상단에 필요한 여백 (레이아웃 시 사용)
+    var topPadding: CGFloat {
+        return verticalPadding
+    }
+
+    /// 텍스트 하단에 필요한 여백 (레이아웃 시 사용)
+    var bottomPadding: CGFloat {
+        return verticalPadding
+    }
+
     /// NSAttributedString에 적용할 attributes 반환
     var attributes: [NSAttributedString.Key: Any] {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.minimumLineHeight = lineHeight
         paragraphStyle.maximumLineHeight = lineHeight
-        
+
         // 폰트의 기본 lineHeight와 디자인 lineHeight의 차이만큼 baselineOffset 조정
         let baselineOffset = (lineHeight - font.lineHeight) / 4
-        
+
         return [
             .font: font,
             .paragraphStyle: paragraphStyle,
