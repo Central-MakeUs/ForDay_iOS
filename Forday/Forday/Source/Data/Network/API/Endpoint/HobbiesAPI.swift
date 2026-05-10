@@ -45,7 +45,7 @@ enum HobbiesAPI {
             return "/hobbies/info/re-check"
 
         case .fetchHomeInfo:
-            return "/hobbies/home"
+            return "/api/v2/hobbies/home"
             
         case .fetchHomeStickerInfo:
             return "/hobbies/stickers"
