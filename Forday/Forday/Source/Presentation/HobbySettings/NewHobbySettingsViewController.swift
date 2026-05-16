@@ -126,7 +126,31 @@ class NewHobbySettingsViewController: UIViewController {
     // MARK: - Actions
 
     @objc private func backButtonTapped() {
-        // 홈으로 돌아가기 (뒤로가기)
+        // Check if there are unsaved changes
+        if viewModel.hasChanges {
+            // Show confirmation popup
+            let popup = CommonPopupViewController(
+                title: "편집 중인 화면을 닫으시겠습니까?",
+                message: "지금까지 변경한 내용은 저장되지 않습니다.",
+                primaryButtonTitle: "닫기",
+                secondaryButtonTitle: "취소"
+            )
+
+            popup.onPrimaryAction = { [weak self] in
+                // Discard changes and go back
+                self?.performBackNavigation()
+            }
+
+            // onSecondaryAction does nothing - just dismisses popup
+
+            present(popup, animated: true)
+        } else {
+            // No changes, just go back
+            performBackNavigation()
+        }
+    }
+
+    private func performBackNavigation() {
         if let navController = navigationController, navController.viewControllers.count > 1 {
             navController.popViewController(animated: true)
         } else {
@@ -149,7 +173,44 @@ class NewHobbySettingsViewController: UIViewController {
     }
 
     @objc private func trashButtonTapped() {
-        viewModel.toggleDeletionMode()
+        if viewModel.hasChanges {
+            // Show save confirmation popup
+            let popup = CommonPopupViewController(
+                title: "변경된 내용을 저장하시겠습니까?",
+                message: "취소하면 변경된 내용이 초기화됩니다.",
+                primaryButtonTitle: "저장",
+                secondaryButtonTitle: "취소"
+            )
+
+            popup.onPrimaryAction = { [weak self] in
+                // Save changes first, then toggle deletion mode
+                Task { @MainActor [weak self] in
+                    do {
+                        try await self?.viewModel.saveChanges()
+                        self?.viewModel.toggleDeletionMode()
+                    } catch {
+                        // Error handled via binding
+                    }
+                }
+            }
+
+            popup.onSecondaryAction = { [weak self] in
+                // Discard changes and toggle deletion mode
+                Task { @MainActor [weak self] in
+                    do {
+                        try await self?.viewModel.fetchHobbies()
+                        self?.viewModel.toggleDeletionMode()
+                    } catch {
+                        // Error handled via binding
+                    }
+                }
+            }
+
+            present(popup, animated: true)
+        } else {
+            // No changes, just toggle deletion mode
+            viewModel.toggleDeletionMode()
+        }
     }
 
     @objc private func closeButtonTapped() {
@@ -158,6 +219,47 @@ class NewHobbySettingsViewController: UIViewController {
     }
 
     @objc private func plusButtonTapped() {
+        if viewModel.hasChanges {
+            // Show save confirmation popup
+            let popup = CommonPopupViewController(
+                title: "변경된 내용을 저장하시겠습니까?",
+                message: "취소하면 변경된 내용이 초기화됩니다.",
+                primaryButtonTitle: "저장",
+                secondaryButtonTitle: "취소"
+            )
+
+            popup.onPrimaryAction = { [weak self] in
+                // Save changes first, then show add popup
+                Task { @MainActor [weak self] in
+                    do {
+                        try await self?.viewModel.saveChanges()
+                        self?.showAddHobbyPopup()
+                    } catch {
+                        // Error handled via binding
+                    }
+                }
+            }
+
+            popup.onSecondaryAction = { [weak self] in
+                // Discard changes and show add popup
+                Task { @MainActor [weak self] in
+                    do {
+                        try await self?.viewModel.fetchHobbies()
+                        self?.showAddHobbyPopup()
+                    } catch {
+                        // Error handled via binding
+                    }
+                }
+            }
+
+            present(popup, animated: true)
+        } else {
+            // No changes, just show add popup
+            showAddHobbyPopup()
+        }
+    }
+
+    private func showAddHobbyPopup() {
         let popup = TextInputPopupViewController(
             title: "취미 추가",
             placeholder: "취미명을 입력해주세요.",
