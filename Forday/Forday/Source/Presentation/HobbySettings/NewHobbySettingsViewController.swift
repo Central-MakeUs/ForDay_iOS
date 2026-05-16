@@ -184,9 +184,9 @@ class NewHobbySettingsViewController: UIViewController {
     private func handleDeleteTapped(hobbyId: Int) {
         let popup = CommonPopupViewController(
             title: "취미를 삭제하시겠어요?",
-            message: "삭제 시 복구는 안돼요!",
+            message: "삭제 시 관련된 모든 활동 기록글이 삭제되며 복구할 수 없습니다.",
             primaryButtonTitle: "삭제하기",
-            secondaryButtonTitle: "취소"
+            secondaryButtonTitle: "닫기"
         )
 
         popup.onPrimaryAction = { [weak self] in
