@@ -127,4 +127,9 @@ final class HobbyRepository: HobbyRepositoryInterface {
         let response = try await activityService.updateCoverImage(request: request)
         return response.toDomain()
     }
+
+    func deleteHobby(hobbyId: Int) async throws -> String {
+        let response = try await activityService.deleteHobby(hobbyId: hobbyId)
+        return response.data.message
+    }
 }

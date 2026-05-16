@@ -44,4 +44,5 @@ protocol HobbyRepositoryInterface {
     func updateGoalDays(hobbyId: Int, isDurationSet: Bool) async throws -> String
     func updateHobbyStatus(hobbyId: Int, hobbyStatus: HobbyStatus) async throws -> String
     func updateCoverImage(hobbyId: Int?, coverImageUrl: String?, recordId: Int?) async throws -> UpdateHobbyCoverResult
+    func deleteHobby(hobbyId: Int) async throws -> String
 }

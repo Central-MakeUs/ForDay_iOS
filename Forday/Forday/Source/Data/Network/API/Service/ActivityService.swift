@@ -142,6 +142,12 @@ final class ActivityService {
         return try await provider.request(.updateHobbyStatus(hobbyId: hobbyId, request: request))
     }
 
+    // MARK: - 취미 삭제
+
+    func deleteHobby(hobbyId: Int) async throws -> DTO.DeleteHobbyResponse {
+        return try await provider.request(.deleteHobby(hobbyId: hobbyId))
+    }
+
     // MARK: - 취미 대표사진 변경
 
     func updateCoverImage(request: DTO.UpdateHobbyCoverRequest) async throws -> DTO.UpdateHobbyCoverResponse {
