@@ -204,6 +204,15 @@ extension HomeViewController {
             }
             .store(in: &cancellables)
 
+        // 사용자 정보 (닉네임) 업데이트
+        viewModel.$userInfo
+            .receive(on: DispatchQueue.main)
+            .compactMap { $0 }
+            .sink { [weak self] userInfo in
+                self?.homeView.updateNickname(userInfo.nickname)
+            }
+            .store(in: &cancellables)
+
         // 로딩 상태
         viewModel.$isLoading
             .receive(on: DispatchQueue.main)
