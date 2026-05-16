@@ -269,8 +269,8 @@ extension NewHobbySettingsViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        if section == 1 && !viewModel.hiddenHobbies.isEmpty {
-            // "숨겨진 취미" 헤더
+        if section == 1 {
+            // "숨겨진 취미" 헤더 (항상 표시)
             let headerView = UIView()
             headerView.backgroundColor = .clear
 
@@ -302,7 +302,49 @@ extension NewHobbySettingsViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        if section == 1 && !viewModel.hiddenHobbies.isEmpty {
+        if section == 1 {
+            return UITableView.automaticDimension
+        }
+        return 0
+    }
+
+    func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
+        if section == 1 && viewModel.hiddenHobbies.isEmpty {
+            // Empty state for hidden hobbies section
+            let footerView = UIView()
+            footerView.backgroundColor = .clear
+
+            let emptyStateIconView = UIImageView()
+            emptyStateIconView.image = .Icon.sorryBubble
+            emptyStateIconView.contentMode = .scaleAspectFit
+
+            let emptyStateLabel = UILabel()
+            emptyStateLabel.setTextWithTypography("숨겨진 취미가 없어요", style: .label14)
+            emptyStateLabel.textColor = .neutral400
+            emptyStateLabel.textAlignment = .center
+
+            footerView.addSubview(emptyStateIconView)
+            footerView.addSubview(emptyStateLabel)
+
+            emptyStateIconView.snp.makeConstraints {
+                $0.top.equalToSuperview().offset(40)
+                $0.centerX.equalToSuperview()
+                $0.width.height.equalTo(48)
+            }
+
+            emptyStateLabel.snp.makeConstraints {
+                $0.top.equalTo(emptyStateIconView.snp.bottom).offset(12)
+                $0.centerX.equalToSuperview()
+                $0.bottom.equalToSuperview().offset(-40)
+            }
+
+            return footerView
+        }
+        return nil
+    }
+
+    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        if section == 1 && viewModel.hiddenHobbies.isEmpty {
             return UITableView.automaticDimension
         }
         return 0
