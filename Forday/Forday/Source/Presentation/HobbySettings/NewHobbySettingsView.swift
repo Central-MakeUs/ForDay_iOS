@@ -18,6 +18,7 @@ class NewHobbySettingsView: UIView {
     private let titleLabel = UILabel()
     let trashButton = UIButton()
     let plusButton = UIButton()
+    let closeButton = UIButton()
 
     // Description
     private let descriptionLabel = UILabel()
@@ -68,6 +69,12 @@ class NewHobbySettingsView: UIView {
             $0.tintColor = .neutral800
         }
 
+        closeButton.do {
+            $0.setImage(.Icon.xmark, for: .normal)
+            $0.tintColor = .neutral800
+            $0.isHidden = true
+        }
+
         // Description
         descriptionLabel.do {
             $0.setTextWithTypography(
@@ -114,6 +121,7 @@ class NewHobbySettingsView: UIView {
         addSubview(titleLabel)
         addSubview(trashButton)
         addSubview(plusButton)
+        addSubview(closeButton)
         addSubview(descriptionLabel)
         addSubview(tableView)
         addSubview(saveButtonGradientView)
@@ -138,6 +146,12 @@ class NewHobbySettingsView: UIView {
 
         trashButton.snp.makeConstraints {
             $0.trailing.equalTo(plusButton.snp.leading).offset(-12)
+            $0.centerY.equalTo(backButton)
+            $0.width.height.equalTo(24)
+        }
+
+        closeButton.snp.makeConstraints {
+            $0.trailing.equalToSuperview().offset(-20)
             $0.centerY.equalTo(backButton)
             $0.width.height.equalTo(24)
         }
@@ -171,5 +185,19 @@ class NewHobbySettingsView: UIView {
     func updateSaveButtonState(isEnabled: Bool) {
         saveButton.isEnabled = isEnabled
         saveButton.backgroundColor = isEnabled ? .action001 : .neutral200
+    }
+
+    func updateNavigationForDeletionMode(isDeletionMode: Bool) {
+        if isDeletionMode {
+            // 삭제 모드: trash, plus 숨기고 closeButton 표시
+            trashButton.isHidden = true
+            plusButton.isHidden = true
+            closeButton.isHidden = false
+        } else {
+            // 기본 모드: trash, plus 표시하고 closeButton 숨기기
+            trashButton.isHidden = false
+            plusButton.isHidden = false
+            closeButton.isHidden = true
+        }
     }
 }

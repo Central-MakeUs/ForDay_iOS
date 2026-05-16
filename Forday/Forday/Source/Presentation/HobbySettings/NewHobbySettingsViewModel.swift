@@ -17,11 +17,14 @@ class NewHobbySettingsViewModel {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var hasChanges: Bool = false
+    @Published var isDeletionMode: Bool = false
 
     // MARK: - UseCases
 
     private let fetchUseCase: FetchHobbySettingsV2UseCase
     private let updateUseCase: UpdateHobbySettingsV2UseCase
+    private let deleteUseCase: DeleteHobbyUseCase
+    private let createUseCase: CreateHobbyV2UseCase
 
     // MARK: - Original Data (for detecting changes)
 
@@ -32,10 +35,14 @@ class NewHobbySettingsViewModel {
 
     init(
         fetchUseCase: FetchHobbySettingsV2UseCase,
-        updateUseCase: UpdateHobbySettingsV2UseCase
+        updateUseCase: UpdateHobbySettingsV2UseCase,
+        deleteUseCase: DeleteHobbyUseCase = DeleteHobbyUseCase(),
+        createUseCase: CreateHobbyV2UseCase = CreateHobbyV2UseCase()
     ) {
         self.fetchUseCase = fetchUseCase
         self.updateUseCase = updateUseCase
+        self.deleteUseCase = deleteUseCase
+        self.createUseCase = createUseCase
     }
 
     // MARK: - Public Methods
@@ -126,6 +133,84 @@ class NewHobbySettingsViewModel {
         hiddenHobbies.insert(hobby, at: destinationIndex)
         updateHiddenSequences()
         checkForChanges()
+    }
+
+    /// 삭제 모드 토글
+    func toggleDeletionMode() {
+        isDeletionMode.toggle()
+    }
+
+    /// 취미 추가
+    func addHobby(hobbyName: String) async throws {
+        // 취미명 길이 검증
+        let trimmedName = hobbyName.trimmingCharacters(in: .whitespaces)
+        guard trimmedName.count >= 1 && trimmedName.count <= 20 else {
+            throw AppError.validation("취미명은 1자 이상 20자 이하로 입력해주세요.")
+        }
+
+        // 현재 취미 개수 확인 (진행 중 + 숨김)
+        let totalCount = progressHobbies.count + hiddenHobbies.count
+        guard totalCount < 10 else {
+            throw AppError.validation("취미는 최대 10개까지 추가할 수 있습니다.")
+        }
+
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            // hobbyInfoId: nil (커스텀 취미)
+            _ = try await createUseCase.execute(hobbies: [(hobbyInfoId: nil, hobbyName: trimmedName)])
+
+            // 추가 후 목록 다시 조회
+            try await fetchHobbies()
+
+            await MainActor.run {
+                self.isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                self.errorMessage = error.localizedDescription
+                self.isLoading = false
+            }
+            throw error
+        }
+    }
+
+    /// 취미 삭제
+    func deleteHobby(hobbyId: Int) async throws {
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            _ = try await deleteUseCase.execute(hobbyId: hobbyId)
+
+            await MainActor.run {
+                // progressHobbies에서 제거
+                if let index = progressHobbies.firstIndex(where: { $0.hobbyId == hobbyId }) {
+                    progressHobbies.remove(at: index)
+                    updateSequences()
+                }
+                // hiddenHobbies에서 제거
+                if let index = hiddenHobbies.firstIndex(where: { $0.hobbyId == hobbyId }) {
+                    hiddenHobbies.remove(at: index)
+                    updateHiddenSequences()
+                }
+                // 원본 데이터도 업데이트
+                if let index = originalProgressHobbies.firstIndex(where: { $0.hobbyId == hobbyId }) {
+                    originalProgressHobbies.remove(at: index)
+                }
+                if let index = originalHiddenHobbies.firstIndex(where: { $0.hobbyId == hobbyId }) {
+                    originalHiddenHobbies.remove(at: index)
+                }
+                self.isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                self.errorMessage = error.localizedDescription
+                self.isLoading = false
+            }
+            throw error
+        }
     }
 
     /// 저장

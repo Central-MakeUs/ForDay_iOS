@@ -64,7 +64,9 @@ class NewHobbySettingsViewController: UIViewController {
     private func setupButtons() {
         hobbySettingsView.backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
         hobbySettingsView.saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
-        // trash, plus 버튼은 나중에 구현
+        hobbySettingsView.trashButton.addTarget(self, action: #selector(trashButtonTapped), for: .touchUpInside)
+        hobbySettingsView.closeButton.addTarget(self, action: #selector(closeButtonTapped), for: .touchUpInside)
+        hobbySettingsView.plusButton.addTarget(self, action: #selector(plusButtonTapped), for: .touchUpInside)
     }
 
     private func bind() {
@@ -100,6 +102,15 @@ class NewHobbySettingsViewController: UIViewController {
                 self?.showErrorAlert(message: errorMessage)
             }
             .store(in: &cancellables)
+
+        // Bind deletion mode to reload table view and update navigation
+        viewModel.$isDeletionMode
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isDeletionMode in
+                self?.hobbySettingsView.updateNavigationForDeletionMode(isDeletionMode: isDeletionMode)
+                self?.hobbySettingsView.tableView.reloadData()
+            }
+            .store(in: &cancellables)
     }
 
     private func fetchInitialData() {
@@ -115,6 +126,7 @@ class NewHobbySettingsViewController: UIViewController {
     // MARK: - Actions
 
     @objc private func backButtonTapped() {
+        // 홈으로 돌아가기 (뒤로가기)
         if let navController = navigationController, navController.viewControllers.count > 1 {
             navController.popViewController(animated: true)
         } else {
@@ -134,6 +146,61 @@ class NewHobbySettingsViewController: UIViewController {
                 // Error already handled via binding
             }
         }
+    }
+
+    @objc private func trashButtonTapped() {
+        viewModel.toggleDeletionMode()
+    }
+
+    @objc private func closeButtonTapped() {
+        // 삭제 모드 해제
+        viewModel.toggleDeletionMode()
+    }
+
+    @objc private func plusButtonTapped() {
+        let popup = TextInputPopupViewController(
+            title: "취미 추가",
+            placeholder: "취미명을 입력해주세요.",
+            maxCharacterCount: 20
+        )
+
+        popup.modalPresentationStyle = .overFullScreen
+        popup.modalTransitionStyle = .crossDissolve
+
+        popup.onSubmit = { [weak self] hobbyName in
+            Task { @MainActor [weak self] in
+                do {
+                    try await self?.viewModel.addHobby(hobbyName: hobbyName)
+                    ToastView.show(message: "취미가 추가되었습니다.")
+                } catch {
+                    // Error already handled via binding
+                }
+            }
+        }
+
+        present(popup, animated: true)
+    }
+
+    private func handleDeleteTapped(hobbyId: Int) {
+        let popup = CommonPopupViewController(
+            title: "취미를 삭제하시겠어요?",
+            message: "삭제 시 복구는 안돼요!",
+            primaryButtonTitle: "삭제하기",
+            secondaryButtonTitle: "취소"
+        )
+
+        popup.onPrimaryAction = { [weak self] in
+            Task { @MainActor [weak self] in
+                do {
+                    try await self?.viewModel.deleteHobby(hobbyId: hobbyId)
+                    ToastView.show(message: "취미가 삭제되었습니다.")
+                } catch {
+                    // Error already handled via binding
+                }
+            }
+        }
+
+        present(popup, animated: true)
     }
 
     private func handleMinusTapped(hobbyId: Int) {
@@ -173,9 +240,12 @@ extension NewHobbySettingsViewController: UITableViewDataSource {
             }
 
             let hobby = viewModel.progressHobbies[indexPath.row]
-            cell.configure(hobby: hobby)
+            cell.configure(hobby: hobby, isDeletionMode: viewModel.isDeletionMode)
             cell.onMinusTapped = { [weak self] hobbyId in
                 self?.handleMinusTapped(hobbyId: hobbyId)
+            }
+            cell.onDeleteTapped = { [weak self] hobbyId in
+                self?.handleDeleteTapped(hobbyId: hobbyId)
             }
 
             return cell

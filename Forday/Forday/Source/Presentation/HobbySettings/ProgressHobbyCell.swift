@@ -19,9 +19,11 @@ class ProgressHobbyCell: UITableViewCell {
     private let hobbyIconView = UIImageView()
     private let hobbyNameLabel = UILabel()
     private let minusButton = UIButton()
+    private let deleteButton = UIButton()
 
     // Callback
     var onMinusTapped: ((Int) -> Void)?
+    var onDeleteTapped: ((Int) -> Void)?
 
     // Hobby ID
     private var hobbyId: Int?
@@ -64,6 +66,13 @@ class ProgressHobbyCell: UITableViewCell {
             $0.tintColor = .systemRed
             $0.addTarget(self, action: #selector(minusButtonTapped), for: .touchUpInside)
         }
+
+        deleteButton.do {
+            $0.setImage(.Icon.trash, for: .normal)
+            $0.tintColor = .systemRed
+            $0.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
+            $0.isHidden = true
+        }
     }
 
     private func setupLayout() {
@@ -71,6 +80,7 @@ class ProgressHobbyCell: UITableViewCell {
         contentView.addSubview(hobbyIconView)
         contentView.addSubview(hobbyNameLabel)
         contentView.addSubview(minusButton)
+        contentView.addSubview(deleteButton)
 
         menuIconView.snp.makeConstraints {
             $0.leading.equalToSuperview()
@@ -95,6 +105,12 @@ class ProgressHobbyCell: UITableViewCell {
             $0.width.height.equalTo(20)
         }
 
+        deleteButton.snp.makeConstraints {
+            $0.trailing.equalToSuperview()
+            $0.centerY.equalToSuperview()
+            $0.width.height.equalTo(24)
+        }
+
         contentView.snp.makeConstraints {
             $0.top.bottom.equalToSuperview().inset(16)
             $0.leading.trailing.equalToSuperview()
@@ -103,10 +119,14 @@ class ProgressHobbyCell: UITableViewCell {
 
     // Configure
 
-    func configure(hobby: HobbyItemV2Entity) {
+    func configure(hobby: HobbyItemV2Entity, isDeletionMode: Bool = false) {
         self.hobbyId = hobby.hobbyId
         hobbyIconView.image = hobby.imageAsset.icon
         hobbyNameLabel.setTextWithTypography(hobby.hobbyName, style: .body16)
+
+        // 삭제 모드에 따라 버튼 표시 전환
+        minusButton.isHidden = isDeletionMode
+        deleteButton.isHidden = !isDeletionMode
     }
 
     // Actions
@@ -114,5 +134,10 @@ class ProgressHobbyCell: UITableViewCell {
     @objc private func minusButtonTapped() {
         guard let hobbyId = hobbyId else { return }
         onMinusTapped?(hobbyId)
+    }
+
+    @objc private func deleteButtonTapped() {
+        guard let hobbyId = hobbyId else { return }
+        onDeleteTapped?(hobbyId)
     }
 }
