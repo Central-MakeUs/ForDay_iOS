@@ -256,9 +256,12 @@ extension NewHobbySettingsViewController: UITableViewDataSource {
             }
 
             let hobby = viewModel.hiddenHobbies[indexPath.row]
-            cell.configure(hobby: hobby)
+            cell.configure(hobby: hobby, isDeletionMode: viewModel.isDeletionMode)
             cell.onPlusTapped = { [weak self] hobbyId in
                 self?.handlePlusTapped(hobbyId: hobbyId)
+            }
+            cell.onDeleteTapped = { [weak self] hobbyId in
+                self?.handleDeleteTapped(hobbyId: hobbyId)
             }
 
             return cell

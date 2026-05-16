@@ -18,9 +18,11 @@ class HiddenHobbyCell: UITableViewCell {
     private let hobbyIconView = UIImageView()
     private let hobbyNameLabel = UILabel()
     private let plusButton = UIButton()
+    private let deleteButton = UIButton()
 
     // Callback
     var onPlusTapped: ((Int) -> Void)?
+    var onDeleteTapped: ((Int) -> Void)?
 
     // Hobby ID
     private var hobbyId: Int?
@@ -57,12 +59,20 @@ class HiddenHobbyCell: UITableViewCell {
             $0.tintColor = .systemBlue
             $0.addTarget(self, action: #selector(plusButtonTapped), for: .touchUpInside)
         }
+
+        deleteButton.do {
+            $0.setImage(.Icon.trash, for: .normal)
+            $0.tintColor = .systemRed
+            $0.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
+            $0.isHidden = true
+        }
     }
 
     private func setupLayout() {
         contentView.addSubview(hobbyIconView)
         contentView.addSubview(hobbyNameLabel)
         contentView.addSubview(plusButton)
+        contentView.addSubview(deleteButton)
 
         hobbyIconView.snp.makeConstraints {
             $0.leading.equalToSuperview()
@@ -81,6 +91,12 @@ class HiddenHobbyCell: UITableViewCell {
             $0.width.height.equalTo(20)
         }
 
+        deleteButton.snp.makeConstraints {
+            $0.trailing.equalToSuperview()
+            $0.centerY.equalToSuperview()
+            $0.width.height.equalTo(24)
+        }
+
         contentView.snp.makeConstraints {
             $0.top.bottom.equalToSuperview().inset(16)
             $0.leading.trailing.equalToSuperview()
@@ -89,10 +105,14 @@ class HiddenHobbyCell: UITableViewCell {
 
     // Configure
 
-    func configure(hobby: HobbyItemV2Entity) {
+    func configure(hobby: HobbyItemV2Entity, isDeletionMode: Bool = false) {
         self.hobbyId = hobby.hobbyId
         hobbyIconView.image = hobby.imageAsset.icon
         hobbyNameLabel.setTextWithTypography(hobby.hobbyName, style: .body16)
+
+        // 삭제 모드에 따라 버튼 표시 전환
+        plusButton.isHidden = isDeletionMode
+        deleteButton.isHidden = !isDeletionMode
     }
 
     // Actions
@@ -100,5 +120,10 @@ class HiddenHobbyCell: UITableViewCell {
     @objc private func plusButtonTapped() {
         guard let hobbyId = hobbyId else { return }
         onPlusTapped?(hobbyId)
+    }
+
+    @objc private func deleteButtonTapped() {
+        guard let hobbyId = hobbyId else { return }
+        onDeleteTapped?(hobbyId)
     }
 }
