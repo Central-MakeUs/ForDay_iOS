@@ -32,13 +32,23 @@ final class TermsAgreementViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupNavigationBar()
         setupActions()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        setupNavigationBar()
     }
 }
 
 // MARK: - Setup
 
 extension TermsAgreementViewController {
+    private func setupNavigationBar() {
+        navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+
     private func setupActions() {
         // Back Button
         termsAgreementView.backButton.addTarget(
