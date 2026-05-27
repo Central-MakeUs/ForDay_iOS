@@ -81,9 +81,9 @@ class NicknameViewController: BaseOnboardingViewController {
                 // 닉네임 설정 API 호출
                 _ = try await self.viewModel.setNickname()
 
-                // 성공 시 취미 선택 화면으로
+                // 성공 시 플로우에 맞는 다음 화면으로 이동
                 await MainActor.run { [weak self] in
-                    self?.authCoordinator?.showSimpleHobbySelection()
+                    self?.routeAfterNicknameSet()
                 }
             } catch {
                 // 실패 시 에러 처리
@@ -93,6 +93,21 @@ class NicknameViewController: BaseOnboardingViewController {
                 }
             }
         }
+    }
+
+    private func routeAfterNicknameSet() {
+        if let authCoordinator {
+            authCoordinator.showSimpleHobbySelection()
+            return
+        }
+
+        if let coordinator {
+            coordinator.finishOnboarding()
+            return
+        }
+
+        setNextButtonEnabled(true)
+        print("⚠️ 닉네임 설정 후 이동할 Coordinator가 없습니다.")
     }
 
     private func showError(_ error: Error) {
