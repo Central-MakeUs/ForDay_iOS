@@ -161,56 +161,8 @@ class AuthCoordinator: Coordinator {
     // 자동 로그인 (앱 시작 시, 토큰 valid할 때)
     func autoLogin() {
         print("🔵 autoLogin() 시작")
-        Task { [weak self] in
-            guard let self = self else { return }
-            do {
-                // 1. guestUserId가 있는지 확인
-                let tokenStorage = TokenStorage.shared
-                let savedGuestUserId = tokenStorage.loadGuestUserId()
-                print("   - 저장된 guestUserId: \(savedGuestUserId ?? "없음")")
-
-                if let guestUserId = savedGuestUserId {
-                    print("🔄 게스트 사용자 자동 재로그인 시도: \(guestUserId)")
-
-                    // 게스트 재로그인
-                    let guestLoginUseCase = GuestLoginUseCase(
-                        authRepository: AuthRepository()
-                    )
-                    let authToken = try await guestLoginUseCase.execute()
-
-                    // 로그인 성공 처리
-                    await MainActor.run { [weak self] in
-                        self?.handleLoginSuccess(authToken: authToken)
-                    }
-                    return
-                }
-
-                print("   - guestUserId 없음 → 일반 사용자로 처리")
-                // 2. 일반 사용자 (카카오/애플) - 사용자 정보 조회로 닉네임 설정 여부 확인
-                let usersService = UsersService()
-                let userInfo = try await usersService.fetchUserInfo(userId: nil)
-
-                await MainActor.run { [weak self] in
-                    // nickname이 nil이거나 비어있으면 닉네임 설정 화면으로
-                    if userInfo.data.nickname == nil || userInfo.data.nickname?.isEmpty == true {
-                        print("   ➡️ 닉네임 설정 화면으로 이동")
-                        self?.showNicknameSetup()
-                    } else {
-                        // nickname이 있으면 홈으로
-                        print("   ➡️ 홈으로 이동")
-                        self?.showHome()
-                    }
-                }
-
-            } catch {
-                // 자동 로그인 실패 - 로그인 화면으로
-                await MainActor.run { [weak self] in
-                    print("⚠️ 자동 로그인 실패: \(error)")
-                    print("   ➡️ 로그인 화면으로 이동")
-                    self?.showLogin()
-                }
-            }
-        }
+        print("   - 토큰 검증 완료 상태 → 홈으로 이동")
+        showHome()
     }
 
     // MARK: - 새 온보딩 플로우 (테스트용)
