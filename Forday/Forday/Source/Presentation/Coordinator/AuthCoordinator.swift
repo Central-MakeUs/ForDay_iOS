@@ -54,29 +54,32 @@ class AuthCoordinator: Coordinator {
             return
         }
 
-        // 케이스 1: 닉네임 설정 완료 → 홈
-        if authToken.nicknameSet {
-            print("   ➡️ 홈으로 이동")
-            showHome()
-        }
-        // 케이스 2: 닉네임 미설정
-        else {
-            // 케이스 2-1: 온보딩 완료 (취미 생성 완료)
-            if authToken.onboardingCompleted {
-                // 온보딩 데이터가 있으면 온보딩 재개, 없으면 닉네임 설정 화면
-                if let savedData = authToken.onboardingData {
-                    print("   ➡️ 온보딩 재개 (PeriodSelection으로 복원)")
-                    resumeOnboarding(with: savedData)
-                } else {
-                    print("   ➡️ 닉네임 설정 화면으로 이동")
-                    showNicknameSetup()
-                }
-            }
-            // 케이스 2-2: 온보딩 미완료 → 온보딩 시작
-            else {
+        // 케이스 1: 온보딩 미완료 → 홈 진입 금지
+        if !authToken.onboardingCompleted {
+            if let savedData = authToken.onboardingData {
+                print("   ➡️ 온보딩 재개 (PeriodSelection으로 복원)")
+                resumeOnboarding(with: savedData)
+            } else {
                 print("   ➡️ 온보딩 시작 화면으로 이동")
                 showOnboarding()
             }
+            return
+        }
+
+        // 케이스 2: 온보딩 완료 + 닉네임 설정 완료 → 홈
+        if authToken.nicknameSet {
+            print("   ➡️ 홈으로 이동")
+            showHome()
+            return
+        }
+
+        // 케이스 3: 온보딩 완료 + 닉네임 미설정 → 저장 데이터가 있으면 재개, 없으면 닉네임 설정
+        if let savedData = authToken.onboardingData {
+            print("   ➡️ 온보딩 재개 (PeriodSelection으로 복원)")
+            resumeOnboarding(with: savedData)
+        } else {
+            print("   ➡️ 닉네임 설정 화면으로 이동")
+            showNicknameSetup()
         }
     }
     
