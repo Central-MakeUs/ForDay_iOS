@@ -53,6 +53,9 @@ This file contains foundational mandates for the **ForDay** project. These instr
 
 ## 🚀 Workflow & Source Control
 
+- **Build Actions**:
+  - Do not run build actions such as `xcodebuild`, Xcode builds, or simulator launches unless the user explicitly asks.
+  - The user will handle build verification locally.
 - **Branching Strategy**:
   - Main branch: `develop`.
   - Feature branches: `feature/#<issue-number>/<description>`.
