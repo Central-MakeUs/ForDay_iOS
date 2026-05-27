@@ -19,9 +19,18 @@ final class OnboardingABTest {
 
     private static let userDefaultsKey = "OnboardingABTestGroup"
     private static let remoteConfigKey = "onboarding_variant"
+    private static var isFetchingGroup = false
+    private static var pendingCompletions: [(Group) -> Void] = []
 
     /// 현재 사용자의 AB 테스트 그룹 가져오기 (Firebase Remote Config 사용)
     static func getGroup(completion: @escaping (Group) -> Void) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async {
+                getGroup(completion: completion)
+            }
+            return
+        }
+
         // 1. 이미 배정된 그룹이 있는지 확인 (캐시)
         if let savedGroupRawValue = UserDefaults.standard.string(forKey: userDefaultsKey),
            let savedGroup = Group(rawValue: savedGroupRawValue) {
@@ -29,6 +38,15 @@ final class OnboardingABTest {
             completion(savedGroup)
             return
         }
+
+        pendingCompletions.append(completion)
+
+        guard !isFetchingGroup else {
+            print("🧪 [AB Test] 그룹 배정 진행 중 - 기존 요청 결과 대기")
+            return
+        }
+
+        isFetchingGroup = true
 
         // 2. Firebase Remote Config에서 그룹 가져오기
         let remoteConfig = RemoteConfig.remoteConfig()
@@ -44,30 +62,36 @@ final class OnboardingABTest {
 
         // Remote Config fetch 및 활성화
         remoteConfig.fetchAndActivate { status, error in
-            var assignedGroup: Group
+            DispatchQueue.main.async {
+                var assignedGroup: Group
 
-            if let error = error {
-                print("⚠️ [AB Test] Remote Config fetch 실패: \(error.localizedDescription)")
-                // Fallback: 로컬 랜덤 배정
-                assignedGroup = assignGroupLocally()
-            } else {
-                // Remote Config에서 값 가져오기
-                let groupValue = remoteConfig.configValue(forKey: remoteConfigKey).stringValue ?? "OLD"
-                assignedGroup = Group(rawValue: groupValue) ?? .control
+                if let error = error {
+                    print("⚠️ [AB Test] Remote Config fetch 실패: \(error.localizedDescription)")
+                    // Fallback: 로컬 랜덤 배정
+                    assignedGroup = assignGroupLocally()
+                } else {
+                    // Remote Config에서 값 가져오기
+                    let groupValue = remoteConfig.configValue(forKey: remoteConfigKey).stringValue ?? "OLD"
+                    assignedGroup = Group(rawValue: groupValue) ?? .control
 
-                print("🧪 [AB Test] Firebase에서 그룹 할당: \(assignedGroup.rawValue)")
+                    print("🧪 [AB Test] Firebase에서 그룹 할당: \(assignedGroup.rawValue)")
+                }
+
+                // 3. UserDefaults에 저장 (캐싱)
+                UserDefaults.standard.set(assignedGroup.rawValue, forKey: userDefaultsKey)
+
+                // 4. Firebase Analytics 이벤트 로깅
+                Analytics.logEvent("ab_test_group_assigned", parameters: [
+                    "group": assignedGroup.rawValue,
+                    "test_name": "onboarding_flow"
+                ])
+
+                let completions = pendingCompletions
+                pendingCompletions.removeAll()
+                isFetchingGroup = false
+
+                completions.forEach { $0(assignedGroup) }
             }
-
-            // 3. UserDefaults에 저장 (캐싱)
-            UserDefaults.standard.set(assignedGroup.rawValue, forKey: userDefaultsKey)
-
-            // 4. Firebase Analytics 이벤트 로깅
-            Analytics.logEvent("ab_test_group_assigned", parameters: [
-                "group": assignedGroup.rawValue,
-                "test_name": "onboarding_flow"
-            ])
-
-            completion(assignedGroup)
         }
     }
 

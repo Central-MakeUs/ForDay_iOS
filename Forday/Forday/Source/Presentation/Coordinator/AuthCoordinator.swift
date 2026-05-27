@@ -60,8 +60,8 @@ class AuthCoordinator: Coordinator {
                 print("   ➡️ 온보딩 재개 (PeriodSelection으로 복원)")
                 resumeOnboarding(with: savedData)
             } else {
-                print("   ➡️ 온보딩 시작 화면으로 이동")
-                showOnboarding()
+                print("   ➡️ AB 테스트 그룹 기준 온보딩 시작")
+                showAssignedOnboardingFlow(nicknameSet: authToken.nicknameSet)
             }
             return
         }
@@ -238,6 +238,25 @@ class AuthCoordinator: Coordinator {
         navigationController.pushViewController(vc, animated: true)
     }
 
+    private func showAssignedOnboardingFlow(nicknameSet: Bool = false) {
+        OnboardingABTest.getGroup { [weak self] abTestGroup in
+            DispatchQueue.main.async {
+                switch abTestGroup {
+                case .control:
+                    print("   🧪 [AB Test] 기존 플로우 진입")
+                    self?.showOnboarding()
+                case .variant:
+                    print("   🧪 [AB Test] 신규 플로우 진입")
+                    if nicknameSet {
+                        self?.showSimpleHobbySelection()
+                    } else {
+                        self?.showNewOnboardingNickname()
+                    }
+                }
+            }
+        }
+    }
+
     func finishNewOnboarding() {
         print("🟢 새 온보딩 플로우 완료")
 
@@ -255,19 +274,7 @@ extension AuthCoordinator: TermsAgreementCoordinatorDelegate {
     func termsAgreementDidComplete() {
         print("✅ 약관동의 완료 → 온보딩 시작")
 
-        // AB 테스트: 기존 플로우 vs 신규 플로우 (Firebase Remote Config)
-        OnboardingABTest.getGroup { [weak self] abTestGroup in
-            DispatchQueue.main.async {
-                switch abTestGroup {
-                case .control:
-                    print("   🧪 [AB Test] 기존 플로우 진입")
-                    self?.showOnboarding()
-                case .variant:
-                    print("   🧪 [AB Test] 신규 플로우 진입")
-                    self?.showNewOnboardingNickname()
-                }
-            }
-        }
+        showAssignedOnboardingFlow()
     }
 
     func termsAgreementDidRequestBack() {
