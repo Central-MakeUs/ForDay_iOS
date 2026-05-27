@@ -207,9 +207,9 @@ extension HomeViewController {
         // 사용자 정보 (닉네임) 업데이트
         viewModel.$userInfo
             .receive(on: DispatchQueue.main)
-            .compactMap { $0 }
-            .sink { [weak self] userInfo in
-                self?.homeView.updateNickname(userInfo.nickname)
+            .compactMap { $0?.nickname }
+            .sink { [weak self] nickname in
+                self?.homeView.updateNickname(nickname)
             }
             .store(in: &cancellables)
 
@@ -464,17 +464,8 @@ extension HomeViewController {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissSettingsDropdown))
         backgroundView.addGestureRecognizer(tapGesture)
 
-        // 메뉴 아이템 결정 (진행 중인 취미가 2개 이상이면 addHobby 제외)
-        let inProgressCount = viewModel.homeInfo?.inProgressHobbies.count ?? 0
-        let menuItems: [HomeSettingsMenuItem]
-        if inProgressCount > 1 {
-            menuItems = HomeSettingsMenuItem.allCases.filter { $0 != .addHobby }
-        } else {
-            menuItems = HomeSettingsMenuItem.allCases
-        }
-
         // 드롭다운 생성
-        let dropdownView = DropdownMenuView(items: menuItems)
+        let dropdownView = DropdownMenuView(items: HomeSettingsMenuItem.allCases)
         dropdownView.onItemSelected = { [weak self] menuItem in
             guard let item = menuItem as? HomeSettingsMenuItem else { return }
             self?.handleSettingsDropdownOption(item)
@@ -500,10 +491,7 @@ extension HomeViewController {
 
         switch item {
         case .manageHobby:
-            coordinator?.showHobbySettings()
-
-        case .addHobby:
-            coordinator?.showAddHobbyOnboarding()
+            coordinator?.showNewHobbySettings()
 
         case .generalSettings:
             coordinator?.showGeneralSettings()

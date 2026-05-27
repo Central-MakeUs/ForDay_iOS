@@ -123,6 +123,7 @@ extension HomeView {
         hobbyListScrollView.do {
             $0.showsHorizontalScrollIndicator = false
             $0.alwaysBounceHorizontal = true
+            $0.contentInset.right = 52
         }
 
         hobbyListStackView.do {
@@ -133,8 +134,16 @@ extension HomeView {
         }
 
         hamburgerButton.do {
-            $0.setImage(.Icon.threeLines, for: .normal)
-            $0.tintColor = .neutral800
+            var config = UIButton.Configuration.plain()
+            config.image = .Icon.threeLines
+            config.baseForegroundColor = .neutral800
+            config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 6, bottom: 6, trailing: 6)
+
+            $0.configuration = config
+            $0.backgroundColor = .neutralWhite
+            $0.layer.cornerRadius = 18
+            $0.layer.borderColor = UIColor.stroke001.cgColor
+            $0.layer.borderWidth = 1
         }
 
         // My Activity Section
@@ -310,7 +319,7 @@ extension HomeView {
         hobbyListScrollView.snp.makeConstraints {
             $0.leading.equalToSuperview().offset(20)
             $0.top.bottom.equalToSuperview()
-            $0.trailing.equalTo(hamburgerButton.snp.leading).offset(-12)
+            $0.trailing.equalToSuperview()
         }
 
         hobbyListStackView.snp.makeConstraints {
@@ -321,7 +330,8 @@ extension HomeView {
         hamburgerButton.snp.makeConstraints {
             $0.trailing.equalToSuperview().offset(-20)
             $0.centerY.equalToSuperview()
-            $0.width.height.equalTo(24)
+            $0.width.equalTo(40)
+            $0.height.equalTo(36)
         }
 
         // My Activity Section
