@@ -37,6 +37,10 @@ final class ReactionUsersBottomSheetViewController: UIViewController {
     private let maxHeight: CGFloat = 668
     private var currentHeight: CGFloat = 322
     private var containerHeightConstraint: Constraint?
+    private lazy var sheetPanGesture = UIPanGestureRecognizer(
+        target: self,
+        action: #selector(handlePan(_:))
+    )
 
     // Callback for loading more users
     var onLoadMore: ((ReactionType?, Int?) -> AnyPublisher<ReactionTabData, Error>)?
@@ -243,9 +247,8 @@ extension ReactionUsersBottomSheetViewController {
         dimmerView.addGestureRecognizer(dimmerTap)
 
         // Pan gesture for dragging
-        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
-        panGesture.delegate = self
-        containerView.addGestureRecognizer(panGesture)
+        sheetPanGesture.delegate = self
+        containerView.addGestureRecognizer(sheetPanGesture)
     }
 
     private func setupBindings() {
@@ -279,6 +282,7 @@ extension ReactionUsersBottomSheetViewController {
             // Update height based on drag
             let newHeight = currentHeight - translation.y
             let clampedHeight = max(minHeight, min(maxHeight, newHeight))
+            currentHeight = clampedHeight
             containerHeightConstraint?.update(offset: clampedHeight)
             gesture.setTranslation(.zero, in: view)
 
@@ -354,8 +358,19 @@ extension ReactionUsersBottomSheetViewController: UIPageViewControllerDelegate, 
 // MARK: - UIGestureRecognizerDelegate
 
 extension ReactionUsersBottomSheetViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard gestureRecognizer === sheetPanGesture else { return true }
+
+        let velocity = sheetPanGesture.velocity(in: view)
+        return abs(velocity.y) > abs(velocity.x)
+    }
+
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        // Allow pan gesture and scroll view gestures to work together
-        return true
+        guard gestureRecognizer === sheetPanGesture || otherGestureRecognizer === sheetPanGesture else {
+            return false
+        }
+
+        let velocity = sheetPanGesture.velocity(in: view)
+        return abs(velocity.y) > abs(velocity.x)
     }
 }
