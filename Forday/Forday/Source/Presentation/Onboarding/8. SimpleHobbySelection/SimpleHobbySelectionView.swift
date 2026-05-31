@@ -62,7 +62,7 @@ extension SimpleHobbySelectionView {
         }
 
         titleLabel.do {
-            $0.setTextWithTypography("유지 님,\n어떤 취미를 시작하고 싶으세요?", style: .header20)
+            $0.setTextWithTypography("어떤 취미를 시작하고 싶으세요?", style: .header20)
             $0.textColor = .neutral900
             $0.numberOfLines = 0
         }
@@ -148,7 +148,8 @@ extension SimpleHobbySelectionView {
 
 class LeftAlignedCollectionViewFlowLayout: UICollectionViewFlowLayout {
     override func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
-        let attributes = super.layoutAttributesForElements(in: rect)
+        let attributes = super.layoutAttributesForElements(in: rect)?
+            .compactMap { $0.copy() as? UICollectionViewLayoutAttributes }
 
         var leftMargin = sectionInset.left
         var maxY: CGFloat = -1.0

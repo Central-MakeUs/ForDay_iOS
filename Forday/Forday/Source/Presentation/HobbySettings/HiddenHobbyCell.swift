@@ -76,6 +76,7 @@ class HiddenHobbyCell: UITableViewCell {
 
         hobbyIconView.snp.makeConstraints {
             $0.leading.equalToSuperview()
+            $0.top.bottom.equalToSuperview().inset(16)
             $0.centerY.equalToSuperview()
             $0.width.height.equalTo(24)
         }
@@ -95,11 +96,6 @@ class HiddenHobbyCell: UITableViewCell {
             $0.trailing.equalToSuperview()
             $0.centerY.equalToSuperview()
             $0.width.height.equalTo(24)
-        }
-
-        contentView.snp.makeConstraints {
-            $0.top.bottom.equalToSuperview().inset(16)
-            $0.leading.trailing.equalToSuperview()
         }
     }
 

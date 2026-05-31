@@ -287,6 +287,6 @@ class NewHobbySettingsViewModel {
 
     private func isSameList(_ list1: [HobbyItemV2Entity], _ list2: [HobbyItemV2Entity]) -> Bool {
         guard list1.count == list2.count else { return false }
-        return zip(list1, list2).allSatisfy { $0.hobbyId == $1.hobbyId && $0.sequence == $1.sequence }
+        return zip(list1, list2).allSatisfy { $0.hobbyId == $1.hobbyId }
     }
 }

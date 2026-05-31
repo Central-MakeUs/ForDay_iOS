@@ -178,9 +178,10 @@ class AuthCoordinator: Coordinator {
         navigationController.pushViewController(vc, animated: true)
     }
 
-    func showSimpleHobbySelection() {
+    func showSimpleHobbySelection(nickname: String? = nil) {
         let vc = SimpleHobbySelectionViewController()
         vc.authCoordinator = self
+        vc.nickname = nickname
         navigationController.pushViewController(vc, animated: true)
     }
 

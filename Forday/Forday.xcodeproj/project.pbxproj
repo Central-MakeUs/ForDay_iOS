@@ -674,6 +674,7 @@
 		};
 		6CA114302FADD95700D54900 /* FirebaseRemoteConfig */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = 6C8BB03A2F52C512001D3B96 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseRemoteConfig;
 		};
 		6CC00A0F2F7FE1B70087420B /* FirebaseMessaging */ = {

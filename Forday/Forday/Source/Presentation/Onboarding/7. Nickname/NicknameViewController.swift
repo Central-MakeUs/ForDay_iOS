@@ -62,7 +62,13 @@ class NicknameViewController: BaseOnboardingViewController {
     }
 
     @objc private func backToLogin() {
-        // 뒤로가기
+        if let navigationController,
+           navigationController.viewControllers.first === self {
+            coordinator?.dismissOnboarding()
+            authCoordinator?.showLogin()
+            return
+        }
+
         navigationController?.popViewController(animated: true)
     }
     
@@ -79,11 +85,11 @@ class NicknameViewController: BaseOnboardingViewController {
             guard let self = self else { return }
             do {
                 // 닉네임 설정 API 호출
-                _ = try await self.viewModel.setNickname()
+                let result = try await self.viewModel.setNickname()
 
                 // 성공 시 플로우에 맞는 다음 화면으로 이동
                 await MainActor.run { [weak self] in
-                    self?.routeAfterNicknameSet()
+                    self?.routeAfterNicknameSet(nickname: result.nickname)
                 }
             } catch {
                 // 실패 시 에러 처리
@@ -95,9 +101,9 @@ class NicknameViewController: BaseOnboardingViewController {
         }
     }
 
-    private func routeAfterNicknameSet() {
+    private func routeAfterNicknameSet(nickname: String) {
         if let authCoordinator {
-            authCoordinator.showSimpleHobbySelection()
+            authCoordinator.showSimpleHobbySelection(nickname: nickname)
             return
         }
 

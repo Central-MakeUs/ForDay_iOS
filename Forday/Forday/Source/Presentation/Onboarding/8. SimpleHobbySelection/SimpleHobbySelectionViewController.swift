@@ -14,6 +14,7 @@ class SimpleHobbySelectionViewController: BaseOnboardingViewController {
 
     private let hobbyView = SimpleHobbySelectionView()
     private let viewModel = SimpleHobbySelectionViewModel()
+    var nickname: String?
 
     // Coordinator
     weak var authCoordinator: AuthCoordinator?
@@ -30,6 +31,9 @@ class SimpleHobbySelectionViewController: BaseOnboardingViewController {
         setupCollectionView()
         setupActions()
         bind()
+        if let nickname {
+            hobbyView.updateTitleLabel(nickname: nickname)
+        }
         fetchHobbyInfo()
     }
 

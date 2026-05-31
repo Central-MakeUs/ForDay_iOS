@@ -18,6 +18,7 @@ class NewHobbySettingsViewController: UIViewController {
     private let hobbySettingsView = NewHobbySettingsView()
     private let viewModel: NewHobbySettingsViewModel
     private var cancellables = Set<AnyCancellable>()
+    private var isPerformingReorder = false
 
     // Coordinator
     weak var coordinator: MainTabBarCoordinator?
@@ -74,6 +75,7 @@ class NewHobbySettingsViewController: UIViewController {
         viewModel.$progressHobbies
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
+                guard self?.isPerformingReorder != true else { return }
                 self?.hobbySettingsView.tableView.reloadData()
             }
             .store(in: &cancellables)
@@ -499,12 +501,15 @@ extension NewHobbySettingsViewController: UITableViewDropDelegate {
             guard let sourceIndexPath = dropItem.sourceIndexPath else { return }
 
             // Reorder hobbies in ViewModel
+            isPerformingReorder = true
             viewModel.moveProgressHobby(from: sourceIndexPath.row, to: destinationIndexPath.row)
 
             // Animate the reorder in TableView
             tableView.performBatchUpdates {
                 tableView.deleteRows(at: [sourceIndexPath], with: .automatic)
                 tableView.insertRows(at: [destinationIndexPath], with: .automatic)
+            } completion: { [weak self] _ in
+                self?.isPerformingReorder = false
             }
 
             coordinator.drop(dropItem.dragItem, toRowAt: destinationIndexPath)
