@@ -80,6 +80,7 @@ final class ActivityDetailView: UIView {
 
     private var currentLayoutType: LayoutType = .withImage
     private(set) var hasImage: Bool = false
+    private var currentImageAspectRatio: CGFloat?
 
     // MARK: - Initialization
 
@@ -91,6 +92,14 @@ final class ActivityDetailView: UIView {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+
+        if hasImage {
+            updateImageHeightForCurrentWidth()
+        }
     }
 
     // MARK: - Configuration
@@ -147,6 +156,7 @@ final class ActivityDetailView: UIView {
             stickerImageView.isHidden = false
             memoStickerImageView.isHidden = true
         } else {
+            currentImageAspectRatio = nil
             imageContainerView.isHidden = true
             stickerImageView.isHidden = true
             // 이미지 없을 때는 메모 안(또는 날짜 아래)에 스티커 표시
@@ -189,7 +199,12 @@ final class ActivityDetailView: UIView {
     }
 
     private func loadImage(from urlString: String) {
-        imageView.setImage(with: urlString)
+        imageView.setImage(with: urlString) { [weak self] result in
+            guard case let .success(imageResult) = result else { return }
+
+            let imageSize = imageResult.image.size
+            self?.updateImageHeight(imageWidth: imageSize.width, imageHeight: imageSize.height)
+        }
     }
 
     private func updateImageHeight(imageWidth: Int?, imageHeight: Int?) {
@@ -198,12 +213,25 @@ final class ActivityDetailView: UIView {
               imageWidth > 0,
               imageHeight > 0 else { return }
 
-        let containerWidth = max(bounds.width, window?.bounds.width ?? UIScreen.main.bounds.width)
-        let availableImageWidth = containerWidth - 40 // 좌우 패딩 20씩
-        guard availableImageWidth > 0 else { return }
+        updateImageHeight(imageWidth: CGFloat(imageWidth), imageHeight: CGFloat(imageHeight))
+    }
 
-        let aspectRatio = CGFloat(imageHeight) / CGFloat(imageWidth)
-        let calculatedHeight = availableImageWidth * aspectRatio
+    private func updateImageHeight(imageWidth: CGFloat, imageHeight: CGFloat) {
+        guard imageWidth > 0, imageHeight > 0 else { return }
+
+        currentImageAspectRatio = imageHeight / imageWidth
+        updateImageHeightForCurrentWidth()
+    }
+
+    private func updateImageHeightForCurrentWidth() {
+        guard let currentImageAspectRatio else { return }
+
+        let containerWidth = max(imageContainerView.bounds.width, bounds.width, window?.bounds.width ?? UIScreen.main.bounds.width)
+        let imageWidth = containerWidth - 40 // 좌우 패딩 20씩
+        guard imageWidth > 0 else { return }
+
+        let calculatedHeight = imageWidth * currentImageAspectRatio
+        guard abs(imageView.bounds.height - calculatedHeight) > 0.5 else { return }
 
         imageView.snp.updateConstraints {
             $0.height.equalTo(calculatedHeight)
