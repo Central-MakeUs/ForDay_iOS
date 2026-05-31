@@ -681,7 +681,6 @@ extension HomeViewController {
         FirebaseAnalyticsService.shared.log(.activityAddEntryClicked(entryPoint: .aiBanner, hobbyName: hobbyName))
 
         let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: hobbyName)
-        inputVC.aiCallRemaining = viewModel.homeInfo?.aiCallRemaining ?? true
         inputVC.onActivityCreated = { [weak self] in
             // Dismiss modal first, then present ActivityListViewController
             self?.dismiss(animated: true) {
@@ -766,7 +765,6 @@ extension HomeViewController {
         FirebaseAnalyticsService.shared.log(.activityAddEntryClicked(entryPoint: .homeFab, hobbyName: hobbyName))
 
         let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: hobbyName)
-        inputVC.aiCallRemaining = viewModel.homeInfo?.aiCallRemaining ?? true
         inputVC.onActivityCreated = { [weak self] in
             // Dismiss modal first, then present ActivityListViewController
             self?.dismiss(animated: true) {
