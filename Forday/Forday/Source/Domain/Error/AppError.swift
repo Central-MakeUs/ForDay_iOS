@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum AppError: Error {
+enum AppError: LocalizedError {
     case network(NetworkError)
     case server(ServerError)
     case auth(AuthError)
@@ -30,6 +30,10 @@ enum AppError: Error {
         case .unknown(let error):
             return error.localizedDescription
         }
+    }
+
+    var errorDescription: String? {
+        return userMessage
     }
 }
 
@@ -79,7 +83,7 @@ enum NetworkError: Error {
 
 // MARK: - Server Errors
 
-struct ServerError: Error {
+struct ServerError: LocalizedError {
     let errorClassName: String
     let message: String
     let statusCode: Int
@@ -88,6 +92,10 @@ struct ServerError: Error {
         self.errorClassName = errorClassName
         self.message = message
         self.statusCode = statusCode
+    }
+
+    var errorDescription: String? {
+        return message
     }
 }
 
