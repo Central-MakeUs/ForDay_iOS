@@ -8,7 +8,8 @@
 import Foundation
 
 enum HobbiesAPI {
-    case createHobby                    /// 취미 생성
+    case createHobby                    /// 취미 생성 (v1)
+    case createHobbyV2                  /// 취미 생성 (v2 - 여러 개 한번에)
     case fetchHobbyInfoRecheck          /// 취미 정보 재조회 (취미 추가 시)
     case fetchHomeInfo                  /// 홈 진입 취미 정보 조회
     case fetchHomeStickerInfo           /// 홈 스티커판 조회
@@ -23,8 +24,11 @@ enum HobbiesAPI {
     case updateActivity(Int)            /// 활동 수정하기
     case deleteActivity(Int)            /// 활동 삭제하기
     case createActivityRecord(Int)      /// 취미 활동 기록하기
+    case deleteHobby(Int)               /// 취미 삭제하기
 
     case fetchHobbySettings             /// 내 취미 관리 페이지 조회
+    case fetchHobbySettingsV2           /// 내 취미 설정 목록 조회 (v2)
+    case updateHobbySettingsV2          /// 내 취미 설정 목록 수정 (v2)
     case updateHobby(Int)               /// 온보딩 중 취미 수정 (nicknameSet: false && onboardingCompleted: true)
     case updateHobbyTime(Int)           /// 취미 시간 변경
     case updateExecutionCount(Int)      /// 실행 횟수 변경
@@ -37,11 +41,14 @@ enum HobbiesAPI {
         case .createHobby:
             return "/hobbies/create"
 
+        case .createHobbyV2:
+            return "/api/v2/hobbies/create"
+
         case .fetchHobbyInfoRecheck:
             return "/hobbies/info/re-check"
 
         case .fetchHomeInfo:
-            return "/hobbies/home"
+            return "/api/v2/hobbies/home"
             
         case .fetchHomeStickerInfo:
             return "/hobbies/stickers"
@@ -76,8 +83,17 @@ enum HobbiesAPI {
         case .createActivityRecord(let activityId):
             return "/hobbies/activities/\(activityId)/record"
 
+        case .deleteHobby(let hobbyId):
+            return "/hobbies/\(hobbyId)"
+
         case .fetchHobbySettings:
             return "/hobbies/setting"
+
+        case .fetchHobbySettingsV2:
+            return "/api/v2/hobbies/setting"
+
+        case .updateHobbySettingsV2:
+            return "/api/v2/hobbies/setting"
 
         case .updateHobby(let hobbyId):
             return "/hobbies/\(hobbyId)/update"

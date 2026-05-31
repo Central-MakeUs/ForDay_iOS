@@ -46,7 +46,7 @@ extension NicknameView {
         backgroundColor = .neutralWhite
         
         titleLabel.do {
-            $0.setTextWithTypography("뉴 포비님,\n어떻게 불리면 좋을까요?", style: .header24)
+            $0.setTextWithTypography("안녕하세요. 뉴 포비님,\n어떻게 불리면 좋을까요?", style: .header24)
             $0.textColor = .neutral900
             $0.numberOfLines = 0
         }

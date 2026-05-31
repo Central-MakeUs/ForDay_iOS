@@ -10,12 +10,16 @@ import UIKit
 import Combine
 
 class NicknameViewController: BaseOnboardingViewController {
-    
+
     // Properties
-    
+
     private let nicknameView = NicknameView()
     private let viewModel = NicknameViewModel()
-        
+    private var shouldResetDuplicateCheckOnAppear = false
+
+    // Coordinator
+    weak var authCoordinator: AuthCoordinator?
+
     // Lifecycle
     
     override func loadView() {
@@ -38,6 +42,11 @@ class NicknameViewController: BaseOnboardingViewController {
         super.viewWillAppear(animated)
         // 네비게이션 바 보이기
         navigationController?.setNavigationBarHidden(false, animated: true)
+
+        if shouldResetDuplicateCheckOnAppear {
+            shouldResetDuplicateCheckOnAppear = false
+            viewModel.resetDuplicateCheck()
+        }
     }
 
     private func setupNavigationBar() {
@@ -59,8 +68,14 @@ class NicknameViewController: BaseOnboardingViewController {
     }
 
     @objc private func backToLogin() {
-        // 온보딩 dismiss하고 로그인 화면으로
-        coordinator?.dismissOnboarding()
+        if let navigationController,
+           navigationController.viewControllers.first === self {
+            coordinator?.dismissOnboarding()
+            authCoordinator?.showLogin()
+            return
+        }
+
+        navigationController?.popViewController(animated: true)
     }
     
     // Actions
@@ -76,13 +91,11 @@ class NicknameViewController: BaseOnboardingViewController {
             guard let self = self else { return }
             do {
                 // 닉네임 설정 API 호출
-                try await self.viewModel.setNickname()
+                let result = try await self.viewModel.setNickname()
 
-                // 성공 시 홈으로
+                // 성공 시 플로우에 맞는 다음 화면으로 이동
                 await MainActor.run { [weak self] in
-                    if let onboardingCoordinator = self?.coordinator as? OnboardingCoordinator {
-                        onboardingCoordinator.finishOnboarding()
-                    }
+                    self?.routeAfterNicknameSet(nickname: result.nickname)
                 }
             } catch {
                 // 실패 시 에러 처리
@@ -92,6 +105,22 @@ class NicknameViewController: BaseOnboardingViewController {
                 }
             }
         }
+    }
+
+    private func routeAfterNicknameSet(nickname: String) {
+        if let authCoordinator {
+            shouldResetDuplicateCheckOnAppear = true
+            authCoordinator.showSimpleHobbySelection(nickname: nickname)
+            return
+        }
+
+        if let coordinator {
+            coordinator.finishOnboarding()
+            return
+        }
+
+        setNextButtonEnabled(true)
+        print("⚠️ 닉네임 설정 후 이동할 Coordinator가 없습니다.")
     }
 
     private func showError(_ error: Error) {

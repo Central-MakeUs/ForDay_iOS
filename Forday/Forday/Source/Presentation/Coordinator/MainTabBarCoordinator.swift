@@ -222,6 +222,28 @@ extension MainTabBarCoordinator: UITabBarControllerDelegate {
         }
     }
 
+    func showNewHobbySettings() {
+        // Create UseCases
+        let fetchHobbySettingsV2UseCase = FetchHobbySettingsV2UseCase()
+        let updateHobbySettingsV2UseCase = UpdateHobbySettingsV2UseCase()
+
+        // Create ViewModel
+        let viewModel = NewHobbySettingsViewModel(
+            fetchUseCase: fetchHobbySettingsV2UseCase,
+            updateUseCase: updateHobbySettingsV2UseCase
+        )
+
+        // Create ViewController
+        let newHobbySettingsVC = NewHobbySettingsViewController(viewModel: viewModel)
+        newHobbySettingsVC.coordinator = self
+        newHobbySettingsVC.hidesBottomBarWhenPushed = true  // 탭바 숨김
+
+        // Push to Home navigation stack (스와이프 백 지원)
+        if let homeNav = tabBarController.viewControllers?.first as? UINavigationController {
+            homeNav.pushViewController(newHobbySettingsVC, animated: true)
+        }
+    }
+
     func showProfileSettings() {
         // Create ViewController
         let profileSettingsVC = ProfileSettingsViewController()

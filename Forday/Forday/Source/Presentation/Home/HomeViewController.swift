@@ -105,27 +105,6 @@ extension HomeViewController {
     }
 
     private func setupActions() {
-        // 첫 번째 취미 버튼
-        homeView.firstHobbyButton.addTarget(
-            self,
-            action: #selector(firstHobbyTapped),
-            for: .touchUpInside
-        )
-
-        // 두 번째 취미 버튼
-        homeView.secondHobbyButton.addTarget(
-            self,
-            action: #selector(secondHobbyTapped),
-            for: .touchUpInside
-        )
-
-        // 취미 추가 버튼 (No hobby state)
-        homeView.addHobbyButton.addTarget(
-            self,
-            action: #selector(addHobbyButtonTapped),
-            for: .touchUpInside
-        )
-
         // 설정 버튼
         homeView.settingsButton.addTarget(
             self,
@@ -137,6 +116,13 @@ extension HomeViewController {
         homeView.notificationButton.addTarget(
             self,
             action: #selector(notificationTapped),
+            for: .touchUpInside
+        )
+
+        // 햄버거 버튼 (새로운 취미설정 화면)
+        homeView.hamburgerButton.addTarget(
+            self,
+            action: #selector(hamburgerButtonTapped),
             for: .touchUpInside
         )
 
@@ -176,11 +162,6 @@ extension HomeViewController {
         // Floating Action Menu
         homeView.floatingActionMenu.onActionSelected = { [weak self] actionType in
             self?.handleFloatingMenuAction(actionType)
-        }
-
-        // AI 검색바 탭
-        homeView.toastView.onTap = { [weak self] in
-            self?.showAIRecommendationModal()
         }
     }
 
@@ -223,6 +204,15 @@ extension HomeViewController {
             }
             .store(in: &cancellables)
 
+        // 사용자 정보 (닉네임) 업데이트
+        viewModel.$userInfo
+            .receive(on: DispatchQueue.main)
+            .compactMap { $0?.nickname }
+            .sink { [weak self] nickname in
+                self?.homeView.updateNickname(nickname)
+            }
+            .store(in: &cancellables)
+
         // 로딩 상태
         viewModel.$isLoading
             .receive(on: DispatchQueue.main)
@@ -239,15 +229,6 @@ extension HomeViewController {
             .sink { [weak self] error in
                 print("❌ 에러: \(error)")
                 self?.handleAppError(error)
-            }
-            .store(in: &cancellables)
-
-        // 토스트 메시지 순환
-        viewModel.$currentToastMessage
-            .receive(on: DispatchQueue.main)
-            .dropFirst() // 초기값 무시
-            .sink { [weak self] message in
-                self?.homeView.toastView.updateMessage(with: message, animated: true)
             }
             .store(in: &cancellables)
 
@@ -367,8 +348,15 @@ extension HomeViewController {
 
         let hasHobbies = !homeInfo.inProgressHobbies.isEmpty
 
-        // 취미 리스트 업데이트
-        homeView.updateHobbies(homeInfo.inProgressHobbies)
+        // 닉네임 업데이트
+        if let nickname = viewModel.userInfo?.nickname {
+            homeView.updateNickname(nickname)
+        }
+
+        // 취미 리스트 업데이트 (칩 생성)
+        homeView.updateHobbies(homeInfo.inProgressHobbies) { [weak self] hobbyId in
+            self?.handleHobbyChipTapped(hobbyId: hobbyId)
+        }
 
         // 활동 미리보기 업데이트 (버튼 텍스트도 함께 업데이트됨)
         homeView.updateActivityPreview(homeInfo.activityPreview)
@@ -381,36 +369,22 @@ extension HomeViewController {
             homeView.updateAddActivityButtonTitle(hasHobbies: false)
         }
 
-        // AI 추천 토스트 설정 및 펼치기 애니메이션
-        homeView.configureToast(with: homeInfo.greetingMessage, aiCallRemaining: homeInfo.aiCallRemaining)
-        homeView.toastView.setInteractionEnabled(hasHobbies)  // 취미 있을 때만 터치 활성화
-        // 약간의 딜레이 후 펼치기 애니메이션 및 메시지 순환 시작
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            self?.homeView.expandToast(animated: true)
-            self?.viewModel.startToastMessageRotation()
-        }
-
         // Update floating button state
         updateFloatingButtonState(enabled: hasHobbies)
 
         // Update TabBar recording button state
         coordinator?.updateTabBarRecordingButtonState(enabled: hasHobbies)
-
-        // 스티커 개수 업데이트
-//        homeView.updateStickerCount(homeInfo.totalStickerNum)
     }
 
     private func handleNoHobbyState() {
         // Show no hobby UI
-        homeView.updateHobbies([])
+        if let nickname = viewModel.userInfo?.nickname {
+            homeView.updateNickname(nickname)
+        }
+        homeView.updateHobbies([]) { _ in }
         homeView.updateActivityPreview(nil)
         homeView.updateAddActivityButtonTitle(hasHobbies: false)
-        viewModel.stopToastMessageRotation()
-        homeView.collapseToast(animated: false)
         homeView.hideFloatingMenu()
-
-        // Disable AI toast interaction (no dim, just disable tap)
-        homeView.toastView.setInteractionEnabled(false)
 
         // Disable floating button
         updateFloatingButtonState(enabled: false)
@@ -439,51 +413,28 @@ extension HomeViewController {
         }
     }
 
-    @objc private func addHobbyButtonTapped() {
-        print("취미 추가 탭")
-        coordinator?.showAddHobbyOnboarding()
-    }
+    private func handleHobbyChipTapped(hobbyId: Int) {
+        guard let homeInfo = viewModel.homeInfo else { return }
 
-    @objc private func firstHobbyTapped() {
-        guard let homeInfo = viewModel.homeInfo, !homeInfo.inProgressHobbies.isEmpty else {
-            return
-        }
-
-        let firstHobby = homeInfo.inProgressHobbies[0]
-        print("첫 번째 취미 탭: \(firstHobby.hobbyName)")
-
-        // 이미 선택된 취미면 무시
-        if firstHobby.currentHobby {
+        // 현재 선택된 취미인지 확인
+        if let currentHobby = homeInfo.inProgressHobbies.first(where: { $0.currentHobby }),
+           currentHobby.hobbyId == hobbyId {
+            // 이미 선택된 취미면 무시
             return
         }
 
         // 취미 선택
         Task { [weak self] in
             guard let self = self else { return }
-            await self.viewModel.selectHobby(hobbyId: firstHobby.hobbyId)
-            await self.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: firstHobby.hobbyId)
+            await self.viewModel.selectHobby(hobbyId: hobbyId)
+            await self.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: hobbyId)
         }
     }
 
-    @objc private func secondHobbyTapped() {
-        guard let homeInfo = viewModel.homeInfo, homeInfo.inProgressHobbies.count >= 2 else {
-            return
-        }
-
-        let secondHobby = homeInfo.inProgressHobbies[1]
-        print("두 번째 취미 탭: \(secondHobby.hobbyName)")
-
-        // 이미 선택된 취미면 무시
-        if secondHobby.currentHobby {
-            return
-        }
-
-        // 취미 선택
-        Task { [weak self] in
-            guard let self = self else { return }
-            await self.viewModel.selectHobby(hobbyId: secondHobby.hobbyId)
-            await self.stickerBoardViewModel.loadInitialStickerBoard(hobbyId: secondHobby.hobbyId)
-        }
+    @objc private func hamburgerButtonTapped() {
+        print("햄버거 버튼 탭 - 새로운 취미설정 화면 이동")
+        // TODO: 새로운 취미설정 화면으로 이동
+        coordinator?.showNewHobbySettings()
     }
 
     @objc private func settingsButtonTapped() {
@@ -513,17 +464,8 @@ extension HomeViewController {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissSettingsDropdown))
         backgroundView.addGestureRecognizer(tapGesture)
 
-        // 메뉴 아이템 결정 (진행 중인 취미가 2개 이상이면 addHobby 제외)
-        let inProgressCount = viewModel.homeInfo?.inProgressHobbies.count ?? 0
-        let menuItems: [HomeSettingsMenuItem]
-        if inProgressCount > 1 {
-            menuItems = HomeSettingsMenuItem.allCases.filter { $0 != .addHobby }
-        } else {
-            menuItems = HomeSettingsMenuItem.allCases
-        }
-
         // 드롭다운 생성
-        let dropdownView = DropdownMenuView(items: menuItems)
+        let dropdownView = DropdownMenuView(items: HomeSettingsMenuItem.allCases)
         dropdownView.onItemSelected = { [weak self] menuItem in
             guard let item = menuItem as? HomeSettingsMenuItem else { return }
             self?.handleSettingsDropdownOption(item)
@@ -549,10 +491,7 @@ extension HomeViewController {
 
         switch item {
         case .manageHobby:
-            coordinator?.showHobbySettings()
-
-        case .addHobby:
-            coordinator?.showAddHobbyOnboarding()
+            coordinator?.showNewHobbySettings()
 
         case .generalSettings:
             coordinator?.showGeneralSettings()

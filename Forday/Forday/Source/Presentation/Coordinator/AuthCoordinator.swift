@@ -54,29 +54,32 @@ class AuthCoordinator: Coordinator {
             return
         }
 
-        // 케이스 1: 닉네임 설정 완료 → 홈
+        // 케이스 1: 온보딩 미완료 → 홈 진입 금지
+        if !authToken.onboardingCompleted {
+            if let savedData = authToken.onboardingData {
+                print("   ➡️ 온보딩 재개 (PeriodSelection으로 복원)")
+                resumeOnboarding(with: savedData)
+            } else {
+                print("   ➡️ AB 테스트 그룹 기준 온보딩 시작")
+                showAssignedOnboardingFlow(nicknameSet: authToken.nicknameSet)
+            }
+            return
+        }
+
+        // 케이스 2: 온보딩 완료 + 닉네임 설정 완료 → 홈
         if authToken.nicknameSet {
             print("   ➡️ 홈으로 이동")
             showHome()
+            return
         }
-        // 케이스 2: 닉네임 미설정
-        else {
-            // 케이스 2-1: 온보딩 완료 (취미 생성 완료)
-            if authToken.onboardingCompleted {
-                // 온보딩 데이터가 있으면 온보딩 재개, 없으면 닉네임 설정 화면
-                if let savedData = authToken.onboardingData {
-                    print("   ➡️ 온보딩 재개 (PeriodSelection으로 복원)")
-                    resumeOnboarding(with: savedData)
-                } else {
-                    print("   ➡️ 닉네임 설정 화면으로 이동")
-                    showNicknameSetup()
-                }
-            }
-            // 케이스 2-2: 온보딩 미완료 → 온보딩 시작
-            else {
-                print("   ➡️ 온보딩 시작 화면으로 이동")
-                showOnboarding()
-            }
+
+        // 케이스 3: 온보딩 완료 + 닉네임 미설정 → 저장 데이터가 있으면 재개, 없으면 닉네임 설정
+        if let savedData = authToken.onboardingData {
+            print("   ➡️ 온보딩 재개 (PeriodSelection으로 복원)")
+            resumeOnboarding(with: savedData)
+        } else {
+            print("   ➡️ 닉네임 설정 화면으로 이동")
+            showNicknameSetup()
         }
     }
     
@@ -125,10 +128,13 @@ class AuthCoordinator: Coordinator {
     // 온보딩 완료 후 홈으로
     func completeOnboarding() {
         print("🟢 completeOnboarding 호출됨")
-        
+
+        // Firebase Analytics: 온보딩 완료 이벤트 로깅
+        OnboardingABTest.logOnboardingCompleted()
+
         // 온보딩 코디네이터 참조 정리
         onboardingCoordinator = nil
-        
+
         // ✅ dismiss 없이 바로 홈으로!
         parentCoordinator?.showMainTabBar()
     }
@@ -155,56 +161,63 @@ class AuthCoordinator: Coordinator {
     // 자동 로그인 (앱 시작 시, 토큰 valid할 때)
     func autoLogin() {
         print("🔵 autoLogin() 시작")
-        Task { [weak self] in
-            guard let self = self else { return }
-            do {
-                // 1. guestUserId가 있는지 확인
-                let tokenStorage = TokenStorage.shared
-                let savedGuestUserId = tokenStorage.loadGuestUserId()
-                print("   - 저장된 guestUserId: \(savedGuestUserId ?? "없음")")
+        print("   - 토큰 검증 완료 상태 → 홈으로 이동")
+        showHome()
+    }
 
-                if let guestUserId = savedGuestUserId {
-                    print("🔄 게스트 사용자 자동 재로그인 시도: \(guestUserId)")
+    // MARK: - 새 온보딩 플로우 (테스트용)
 
-                    // 게스트 재로그인
-                    let guestLoginUseCase = GuestLoginUseCase(
-                        authRepository: AuthRepository()
-                    )
-                    let authToken = try await guestLoginUseCase.execute()
+    /// 새 온보딩 플로우: 약관 동의 → 닉네임 → 취미 선택 → 포비 소개
+    func showNewOnboardingFlow() {
+        showTermsAgreement()
+    }
 
-                    // 로그인 성공 처리
-                    await MainActor.run { [weak self] in
-                        self?.handleLoginSuccess(authToken: authToken)
-                    }
-                    return
-                }
+    func showNewOnboardingNickname() {
+        let vc = NicknameViewController()
+        vc.authCoordinator = self
+        navigationController.pushViewController(vc, animated: true)
+    }
 
-                print("   - guestUserId 없음 → 일반 사용자로 처리")
-                // 2. 일반 사용자 (카카오/애플) - 사용자 정보 조회로 닉네임 설정 여부 확인
-                let usersService = UsersService()
-                let userInfo = try await usersService.fetchUserInfo(userId: nil)
+    func showSimpleHobbySelection(nickname: String? = nil) {
+        let vc = SimpleHobbySelectionViewController()
+        vc.authCoordinator = self
+        vc.nickname = nickname
+        navigationController.pushViewController(vc, animated: true)
+    }
 
-                await MainActor.run { [weak self] in
-                    // nickname이 nil이거나 비어있으면 닉네임 설정 화면으로
-                    if userInfo.data.nickname == nil || userInfo.data.nickname?.isEmpty == true {
-                        print("   ➡️ 닉네임 설정 화면으로 이동")
-                        self?.showNicknameSetup()
+    func showPobyIntroduction() {
+        let vc = OnboardingCompleteViewController()
+        vc.authCoordinator = self
+        navigationController.pushViewController(vc, animated: true)
+    }
+
+    private func showAssignedOnboardingFlow(nicknameSet: Bool = false) {
+        OnboardingABTest.getGroup { [weak self] abTestGroup in
+            DispatchQueue.main.async {
+                switch abTestGroup {
+                case .control:
+                    print("   🧪 [AB Test] 기존 플로우 진입")
+                    self?.showOnboarding()
+                case .variant:
+                    print("   🧪 [AB Test] 신규 플로우 진입")
+                    if nicknameSet {
+                        self?.showSimpleHobbySelection()
                     } else {
-                        // nickname이 있으면 홈으로
-                        print("   ➡️ 홈으로 이동")
-                        self?.showHome()
+                        self?.showNewOnboardingNickname()
                     }
-                }
-
-            } catch {
-                // 자동 로그인 실패 - 로그인 화면으로
-                await MainActor.run { [weak self] in
-                    print("⚠️ 자동 로그인 실패: \(error)")
-                    print("   ➡️ 로그인 화면으로 이동")
-                    self?.showLogin()
                 }
             }
         }
+    }
+
+    func finishNewOnboarding() {
+        print("🟢 새 온보딩 플로우 완료")
+
+        // Firebase Analytics: 온보딩 완료 이벤트 로깅
+        OnboardingABTest.logOnboardingCompleted()
+
+        // 홈으로 이동
+        parentCoordinator?.showMainTabBar()
     }
 }
 
@@ -213,7 +226,8 @@ class AuthCoordinator: Coordinator {
 extension AuthCoordinator: TermsAgreementCoordinatorDelegate {
     func termsAgreementDidComplete() {
         print("✅ 약관동의 완료 → 온보딩 시작")
-        showOnboarding()
+
+        showAssignedOnboardingFlow()
     }
 
     func termsAgreementDidRequestBack() {

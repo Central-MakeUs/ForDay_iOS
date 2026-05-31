@@ -17,10 +17,16 @@ final class ActivityService {
         self.provider = provider
     }
 
-    // MARK: - 취미 생성
+    // MARK: - 취미 생성 (v1)
 
     func createHobby(request: DTO.CreateHobbyRequest) async throws -> DTO.CreateHobbyResponse {
         return try await provider.request(.createHobby(request: request))
+    }
+
+    // MARK: - 취미 생성 (v2 - 여러 개 한번에)
+
+    func createHobbyV2(request: DTO.CreateHobbyV2Request) async throws -> DTO.CreateHobbyV2Response {
+        return try await provider.request(.createHobbyV2(request: request))
     }
 
     // MARK: - 취미 정보 재조회 (취미 추가 시)
@@ -107,6 +113,14 @@ final class ActivityService {
         return try await provider.request(.fetchHobbySettings(hobbyStatus: hobbyStatus))
     }
 
+    func fetchHobbySettingsV2() async throws -> DTO.HobbySettingsV2Response {
+        return try await provider.request(.fetchHobbySettingsV2)
+    }
+
+    func updateHobbySettingsV2(request: DTO.UpdateHobbySettingsV2Request) async throws -> DTO.HobbySettingsV2Response {
+        return try await provider.request(.updateHobbySettingsV2(request: request))
+    }
+
     /// 온보딩 중 취미 수정 (nicknameSet: false && onboardingCompleted: true 상태)
     func updateHobby(hobbyId: Int, request: DTO.UpdateHobbyRequest) async throws -> DTO.UpdateHobbyDetailResponse {
         return try await provider.request(.updateHobby(hobbyId: hobbyId, request: request))
@@ -126,6 +140,12 @@ final class ActivityService {
 
     func updateHobbyStatus(hobbyId: Int, request: DTO.UpdateHobbyStatusRequest) async throws -> DTO.UpdateHobbyResponse {
         return try await provider.request(.updateHobbyStatus(hobbyId: hobbyId, request: request))
+    }
+
+    // MARK: - 취미 삭제
+
+    func deleteHobby(hobbyId: Int) async throws -> DTO.DeleteHobbyResponse {
+        return try await provider.request(.deleteHobby(hobbyId: hobbyId))
     }
 
     // MARK: - 취미 대표사진 변경

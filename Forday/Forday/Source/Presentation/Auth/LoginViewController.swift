@@ -61,13 +61,13 @@ extension LoginViewController {
             action: #selector(kakaoLoginButtonTapped),
             for: .touchUpInside
         )
-        
+
         loginView.appleLoginButton.addTarget(
             self,
             action: #selector(appleLoginButtonTapped),
             for: .touchUpInside
         )
-        
+
         loginView.guestLoginButton.addTarget(
             self,
             action: #selector(guestLoginButtonTapped),
@@ -92,7 +92,7 @@ extension LoginViewController {
             do {
                 let authToken = try await self.kakaoLoginUseCase.execute()
                 await MainActor.run { [weak self] in
-                    self?.coordinator?.handleLoginSuccess(authToken: authToken)
+                    self?.handleLoginSuccessIfVisible(authToken: authToken)
                 }
             } catch {
                 // 사용자 취소 시 에러 알림 표시하지 않음
@@ -119,7 +119,7 @@ extension LoginViewController {
             do {
                 let authToken = try await self.appleLoginUseCase.execute()
                 await MainActor.run { [weak self] in
-                    self?.coordinator?.handleLoginSuccess(authToken: authToken)
+                    self?.handleLoginSuccessIfVisible(authToken: authToken)
                 }
             } catch {
                 // 사용자 취소 시 에러 알림 표시하지 않음
@@ -146,7 +146,7 @@ extension LoginViewController {
             do {
                 let authToken = try await self.guestLoginUseCase.execute()
                 await MainActor.run { [weak self] in
-                    self?.coordinator?.handleLoginSuccess(authToken: authToken)
+                    self?.handleLoginSuccessIfVisible(authToken: authToken)
                 }
             } catch {
                 await MainActor.run { [weak self] in
@@ -155,7 +155,7 @@ extension LoginViewController {
             }
         }
     }
-    
+
     // MARK: - Helper
 
     private func isUserCancellationError(_ error: Error) -> Bool {
@@ -170,6 +170,16 @@ extension LoginViewController {
             return true
         }
         return false
+    }
+
+    @MainActor
+    private func handleLoginSuccessIfVisible(authToken: AuthToken) {
+        guard view.window != nil else {
+            print("⚠️ 로그인 화면이 사라진 후 도착한 로그인 응답 무시")
+            return
+        }
+
+        coordinator?.handleLoginSuccess(authToken: authToken)
     }
 
     private func showError(_ error: Error) {

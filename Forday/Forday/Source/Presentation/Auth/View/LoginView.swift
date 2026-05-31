@@ -176,6 +176,7 @@ extension LoginView {
             )
             $0.setAttributedTitle(attributedTitle, for: .normal)
         }
+
     }
 
     private func layout() {

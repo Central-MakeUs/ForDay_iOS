@@ -109,6 +109,11 @@ class NicknameViewModel {
         }
     }
 
+    /// 다음 화면에서 돌아오면 기존 중복확인 결과는 숨기고, 현재 입력값으로 다시 검사할 수 있게 만든다.
+    func resetDuplicateCheck() {
+        validateNickname(nickname)
+    }
+
     /// 닉네임 설정 (서버 저장)
     func setNickname() async throws -> SetNicknameResult {
         print("💾 닉네임 설정 시작: \(nickname)")

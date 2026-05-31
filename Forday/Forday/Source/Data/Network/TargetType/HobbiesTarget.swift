@@ -11,6 +11,7 @@ import Alamofire
 
 enum HobbiesTarget {
     case createHobby(request: DTO.CreateHobbyRequest)
+    case createHobbyV2(request: DTO.CreateHobbyV2Request)
     case fetchHobbyInfoRecheck
     case fetchHomeInfo(hobbyId: Int?)
     case fetchStickerBoard(hobbyId: Int?, page: Int?, size: Int?)
@@ -24,7 +25,10 @@ enum HobbiesTarget {
     case updateActivity(activityId: Int, request: DTO.UpdateActivityRequest)
     case deleteActivity(activityId: Int)
     case createActivityRecord(activityId: Int, request: DTO.CreateActivityRecordRequest)
+    case deleteHobby(hobbyId: Int)
     case fetchHobbySettings(hobbyStatus: String?)
+    case fetchHobbySettingsV2
+    case updateHobbySettingsV2(request: DTO.UpdateHobbySettingsV2Request)
     case updateHobby(hobbyId: Int, request: DTO.UpdateHobbyRequest)
     case updateHobbyTime(hobbyId: Int, request: DTO.UpdateHobbyTimeRequest)
     case updateExecutionCount(hobbyId: Int, request: DTO.UpdateExecutionCountRequest)
@@ -39,6 +43,9 @@ extension HobbiesTarget: BaseTargetType {
         switch self {
         case .createHobby(_):
             return HobbiesAPI.createHobby.endpoint
+
+        case .createHobbyV2(_):
+            return HobbiesAPI.createHobbyV2.endpoint
 
         case .fetchHobbyInfoRecheck:
             return HobbiesAPI.fetchHobbyInfoRecheck.endpoint
@@ -79,8 +86,17 @@ extension HobbiesTarget: BaseTargetType {
         case .createActivityRecord(let activityId, _):
             return HobbiesAPI.createActivityRecord(activityId).endpoint
 
+        case .deleteHobby(let hobbyId):
+            return HobbiesAPI.deleteHobby(hobbyId).endpoint
+
         case .fetchHobbySettings:
             return HobbiesAPI.fetchHobbySettings.endpoint
+
+        case .fetchHobbySettingsV2:
+            return HobbiesAPI.fetchHobbySettingsV2.endpoint
+
+        case .updateHobbySettingsV2:
+            return HobbiesAPI.updateHobbySettingsV2.endpoint
 
         case .updateHobby(let hobbyId, _):
             return HobbiesAPI.updateHobby(hobbyId).endpoint
@@ -106,6 +122,8 @@ extension HobbiesTarget: BaseTargetType {
         switch self {
         case .createHobby:
             return .post
+        case .createHobbyV2:
+            return .post
         case .fetchHobbyInfoRecheck:
             return .get
         case .fetchHomeInfo:
@@ -130,10 +148,16 @@ extension HobbiesTarget: BaseTargetType {
             return .patch
         case .deleteActivity:
             return .delete
+        case .deleteHobby:
+            return .delete
         case .createActivityRecord:
             return .post
         case .fetchHobbySettings:
             return .get
+        case .fetchHobbySettingsV2:
+            return .get
+        case .updateHobbySettingsV2:
+            return .put
         case .updateHobby:
             return .put
         case .updateHobbyTime:
@@ -153,6 +177,9 @@ extension HobbiesTarget: BaseTargetType {
         switch self {
 
         case .createHobby(let request):
+            return .requestJSONEncodable(request)
+
+        case .createHobbyV2(let request):
             return .requestJSONEncodable(request)
 
         case .fetchHobbyInfoRecheck:
@@ -207,6 +234,9 @@ extension HobbiesTarget: BaseTargetType {
         case .deleteActivity:
             return .requestPlain
 
+        case .deleteHobby:
+            return .requestPlain
+
         case .createActivities(_, let request):
             return .requestJSONEncodable(request)
 
@@ -222,6 +252,12 @@ extension HobbiesTarget: BaseTargetType {
             } else {
                 return .requestPlain
             }
+
+        case .fetchHobbySettingsV2:
+            return .requestPlain
+
+        case .updateHobbySettingsV2(let request):
+            return .requestJSONEncodable(request)
 
         case .updateHobby(_, let request):
             return .requestJSONEncodable(request)

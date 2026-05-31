@@ -18,7 +18,7 @@ class TextInputPopupViewController: UIViewController {
 
     private let popupTitle: String
     private let placeholderText: String
-    private let maxCharacterCount = 10
+    private let maxCharacterCount: Int
     private var dialogCenterYConstraint: Constraint?
 
     // MARK: - UI Components
@@ -34,9 +34,10 @@ class TextInputPopupViewController: UIViewController {
 
     // MARK: - Initialization
 
-    init(title: String, placeholder: String) {
+    init(title: String, placeholder: String, maxCharacterCount: Int = 10) {
         self.popupTitle = title
         self.placeholderText = placeholder
+        self.maxCharacterCount = maxCharacterCount
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -104,16 +105,16 @@ extension TextInputPopupViewController {
         }
 
         characterCountLabel.do {
-            $0.setTextWithTypography("0/10", style: .label10)
+            $0.setTextWithTypography("0/\(maxCharacterCount)", style: .label10)
             $0.textColor = .neutral400
             $0.textAlignment = .right
         }
 
         submitButton.do {
-            $0.setTitle("다음", for: .normal)
+            $0.setTitle("확인", for: .normal)
             $0.titleLabel?.applyTypography(.header14)
             $0.setTitleColor(.white, for: .normal)
-            $0.layer.cornerRadius = 20
+            $0.layer.cornerRadius = 12
             $0.clipsToBounds = true
         }
     }
@@ -172,7 +173,7 @@ extension TextInputPopupViewController {
             $0.top.equalTo(characterCountLabel.snp.bottom).offset(20)
             $0.leading.equalToSuperview().offset(24)
             $0.trailing.equalToSuperview().offset(-24)
-            $0.height.equalTo(40)
+            $0.height.equalTo(44)
             $0.bottom.equalToSuperview().offset(-24)
         }
     }
