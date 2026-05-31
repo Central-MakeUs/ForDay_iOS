@@ -20,6 +20,7 @@ final class StoriesViewController: UIViewController {
 
     private let viewModel: StoriesViewModel
     private var cancellables = Set<AnyCancellable>()
+    private var previousStoriesCount = 0
 
     weak var coordinator: MainTabBarCoordinator?
 
@@ -132,8 +133,22 @@ extension StoriesViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] stories in
                 guard let self = self else { return }
+                let oldCount = self.previousStoriesCount
+                defer { self.previousStoriesCount = stories.count }
+
                 self.storiesView.pinterestLayout.invalidateLayout()
-                self.storiesView.collectionView.reloadData()
+                if stories.count > oldCount, oldCount > 0 {
+                    let indexPaths = (oldCount..<stories.count).map {
+                        IndexPath(item: $0, section: 0)
+                    }
+                    UIView.performWithoutAnimation {
+                        self.storiesView.collectionView.performBatchUpdates({
+                            self.storiesView.collectionView.insertItems(at: indexPaths)
+                        }, completion: nil)
+                    }
+                } else {
+                    self.storiesView.collectionView.reloadData()
+                }
 
                 // 로딩 중일 때는 empty state 표시하지 않음
                 if !self.viewModel.isLoading {
@@ -203,8 +218,11 @@ extension StoriesViewController {
             .dropFirst()  // 초기값 무시
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                self?.storiesView.pinterestLayout.invalidateLayout()
-                self?.storiesView.collectionView.reloadData()
+                guard let self = self else { return }
+                self.storiesView.pinterestLayout.invalidateLayout()
+                UIView.performWithoutAnimation {
+                    self.storiesView.collectionView.performBatchUpdates(nil)
+                }
             }
             .store(in: &cancellables)
 

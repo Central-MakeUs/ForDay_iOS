@@ -21,6 +21,7 @@ final class StoriesViewModel {
     @Published private(set) var hasNext = false
     @Published private(set) var imageSizesUpdated = false  // 이미지 크기 프리페치 완료 시 토글
     @Published private(set) var unReadNotificationExists = false
+    @Published private(set) var isLoadingMore = false
 
     // MARK: - Private Properties
 
@@ -31,7 +32,6 @@ final class StoriesViewModel {
 
     private var lastRecordId: Int?
     private(set) var currentHobbyId: Int?  // 스와이프 네비게이션 context 생성에 필요
-    private var isLoadingMore = false
     private var isInitialLoad = true
 
     // MARK: - Initialization
@@ -148,13 +148,14 @@ final class StoriesViewModel {
     /// 스토리 로드
     @MainActor
     func loadStories(reset: Bool = false) async {
+        guard !isLoading else { return }
+
         if reset {
+            isLoading = true
             lastRecordId = nil
             stories = []
         }
 
-        guard !isLoading else { return }
-        isLoading = true
         error = nil
 
         do {
@@ -185,7 +186,9 @@ final class StoriesViewModel {
             self.error = .unknown(error)
         }
 
-        isLoading = false
+        if reset {
+            isLoading = false
+        }
     }
 
     /// 더 많은 스토리 로드 (무한 스크롤)
@@ -198,8 +201,8 @@ final class StoriesViewModel {
               !isLoadingMore else { return }
 
         isLoadingMore = true
+        defer { isLoadingMore = false }
         await loadStories(reset: false)
-        isLoadingMore = false
     }
 
     /// 좋아요 토글
