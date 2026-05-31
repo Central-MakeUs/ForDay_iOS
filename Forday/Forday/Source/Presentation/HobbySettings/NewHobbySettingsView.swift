@@ -98,17 +98,21 @@ class NewHobbySettingsView: UIView {
         // Save Button
         saveButtonGradientView.do {
             $0.backgroundColor = .white
-            $0.layer.shadowColor = UIColor.black.cgColor
-            $0.layer.shadowOpacity = 0.08
-            $0.layer.shadowOffset = CGSize(width: 0, height: -2)
-            $0.layer.shadowRadius = 8
         }
 
         saveButton.do {
-            $0.setTitleWithTypography("저장", style: .header16)
+            var config = UIButton.Configuration.plain()
+            config.baseForegroundColor = .neutralWhite
+            config.attributedTitle = AttributedString(
+                "저장",
+                attributes: AttributeContainer(
+                    TypographyStyle.header16.attributes.merging([.foregroundColor: UIColor.neutralWhite]) { _, new in new }
+                )
+            )
+
+            $0.configuration = config
             $0.backgroundColor = .action001
-            $0.setTitleColor(.neutralWhite, for: .normal)
-            $0.setTitleColor(.neutralWhite.withAlphaComponent(0.5), for: .disabled)
+            $0.tintColor = .neutralWhite
             $0.layer.cornerRadius = 12
             $0.isEnabled = false
         }
@@ -169,13 +173,13 @@ class NewHobbySettingsView: UIView {
 
         saveButtonGradientView.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(safeAreaLayoutGuide)
-            $0.height.equalTo(88)
+            $0.top.equalTo(saveButton.snp.top).offset(-16)
+            $0.bottom.equalToSuperview()
         }
 
         saveButton.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview().inset(16)
-            $0.bottom.equalToSuperview().offset(-16)
+            $0.bottom.equalTo(safeAreaLayoutGuide).offset(-16)
             $0.height.equalTo(56)
         }
     }
