@@ -15,6 +15,7 @@ class NicknameViewController: BaseOnboardingViewController {
 
     private let nicknameView = NicknameView()
     private let viewModel = NicknameViewModel()
+    private var shouldResetDuplicateCheckOnAppear = false
 
     // Coordinator
     weak var authCoordinator: AuthCoordinator?
@@ -41,6 +42,11 @@ class NicknameViewController: BaseOnboardingViewController {
         super.viewWillAppear(animated)
         // 네비게이션 바 보이기
         navigationController?.setNavigationBarHidden(false, animated: true)
+
+        if shouldResetDuplicateCheckOnAppear {
+            shouldResetDuplicateCheckOnAppear = false
+            viewModel.resetDuplicateCheck()
+        }
     }
 
     private func setupNavigationBar() {
@@ -103,6 +109,7 @@ class NicknameViewController: BaseOnboardingViewController {
 
     private func routeAfterNicknameSet(nickname: String) {
         if let authCoordinator {
+            shouldResetDuplicateCheckOnAppear = true
             authCoordinator.showSimpleHobbySelection(nickname: nickname)
             return
         }
