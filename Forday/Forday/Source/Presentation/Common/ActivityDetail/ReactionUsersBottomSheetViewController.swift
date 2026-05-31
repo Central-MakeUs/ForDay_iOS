@@ -30,6 +30,7 @@ final class ReactionUsersBottomSheetViewController: UIViewController {
     private var cancellables = Set<AnyCancellable>()
     private let recordId: Int
     private var summaryResponse: ReactionSummaryResponse?
+    private var hasAnimatedIn = false
 
     // Sheet height states
     private let minHeight: CGFloat = 322
@@ -63,8 +64,18 @@ final class ReactionUsersBottomSheetViewController: UIViewController {
         setupBindings()
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        guard !hasAnimatedIn else { return }
+        prepareInitialPresentationState()
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+
+        guard !hasAnimatedIn else { return }
+        hasAnimatedIn = true
         animateIn()
     }
 
@@ -137,10 +148,13 @@ final class ReactionUsersBottomSheetViewController: UIViewController {
 
     // MARK: - Animations
 
-    private func animateIn() {
+    private func prepareInitialPresentationState() {
+        view.layoutIfNeeded()
         dimmerView.alpha = 0
         containerView.transform = CGAffineTransform(translationX: 0, y: minHeight)
+    }
 
+    private func animateIn() {
         UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
             self.dimmerView.alpha = 1
             self.containerView.transform = .identity

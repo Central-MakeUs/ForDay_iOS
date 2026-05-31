@@ -41,6 +41,7 @@ final class ActivityDetailPageViewController: UIViewController {
 
     private var cancellables = Set<AnyCancellable>()
     private var childCancellables = Set<AnyCancellable>()
+    private var isLoadingReactionUsersBottomSheet = false
 
     private enum PagingDirection {
         case previous
@@ -317,8 +318,21 @@ extension ActivityDetailPageViewController {
     }
 
     private func handleReactionLongPressed(_ reactionType: ReactionType) {
+        guard !isLoadingReactionUsersBottomSheet,
+              !(presentedViewController is ReactionUsersBottomSheetViewController) else {
+            return
+        }
+
+        isLoadingReactionUsersBottomSheet = true
+
         Task { [weak self] in
-            guard let self = self, let currentDetailVC = self.currentDetailVC else { return }
+            guard let self = self else { return }
+            defer {
+                Task { @MainActor [weak self] in
+                    self?.isLoadingReactionUsersBottomSheet = false
+                }
+            }
+            guard let currentDetailVC = self.currentDetailVC else { return }
 
             do {
                 // Fetch reaction summary
@@ -341,7 +355,7 @@ extension ActivityDetailPageViewController {
                         )
                     }
 
-                    self.present(bottomSheet, animated: true)
+                    self.present(bottomSheet, animated: false)
                 }
             } catch let appError as AppError {
                 await MainActor.run {

@@ -21,6 +21,7 @@ final class ActivityDetailViewController: UIViewController {
     let viewModel: ActivityDetailViewModel  // PageViewController에서 접근 필요
     private var cancellables = Set<AnyCancellable>()
     private var dropdownView: ActivityDetailDropdownView?
+    private var isLoadingReactionUsersBottomSheet = false
 
     weak var coordinator: MainTabBarCoordinator?
 
@@ -261,8 +262,20 @@ extension ActivityDetailViewController {
     }
 
     private func handleReactionLongPressed(_ reactionType: ReactionType) {
+        guard !isLoadingReactionUsersBottomSheet,
+              !(presentedViewController is ReactionUsersBottomSheetViewController) else {
+            return
+        }
+
+        isLoadingReactionUsersBottomSheet = true
+
         Task { [weak self] in
             guard let self = self else { return }
+            defer {
+                Task { @MainActor [weak self] in
+                    self?.isLoadingReactionUsersBottomSheet = false
+                }
+            }
 
             do {
                 // Fetch reaction summary
@@ -285,7 +298,7 @@ extension ActivityDetailViewController {
                         )
                     }
 
-                    self.present(bottomSheet, animated: true)
+                    self.present(bottomSheet, animated: false)
                 }
             } catch let appError as AppError {
                 await MainActor.run {
