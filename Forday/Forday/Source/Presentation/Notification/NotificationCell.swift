@@ -33,6 +33,16 @@ final class NotificationCell: UITableViewCell {
     private let thumbnailImageView = UIImageView()
     private let separatorView = UIView()
 
+    private enum Layout {
+        static let horizontalInset: CGFloat = 20
+        static let verticalInset: CGFloat = 12
+        static let profileSize: CGFloat = 36
+        static let reactionIconSize: CGFloat = 16
+        static let thumbnailSize: CGFloat = 48
+        static let textHorizontalSpacing: CGFloat = 8
+        static let textVerticalSpacing: CGFloat = 4
+    }
+
     // MARK: - Initialization
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -71,13 +81,13 @@ final class NotificationCell: UITableViewCell {
         }
 
         timeLabel.do {
-            $0.font = TypographyStyle.label12.font
+            $0.applyTypography(.label12)
             $0.textColor = .neutral400
             $0.numberOfLines = 1
         }
 
         messageLabel.do {
-            $0.font = TypographyStyle.label14.font
+            $0.applyTypography(.label14)
             $0.textColor = .neutral800
             $0.numberOfLines = 0
         }
@@ -112,37 +122,37 @@ final class NotificationCell: UITableViewCell {
 
         // 원형 프로필 (왼쪽, 20pt 패딩)
         profileImageView.snp.makeConstraints {
-            $0.leading.equalToSuperview().offset(20)
+            $0.leading.equalToSuperview().offset(Layout.horizontalInset)
             $0.centerY.equalToSuperview()
-            $0.size.equalTo(36)
+            $0.size.equalTo(Layout.profileSize)
         }
 
         // 감정 아이콘 (프로필 오른쪽 하단에 오버레이)
         reactionIconView.snp.makeConstraints {
             $0.trailing.equalTo(profileImageView.snp.trailing).offset(4)
             $0.bottom.equalTo(profileImageView.snp.bottom).offset(-2)
-            $0.size.equalTo(16)
+            $0.size.equalTo(Layout.reactionIconSize)
         }
 
         // 텍스트 컨테이너 (시간 + 메시지)
         timeLabel.snp.makeConstraints {
-            $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
-            $0.trailing.equalTo(thumbnailImageView.snp.leading).offset(-8)
-            $0.top.equalToSuperview().offset(15)
+            $0.leading.equalTo(profileImageView.snp.trailing).offset(Layout.textHorizontalSpacing)
+            $0.trailing.equalTo(thumbnailImageView.snp.leading).offset(-Layout.textHorizontalSpacing)
+            $0.top.equalToSuperview().offset(Layout.verticalInset)
         }
 
         messageLabel.snp.makeConstraints {
             $0.leading.equalTo(timeLabel)
             $0.trailing.equalTo(timeLabel)
-            $0.top.equalTo(timeLabel.snp.bottom).offset(4)
-            $0.bottom.equalToSuperview().offset(-15)
+            $0.top.equalTo(timeLabel.snp.bottom).offset(Layout.textVerticalSpacing)
+            $0.bottom.equalToSuperview().offset(-Layout.verticalInset)
         }
 
         // 활동 사진 (오른쪽, 20pt 패딩)
         thumbnailImageView.snp.makeConstraints {
-            $0.trailing.equalToSuperview().offset(-20)
+            $0.trailing.equalToSuperview().offset(-Layout.horizontalInset)
             $0.centerY.equalToSuperview()
-            $0.size.equalTo(48)
+            $0.size.equalTo(Layout.thumbnailSize)
         }
 
         // 구분선 (전체 너비)
@@ -172,14 +182,15 @@ final class NotificationCell: UITableViewCell {
 
         // 시간 (빈 문자열이 아닐 때만 표시)
         if !notification.createdAt.isEmpty {
-            timeLabel.text = notification.createdAt
+            timeLabel.setTextWithTypography(notification.createdAt, style: .label12)
             timeLabel.isHidden = false
         } else {
+            timeLabel.attributedText = nil
             timeLabel.isHidden = true
         }
 
         // 메시지
-        messageLabel.text = notification.message
+        messageLabel.setTextWithTypography(notification.message, style: .label14)
 
         // 활동 사진
         if let imageUrl = notification.imageUrl {
@@ -205,55 +216,55 @@ final class NotificationCell: UITableViewCell {
             if thumbnailImageView.isHidden {
                 // 썸네일도 없는 경우
                 messageLabel.snp.remakeConstraints {
-                    $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
-                    $0.trailing.equalToSuperview().offset(-20)
-                    $0.top.equalToSuperview().offset(10)
-                    $0.bottom.equalToSuperview().offset(-10)
+                    $0.leading.equalTo(profileImageView.snp.trailing).offset(Layout.textHorizontalSpacing)
+                    $0.trailing.equalToSuperview().offset(-Layout.horizontalInset)
+                    $0.top.equalToSuperview().offset(Layout.verticalInset)
+                    $0.bottom.equalToSuperview().offset(-Layout.verticalInset)
                 }
             } else {
                 // 썸네일이 있는 경우
                 messageLabel.snp.remakeConstraints {
-                    $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
-                    $0.trailing.equalTo(thumbnailImageView.snp.leading).offset(-8)
-                    $0.top.equalToSuperview().offset(10)
-                    $0.bottom.equalToSuperview().offset(-10)
+                    $0.leading.equalTo(profileImageView.snp.trailing).offset(Layout.textHorizontalSpacing)
+                    $0.trailing.equalTo(thumbnailImageView.snp.leading).offset(-Layout.textHorizontalSpacing)
+                    $0.top.equalToSuperview().offset(Layout.verticalInset)
+                    $0.bottom.equalToSuperview().offset(-Layout.verticalInset)
                 }
             }
 
             timeLabel.snp.remakeConstraints {
-                $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
-                $0.trailing.equalToSuperview().offset(-20)
-                $0.top.equalToSuperview().offset(10)
+                $0.leading.equalTo(profileImageView.snp.trailing).offset(Layout.textHorizontalSpacing)
+                $0.trailing.equalToSuperview().offset(-Layout.horizontalInset)
+                $0.top.equalToSuperview().offset(Layout.verticalInset)
             }
         } else {
             // 시간 라벨이 표시되는 경우
             if thumbnailImageView.isHidden {
                 // 썸네일이 없는 경우
                 timeLabel.snp.remakeConstraints {
-                    $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
-                    $0.trailing.equalToSuperview().offset(-20)
-                    $0.top.equalToSuperview().offset(10)
+                    $0.leading.equalTo(profileImageView.snp.trailing).offset(Layout.textHorizontalSpacing)
+                    $0.trailing.equalToSuperview().offset(-Layout.horizontalInset)
+                    $0.top.equalToSuperview().offset(Layout.verticalInset)
                 }
 
                 messageLabel.snp.remakeConstraints {
                     $0.leading.equalTo(timeLabel)
                     $0.trailing.equalTo(timeLabel)
-                    $0.top.equalTo(timeLabel.snp.bottom).offset(4)
-                    $0.bottom.equalToSuperview().offset(-10)
+                    $0.top.equalTo(timeLabel.snp.bottom).offset(Layout.textVerticalSpacing)
+                    $0.bottom.equalToSuperview().offset(-Layout.verticalInset)
                 }
             } else {
                 // 썸네일이 있는 경우
                 timeLabel.snp.remakeConstraints {
-                    $0.leading.equalTo(profileImageView.snp.trailing).offset(8)
-                    $0.trailing.equalTo(thumbnailImageView.snp.leading).offset(-8)
-                    $0.top.equalToSuperview().offset(10)
+                    $0.leading.equalTo(profileImageView.snp.trailing).offset(Layout.textHorizontalSpacing)
+                    $0.trailing.equalTo(thumbnailImageView.snp.leading).offset(-Layout.textHorizontalSpacing)
+                    $0.top.equalToSuperview().offset(Layout.verticalInset)
                 }
 
                 messageLabel.snp.remakeConstraints {
                     $0.leading.equalTo(timeLabel)
                     $0.trailing.equalTo(timeLabel)
-                    $0.top.equalTo(timeLabel.snp.bottom).offset(4)
-                    $0.bottom.equalToSuperview().offset(-10)
+                    $0.top.equalTo(timeLabel.snp.bottom).offset(Layout.textVerticalSpacing)
+                    $0.bottom.equalToSuperview().offset(-Layout.verticalInset)
                 }
             }
         }
