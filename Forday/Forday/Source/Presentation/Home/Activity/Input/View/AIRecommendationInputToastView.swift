@@ -6,6 +6,8 @@
 //
 
 
+// 제거 예정 화면 - AI 추천 토스트 뷰
+
 import UIKit
 import SnapKit
 import Then
