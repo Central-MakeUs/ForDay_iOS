@@ -221,10 +221,14 @@ extension ActivityRecordView {
         
         privacyButton.do {
             var config = UIButton.Configuration.plain()
-            config.title = "전체공개"
+            config.attributedTitle = AttributedString(
+                "전체공개",
+                attributes: AttributeContainer(TypographyStyle.label14.attributes)
+            )
             config.image = .Icon.chevronDown
             config.imagePlacement = .trailing
-            config.imagePadding = 8
+            config.imagePadding = 4
+            config.contentInsets = .zero
             config.baseForegroundColor = .neutral600
 
             $0.configuration = config
@@ -472,7 +476,10 @@ extension ActivityRecordView {
 
     func updatePrivacyButtonTitle(_ title: String) {
         var config = privacyButton.configuration
-        config?.title = title
+        config?.attributedTitle = AttributedString(
+            title,
+            attributes: AttributeContainer(TypographyStyle.label14.attributes)
+        )
         privacyButton.configuration = config
     }
 
