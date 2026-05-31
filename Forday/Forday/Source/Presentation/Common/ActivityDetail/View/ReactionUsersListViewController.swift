@@ -26,6 +26,7 @@ final class ReactionUsersListViewController: UIViewController {
     private var hasNext: Bool = false
     private var isLoadingMore = false
     private var hasStartedDragging = false
+    private var needsReloadOnAppear = false
 
     var onLoadMore: ((ReactionType?, Int?) -> Void)?
 
@@ -47,6 +48,12 @@ final class ReactionUsersListViewController: UIViewController {
         setupStyle()
         setupLayout()
         setupTableView()
+        updateEmptyState()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        reloadTableViewIfNeeded()
     }
 
     // MARK: - Configuration
@@ -56,8 +63,9 @@ final class ReactionUsersListViewController: UIViewController {
         self.lastReactionId = tabData.lastReactionId
         self.hasNext = tabData.hasNext
 
+        guard isViewLoaded else { return }
         updateEmptyState()
-        tableView.reloadData()
+        reloadTableViewIfPossible()
     }
 
     func appendUsers(_ newUsers: [ReactionUserItem], lastReactionId: Int?, hasNext: Bool) {
@@ -66,12 +74,30 @@ final class ReactionUsersListViewController: UIViewController {
         self.hasNext = hasNext
         self.isLoadingMore = false
 
-        tableView.reloadData()
+        guard isViewLoaded else { return }
+        updateEmptyState()
+        reloadTableViewIfPossible()
     }
 
     private func updateEmptyState() {
         emptyLabel.isHidden = !users.isEmpty
         tableView.isHidden = users.isEmpty
+    }
+
+    private func reloadTableViewIfPossible() {
+        guard view.window != nil else {
+            needsReloadOnAppear = true
+            return
+        }
+
+        needsReloadOnAppear = false
+        tableView.reloadData()
+    }
+
+    private func reloadTableViewIfNeeded() {
+        guard needsReloadOnAppear else { return }
+        updateEmptyState()
+        reloadTableViewIfPossible()
     }
 }
 

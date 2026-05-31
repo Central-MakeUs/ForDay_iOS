@@ -235,8 +235,9 @@ extension ActivityDetailPageViewController {
         view.addSubview(reactionButtonsView)
 
         reactionButtonsView.snp.makeConstraints {
-            $0.leading.trailing.bottom.equalToSuperview()
-            $0.top.equalTo(view.safeAreaLayoutGuide.snp.bottom).offset(-72)
+            $0.leading.trailing.equalToSuperview()
+            $0.bottom.equalTo(view.safeAreaLayoutGuide)
+            $0.height.equalTo(72)
         }
 
         // 반응 버튼 이벤트 연결

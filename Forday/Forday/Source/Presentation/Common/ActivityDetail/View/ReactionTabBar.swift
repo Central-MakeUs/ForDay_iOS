@@ -15,9 +15,9 @@ final class ReactionTabBar: UIView {
 
     // MARK: - UI Components
 
-    private let scrollView = UIScrollView()
     private let stackView = UIStackView()
     private let bottomBorder = UIView()
+    private let spacerView = UIView()
 
     private var tabButtons: [ReactionTabButton] = []
 
@@ -55,20 +55,32 @@ final class ReactionTabBar: UIView {
             ("", summary.amazing, .Reaction.amazing),
             ("", summary.fighting, .Reaction.fighting)
         ]
+        let debugBackgroundColors: [UIColor] = [
+            UIColor.systemRed.withAlphaComponent(0.18),
+            UIColor.systemOrange.withAlphaComponent(0.18),
+            UIColor.systemYellow.withAlphaComponent(0.24),
+            UIColor.systemGreen.withAlphaComponent(0.18),
+            UIColor.systemBlue.withAlphaComponent(0.18)
+        ]
 
         for (index, tab) in tabs.enumerated() {
             let button = ReactionTabButton(
                 title: tab.title,
                 count: tab.count,
                 icon: tab.icon,
-                isSelected: index == 0
+                isSelected: index == 0,
+                debugBackgroundColor: debugBackgroundColors[index]
             )
             button.tag = index
+            button.addTarget(self, action: #selector(tabButtonTouchDown(_:)), for: .touchDown)
             button.addTarget(self, action: #selector(tabButtonTapped(_:)), for: .touchUpInside)
+            button.addTarget(self, action: #selector(tabButtonTouchCancelled(_:)), for: [.touchCancel, .touchUpOutside, .touchDragExit])
 
             stackView.addArrangedSubview(button)
             tabButtons.append(button)
         }
+
+        stackView.addArrangedSubview(spacerView)
 
         // Select first tab by default
         selectedIndex = 0
@@ -84,10 +96,22 @@ final class ReactionTabBar: UIView {
 
     @objc private func tabButtonTapped(_ sender: UIButton) {
         let index = sender.tag
-        guard index != selectedIndex else { return }
+        print("🟣 [ReactionTabBar] touchUpInside index=\(index), selectedIndex=\(selectedIndex)")
 
-        selectTab(at: index)
+        guard index != selectedIndex else {
+            print("🟣 [ReactionTabBar] ignored - already selected index=\(index)")
+            return
+        }
+
         tabSelected.send(index)
+    }
+
+    @objc private func tabButtonTouchDown(_ sender: UIButton) {
+        print("🟣 [ReactionTabBar] touchDown index=\(sender.tag), selectedIndex=\(selectedIndex)")
+    }
+
+    @objc private func tabButtonTouchCancelled(_ sender: UIButton) {
+        print("🟣 [ReactionTabBar] touch cancelled/outside/dragExit index=\(sender.tag), selectedIndex=\(selectedIndex)")
     }
 }
 
@@ -97,35 +121,30 @@ extension ReactionTabBar {
     private func setupStyle() {
         backgroundColor = .clear
 
-        scrollView.do {
-            $0.showsHorizontalScrollIndicator = false
-            $0.showsVerticalScrollIndicator = false
-        }
-
         stackView.do {
             $0.axis = .horizontal
             $0.spacing = 0
             $0.alignment = .fill
-            $0.distribution = .fillProportionally
+            $0.distribution = .fill
         }
 
         bottomBorder.do {
             $0.backgroundColor = .stroke001
         }
+
+        spacerView.do {
+            $0.backgroundColor = .clear
+            $0.setContentHuggingPriority(.defaultLow, for: .horizontal)
+            $0.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        }
     }
 
     private func setupLayout() {
-        addSubview(scrollView)
+        addSubview(stackView)
         addSubview(bottomBorder)
-        scrollView.addSubview(stackView)
-
-        scrollView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
-        }
 
         stackView.snp.makeConstraints {
             $0.edges.equalToSuperview()
-            $0.height.equalToSuperview()
         }
 
         bottomBorder.snp.makeConstraints {
@@ -153,12 +172,13 @@ private final class ReactionTabButton: UIButton {
 
     // MARK: - Initialization
 
-    init(title: String, count: Int, icon: UIImage?, isSelected: Bool) {
+    init(title: String, count: Int, icon: UIImage?, isSelected: Bool, debugBackgroundColor: UIColor? = nil) {
         self.icon = icon
         self.count = count
         super.init(frame: .zero)
 
         setupStyle()
+        backgroundColor = debugBackgroundColor ?? .clear
         setupLayout()
         configure(title: title, count: count, icon: icon)
         setSelected(isSelected)
@@ -203,25 +223,27 @@ private final class ReactionTabButton: UIButton {
     }
 
     private func setupStyle() {
-        backgroundColor = .clear
-
         iconImageView.do {
             $0.contentMode = .scaleAspectFit
             $0.isHidden = true
+            $0.isUserInteractionEnabled = false
         }
 
         textLabel.do {
             $0.textColor = .neutral400
             $0.isHidden = true
+            $0.isUserInteractionEnabled = false
         }
 
         countLabel.do {
             $0.textColor = .neutral400
+            $0.isUserInteractionEnabled = false
         }
 
         bottomIndicator.do {
             $0.backgroundColor = .neutral800
             $0.isHidden = true
+            $0.isUserInteractionEnabled = false
         }
     }
 
