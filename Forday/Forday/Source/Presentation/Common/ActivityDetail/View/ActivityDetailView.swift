@@ -141,6 +141,7 @@ final class ActivityDetailView: UIView {
 
         // Configure image
         if hasImage {
+            updateImageHeight(imageWidth: detail.imageWidth, imageHeight: detail.imageHeight)
             loadImage(from: detail.imageUrl)
             imageContainerView.isHidden = false
             stickerImageView.isHidden = false
@@ -188,28 +189,25 @@ final class ActivityDetailView: UIView {
     }
 
     private func loadImage(from urlString: String) {
-        imageView.setImage(with: urlString) { [weak self] result in
-            if case .success(let imageResult) = result {
-                // 이미지 로드 후 원본 비율로 높이 조정
-                self?.updateImageHeight(for: imageResult.image)
-            }
-        }
+        imageView.setImage(with: urlString)
     }
 
-    private func updateImageHeight(for image: UIImage) {
-        let imageWidth = bounds.width - 40 // 좌우 패딩 20씩
-        guard imageWidth > 0 else { return }
+    private func updateImageHeight(imageWidth: Int?, imageHeight: Int?) {
+        guard let imageWidth,
+              let imageHeight,
+              imageWidth > 0,
+              imageHeight > 0 else { return }
 
-        let aspectRatio = image.size.height / image.size.width
-        let imageHeight = imageWidth * aspectRatio
+        let containerWidth = max(bounds.width, window?.bounds.width ?? UIScreen.main.bounds.width)
+        let availableImageWidth = containerWidth - 40 // 좌우 패딩 20씩
+        guard availableImageWidth > 0 else { return }
+
+        let aspectRatio = CGFloat(imageHeight) / CGFloat(imageWidth)
+        let calculatedHeight = availableImageWidth * aspectRatio
 
         imageView.snp.updateConstraints {
-            $0.height.equalTo(imageHeight)
+            $0.height.equalTo(calculatedHeight)
         }
-
-        // 이미지 높이가 변하면 전체 레이아웃 다시 계산하여 contentSize 갱신
-        setNeedsLayout()
-        layoutIfNeeded()
     }
 
     private func updateLayoutForType() {
