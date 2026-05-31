@@ -174,6 +174,7 @@ final class StoryCell: UICollectionViewCell {
 
     private func updateGreatButtonState(isPressed: Bool) {
         guard var config = greatButton.configuration else { return }
+        config.background.backgroundColor = isPressed ? .primary002 : .neutralWhite
         config.background.strokeColor = isPressed ? .action001 : .stroke001
         greatButton.configuration = config
     }
