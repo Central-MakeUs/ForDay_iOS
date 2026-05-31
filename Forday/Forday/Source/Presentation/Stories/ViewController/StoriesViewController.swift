@@ -137,7 +137,7 @@ extension StoriesViewController {
                 defer { self.previousStoriesCount = stories.count }
 
                 self.storiesView.pinterestLayout.invalidateLayout()
-                if stories.count > oldCount, oldCount > 0 {
+                if !self.viewModel.isLoading, stories.count > oldCount, oldCount > 0 {
                     let indexPaths = (oldCount..<stories.count).map {
                         IndexPath(item: $0, section: 0)
                     }
@@ -187,9 +187,7 @@ extension StoriesViewController {
                 if isLoading {
                     // pull-to-refresh가 아닌 경우에만 스켈레톤 표시
                     if !self.storiesView.isRefreshing {
-                        // 초기 로드: 탭 + 셀 스켈레톤 / 탭 전환: 셀만 스켈레톤
-                        let isInitialLoad = self.viewModel.tabs.isEmpty
-                        self.storiesView.showSkeleton(includeTabs: isInitialLoad)
+                        self.storiesView.showSkeleton(includeTabs: false)
                     }
                 } else {
                     self.storiesView.hideSkeleton()

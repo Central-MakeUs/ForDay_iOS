@@ -43,7 +43,10 @@ final class StoriesTabSegmentControl: UIView {
         self.tabs = tabs
 
         // Clear existing buttons
-        tabButtons.forEach { $0.removeFromSuperview() }
+        stackView.arrangedSubviews.forEach {
+            stackView.removeArrangedSubview($0)
+            $0.removeFromSuperview()
+        }
         tabButtons.removeAll()
 
         // Create new buttons
@@ -55,7 +58,8 @@ final class StoriesTabSegmentControl: UIView {
 
         // Select first tab by default
         if !tabs.isEmpty {
-            selectTab(at: 0, animated: false)
+            let index = min(selectedIndex, tabs.count - 1)
+            selectTab(at: index, animated: false)
         }
     }
 
@@ -80,6 +84,8 @@ final class StoriesTabSegmentControl: UIView {
         config.attributedTitle = titleAttr
 
         button.configuration = config
+        button.setContentHuggingPriority(.required, for: .horizontal)
+        button.setContentCompressionResistancePriority(.required, for: .horizontal)
 
         button.addAction(UIAction { [weak self] _ in
             self?.handleTabTapped(at: index)
@@ -108,6 +114,7 @@ final class StoriesTabSegmentControl: UIView {
     private func moveIndicator(to index: Int, animated: Bool) {
         guard index >= 0 && index < tabButtons.count else { return }
 
+        layoutIfNeeded()
         let button = tabButtons[index]
 
         let animationBlock = {
@@ -132,6 +139,7 @@ final class StoriesTabSegmentControl: UIView {
     private func scrollToSelectedTab(at index: Int, animated: Bool) {
         guard index >= 0 && index < tabButtons.count else { return }
 
+        layoutIfNeeded()
         let button = tabButtons[index]
 
         // Calculate the target scroll position to center the selected button
@@ -162,7 +170,7 @@ extension StoriesTabSegmentControl {
             $0.axis = .horizontal
             $0.spacing = 0
             $0.alignment = .center
-            $0.distribution = .fillProportionally
+            $0.distribution = .fill
         }
 
         indicatorView.do {

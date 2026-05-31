@@ -29,6 +29,7 @@ final class StoriesViewModel {
     private let addReactionUseCase: AddReactionUseCase
     private let deleteReactionUseCase: DeleteReactionUseCase
     private let imageSizeCache = ImageSizeCache.shared
+    private let minimumResetLoadingDuration: TimeInterval = 0.35
 
     private var lastRecordId: Int?
     private(set) var currentHobbyId: Int?  // 스와이프 네비게이션 context 생성에 필요
@@ -149,6 +150,7 @@ final class StoriesViewModel {
     @MainActor
     func loadStories(reset: Bool = false) async {
         guard !isLoading else { return }
+        let loadingStartedAt = Date()
 
         if reset {
             isLoading = true
@@ -187,6 +189,7 @@ final class StoriesViewModel {
         }
 
         if reset {
+            await waitForMinimumResetLoadingDuration(since: loadingStartedAt)
             isLoading = false
         }
     }
@@ -267,5 +270,13 @@ final class StoriesViewModel {
         imageSizeCache.prefetchSizes(for: urls) { [weak self] in
             self?.imageSizesUpdated.toggle()  // 레이아웃 갱신 트리거
         }
+    }
+
+    private func waitForMinimumResetLoadingDuration(since startDate: Date) async {
+        let elapsed = Date().timeIntervalSince(startDate)
+        let remaining = minimumResetLoadingDuration - elapsed
+        guard remaining > 0 else { return }
+
+        try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
     }
 }
