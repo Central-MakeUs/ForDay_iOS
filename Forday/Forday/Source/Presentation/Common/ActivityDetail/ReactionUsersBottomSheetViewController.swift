@@ -264,7 +264,7 @@ extension ReactionUsersBottomSheetViewController {
                 let direction: UIPageViewController.NavigationDirection = index > currentIndex ? .forward : .reverse
                 let targetVC = self.listViewControllers[index]
 
-                self.pageViewController.setViewControllers([targetVC], direction: direction, animated: true)
+                self.pageViewController.setViewControllers([targetVC], direction: direction, animated: false)
             }
             .store(in: &cancellables)
 
