@@ -17,6 +17,7 @@ final class NotificationViewController: UIViewController {
     private let viewModel = NotificationViewModel()
     private var cancellables = Set<AnyCancellable>()
     private var hasLoadedInitialData = false
+    private var previousNotificationCount = 0
 
     weak var coordinator: MainTabBarCoordinator?
 
@@ -95,8 +96,20 @@ final class NotificationViewController: UIViewController {
         viewModel.$notifications
             .receive(on: DispatchQueue.main)
             .sink { [weak self] notifications in
-                self?.notificationView.tableView.reloadData()
-                self?.updateEmptyState()
+                guard let self else { return }
+
+                let newCount = notifications.count
+                if self.viewModel.isLoadingMore, newCount > self.previousNotificationCount {
+                    let indexPaths = (self.previousNotificationCount..<newCount).map {
+                        IndexPath(row: $0, section: 0)
+                    }
+                    self.notificationView.tableView.insertRows(at: indexPaths, with: .none)
+                } else {
+                    self.notificationView.tableView.reloadData()
+                }
+
+                self.previousNotificationCount = newCount
+                self.updateEmptyState()
             }
             .store(in: &cancellables)
 
@@ -104,11 +117,17 @@ final class NotificationViewController: UIViewController {
         viewModel.$isLoading
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isLoading in
+                guard let self else { return }
+
                 if isLoading {
-                    self?.notificationView.showLoading()
+                    if !self.viewModel.isLoadingMore,
+                       self.viewModel.notifications.isEmpty,
+                       !self.notificationView.refreshControl.isRefreshing {
+                        self.notificationView.showLoading()
+                    }
                 } else {
-                    self?.notificationView.hideLoading()
-                    self?.notificationView.refreshControl.endRefreshing()
+                    self.notificationView.hideLoading()
+                    self.notificationView.refreshControl.endRefreshing()
                 }
             }
             .store(in: &cancellables)

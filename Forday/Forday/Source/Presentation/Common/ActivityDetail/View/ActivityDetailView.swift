@@ -64,6 +64,9 @@ final class ActivityDetailView: UIView {
 
     // Date label
     let dateLabel = UILabel()
+    private let privacyBadgeView = UIView()
+    private let privacyLabel = UILabel()
+    private let privacyChevronImageView = UIImageView()
 
     // Image container (with padding)
     private let imageContainerView = UIView()
@@ -80,6 +83,7 @@ final class ActivityDetailView: UIView {
 
     private var currentLayoutType: LayoutType = .withImage
     private(set) var hasImage: Bool = false
+    private var currentImageAspectRatio: CGFloat?
 
     // MARK: - Initialization
 
@@ -91,6 +95,14 @@ final class ActivityDetailView: UIView {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+
+        if hasImage {
+            updateImageHeightForCurrentWidth()
+        }
     }
 
     // MARK: - Configuration
@@ -129,6 +141,7 @@ final class ActivityDetailView: UIView {
         // Configure title (at top) and date
         titleLabel.setTextWithTypography(detail.activityContent, style: .header20)
         dateLabel.setTextWithTypography(detail.createdAt, style: .label14)
+        updatePrivacyBadge(with: detail)
 
         // Configure memo
         if hasMemo {
@@ -141,11 +154,13 @@ final class ActivityDetailView: UIView {
 
         // Configure image
         if hasImage {
+            updateImageHeight(imageWidth: detail.imageWidth, imageHeight: detail.imageHeight)
             loadImage(from: detail.imageUrl)
             imageContainerView.isHidden = false
             stickerImageView.isHidden = false
             memoStickerImageView.isHidden = true
         } else {
+            currentImageAspectRatio = nil
             imageContainerView.isHidden = true
             stickerImageView.isHidden = true
             // 이미지 없을 때는 메모 안(또는 날짜 아래)에 스티커 표시
@@ -187,29 +202,62 @@ final class ActivityDetailView: UIView {
         }
     }
 
+    private func updatePrivacyBadge(with detail: ActivityDetail) {
+        guard detail.recordOwner else {
+            privacyBadgeView.isHidden = true
+            return
+        }
+
+        privacyBadgeView.isHidden = false
+        let privacyTitle = Privacy(rawValue: detail.visibility)?.title ?? {
+            switch detail.visibility {
+            case "FRIENDS_ONLY":
+                return Privacy.friend.title
+            default:
+                return Privacy.public.title
+            }
+        }()
+        privacyLabel.setTextWithTypography(privacyTitle, style: .label14)
+    }
+
     private func loadImage(from urlString: String) {
         imageView.setImage(with: urlString) { [weak self] result in
-            if case .success(let imageResult) = result {
-                // 이미지 로드 후 원본 비율로 높이 조정
-                self?.updateImageHeight(for: imageResult.image)
-            }
+            guard case let .success(imageResult) = result else { return }
+
+            let imageSize = imageResult.image.size
+            self?.updateImageHeight(imageWidth: imageSize.width, imageHeight: imageSize.height)
         }
     }
 
-    private func updateImageHeight(for image: UIImage) {
-        let imageWidth = bounds.width - 40 // 좌우 패딩 20씩
+    private func updateImageHeight(imageWidth: Int?, imageHeight: Int?) {
+        guard let imageWidth,
+              let imageHeight,
+              imageWidth > 0,
+              imageHeight > 0 else { return }
+
+        updateImageHeight(imageWidth: CGFloat(imageWidth), imageHeight: CGFloat(imageHeight))
+    }
+
+    private func updateImageHeight(imageWidth: CGFloat, imageHeight: CGFloat) {
+        guard imageWidth > 0, imageHeight > 0 else { return }
+
+        currentImageAspectRatio = imageHeight / imageWidth
+        updateImageHeightForCurrentWidth()
+    }
+
+    private func updateImageHeightForCurrentWidth() {
+        guard let currentImageAspectRatio else { return }
+
+        let containerWidth = max(imageContainerView.bounds.width, bounds.width, window?.bounds.width ?? UIScreen.main.bounds.width)
+        let imageWidth = containerWidth - 40 // 좌우 패딩 20씩
         guard imageWidth > 0 else { return }
 
-        let aspectRatio = image.size.height / image.size.width
-        let imageHeight = imageWidth * aspectRatio
+        let calculatedHeight = imageWidth * currentImageAspectRatio
+        guard abs(imageView.bounds.height - calculatedHeight) > 0.5 else { return }
 
         imageView.snp.updateConstraints {
-            $0.height.equalTo(imageHeight)
+            $0.height.equalTo(calculatedHeight)
         }
-
-        // 이미지 높이가 변하면 전체 레이아웃 다시 계산하여 contentSize 갱신
-        setNeedsLayout()
-        layoutIfNeeded()
     }
 
     private func updateLayoutForType() {
@@ -220,7 +268,7 @@ final class ActivityDetailView: UIView {
             dateLabel.snp.remakeConstraints {
                 $0.top.equalTo(imageContainerView.snp.bottom).offset(16)
                 $0.leading.equalToSuperview().offset(20)
-                $0.trailing.equalToSuperview().offset(-20)
+                $0.trailing.lessThanOrEqualTo(privacyBadgeView.snp.leading).offset(-8)
             }
             // 메모 텍스트
             contentLabel.snp.remakeConstraints {
@@ -240,7 +288,7 @@ final class ActivityDetailView: UIView {
             dateLabel.snp.remakeConstraints {
                 $0.top.equalTo(titleLabel.snp.bottom).offset(8)
                 $0.leading.equalToSuperview().offset(20)
-                $0.trailing.equalToSuperview().offset(-20)
+                $0.trailing.lessThanOrEqualTo(privacyBadgeView.snp.leading).offset(-8)
             }
             // 메모 텍스트
             contentLabel.snp.remakeConstraints {
@@ -266,7 +314,7 @@ final class ActivityDetailView: UIView {
             dateLabel.snp.remakeConstraints {
                 $0.top.equalTo(titleLabel.snp.bottom).offset(24)
                 $0.leading.equalToSuperview().offset(20)
-                $0.trailing.equalToSuperview().offset(-20)
+                $0.trailing.lessThanOrEqualTo(privacyBadgeView.snp.leading).offset(-8)
             }
             memoStickerImageView.snp.remakeConstraints {
                 $0.top.equalTo(dateLabel.snp.bottom).offset(24)
@@ -336,6 +384,22 @@ extension ActivityDetailView {
 
         dateLabel.do {
             $0.textColor = .neutral600
+        }
+
+        privacyBadgeView.do {
+            $0.backgroundColor = .clear
+            $0.isHidden = true
+        }
+
+        privacyLabel.do {
+            $0.textColor = .neutral600
+            $0.textAlignment = .right
+        }
+
+        privacyChevronImageView.do {
+            $0.image = .Icon.chevronDown
+            $0.tintColor = .neutral600
+            $0.contentMode = .scaleAspectFit
         }
 
         imageContainerView.do {
@@ -414,10 +478,13 @@ extension ActivityDetailView {
         contentView.addSubview(titleLabel)
         contentView.addSubview(imageContainerView)
         contentView.addSubview(dateLabel)
+        contentView.addSubview(privacyBadgeView)
         contentView.addSubview(memoContainerView)
         contentView.addSubview(memoStickerImageView)
 
         hobbyNameContainerView.addSubview(hobbyNameLabel)
+        privacyBadgeView.addSubview(privacyLabel)
+        privacyBadgeView.addSubview(privacyChevronImageView)
         imageContainerView.addSubview(imageView)
         imageView.addSubview(stickerImageView)
 
@@ -468,7 +535,23 @@ extension ActivityDetailView {
         dateLabel.snp.makeConstraints {
             $0.top.equalTo(imageContainerView.snp.bottom).offset(16)
             $0.leading.equalToSuperview().offset(20)
+            $0.trailing.lessThanOrEqualTo(privacyBadgeView.snp.leading).offset(-8)
+        }
+
+        privacyBadgeView.snp.makeConstraints {
             $0.trailing.equalToSuperview().offset(-20)
+            $0.centerY.equalTo(dateLabel)
+        }
+
+        privacyLabel.snp.makeConstraints {
+            $0.leading.verticalEdges.equalToSuperview()
+        }
+
+        privacyChevronImageView.snp.makeConstraints {
+            $0.leading.equalTo(privacyLabel.snp.trailing).offset(4)
+            $0.trailing.equalToSuperview()
+            $0.centerY.equalTo(privacyLabel)
+            $0.size.equalTo(16)
         }
 
         memoContainerView.addSubview(contentLabel)

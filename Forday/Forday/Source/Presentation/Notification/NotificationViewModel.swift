@@ -16,6 +16,7 @@ final class NotificationViewModel: ObservableObject {
     @Published var notifications: [NotificationItem] = []
     @Published var pushInfo: PushInfo?
     @Published var isLoading = false
+    @Published private(set) var isLoadingMore = false
     @Published var error: AppError?
     @Published var systemNotificationEnabled = false
 
@@ -45,6 +46,7 @@ final class NotificationViewModel: ObservableObject {
             hasNext = false
         }
 
+        isLoadingMore = !reset && !notifications.isEmpty
         isLoading = true
         error = nil
 
@@ -72,6 +74,7 @@ final class NotificationViewModel: ObservableObject {
         }
 
         isLoading = false
+        isLoadingMore = false
     }
 
     /// 무한 스크롤 - 더 로드할 항목이 있는지 확인

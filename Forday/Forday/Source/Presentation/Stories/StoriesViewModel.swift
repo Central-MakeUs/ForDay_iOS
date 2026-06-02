@@ -21,6 +21,7 @@ final class StoriesViewModel {
     @Published private(set) var hasNext = false
     @Published private(set) var imageSizesUpdated = false  // 이미지 크기 프리페치 완료 시 토글
     @Published private(set) var unReadNotificationExists = false
+    @Published private(set) var isLoadingMore = false
 
     // MARK: - Private Properties
 
@@ -28,10 +29,10 @@ final class StoriesViewModel {
     private let addReactionUseCase: AddReactionUseCase
     private let deleteReactionUseCase: DeleteReactionUseCase
     private let imageSizeCache = ImageSizeCache.shared
+    private let minimumResetLoadingDuration: TimeInterval = 0.35
 
     private var lastRecordId: Int?
     private(set) var currentHobbyId: Int?  // 스와이프 네비게이션 context 생성에 필요
-    private var isLoadingMore = false
     private var isInitialLoad = true
 
     // MARK: - Initialization
@@ -148,13 +149,15 @@ final class StoriesViewModel {
     /// 스토리 로드
     @MainActor
     func loadStories(reset: Bool = false) async {
+        guard !isLoading else { return }
+        let loadingStartedAt = Date()
+
         if reset {
+            isLoading = true
             lastRecordId = nil
             stories = []
         }
 
-        guard !isLoading else { return }
-        isLoading = true
         error = nil
 
         do {
@@ -185,7 +188,10 @@ final class StoriesViewModel {
             self.error = .unknown(error)
         }
 
-        isLoading = false
+        if reset {
+            await waitForMinimumResetLoadingDuration(since: loadingStartedAt)
+            isLoading = false
+        }
     }
 
     /// 더 많은 스토리 로드 (무한 스크롤)
@@ -198,8 +204,8 @@ final class StoriesViewModel {
               !isLoadingMore else { return }
 
         isLoadingMore = true
+        defer { isLoadingMore = false }
         await loadStories(reset: false)
-        isLoadingMore = false
     }
 
     /// 좋아요 토글
@@ -264,5 +270,13 @@ final class StoriesViewModel {
         imageSizeCache.prefetchSizes(for: urls) { [weak self] in
             self?.imageSizesUpdated.toggle()  // 레이아웃 갱신 트리거
         }
+    }
+
+    private func waitForMinimumResetLoadingDuration(since startDate: Date) async {
+        let elapsed = Date().timeIntervalSince(startDate)
+        let remaining = minimumResetLoadingDuration - elapsed
+        guard remaining > 0 else { return }
+
+        try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
     }
 }

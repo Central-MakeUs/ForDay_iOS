@@ -41,6 +41,21 @@ final class ActivityDetailPageViewController: UIViewController {
 
     private var cancellables = Set<AnyCancellable>()
     private var childCancellables = Set<AnyCancellable>()
+    private var isLoadingReactionUsersBottomSheet = false
+
+    private enum PagingDirection {
+        case previous
+        case next
+
+        var pageDirection: UIPageViewController.NavigationDirection {
+            switch self {
+            case .previous:
+                return .reverse
+            case .next:
+                return .forward
+            }
+        }
+    }
 
     // PageViewController의 내부 scrollView (제스처 제어용)
     private var pageScrollView: UIScrollView? {
@@ -56,12 +71,16 @@ final class ActivityDetailPageViewController: UIViewController {
     private let topLoadingIndicator = UIActivityIndicatorView(style: .medium)
     private let bottomLoadingIndicator = UIActivityIndicatorView(style: .medium)
 
-    // 로딩 상태
-    private var isLoadingPrev = false
-    private var isLoadingNext = false
+    private let pagingTriggerThreshold: CGFloat = 80
+    private var lockedPagingDirection: PagingDirection?
 
     // 페이징 전환 중 플래그 (제스처 충돌 방지용)
     private var isTransitioning = false
+
+    private lazy var edgePagingPanGesture = UIPanGestureRecognizer(
+        target: self,
+        action: #selector(handleEdgePagingPan(_:))
+    )
 
     // MARK: - Initialization
 
@@ -92,6 +111,7 @@ final class ActivityDetailPageViewController: UIViewController {
         setupLoadingIndicators()
         setupNavigationView()
         setupReactionViews()
+        setupEdgePagingGesture()
         loadInitialViewController()
     }
 
@@ -112,14 +132,19 @@ extension ActivityDetailPageViewController {
         pageViewController.didMove(toParent: self)
 
         pageViewController.delegate = self
-        pageViewController.dataSource = self
 
         // 배경색
         view.backgroundColor = .systemBackground
         pageViewController.view.backgroundColor = .systemBackground
 
-        // 내부 스크롤뷰 델리게이트 설정
-        pageScrollView?.delegate = self
+        // 상세 콘텐츠 스크롤을 우선하고, 경계에서만 직접 페이징합니다.
+        pageScrollView?.isScrollEnabled = false
+    }
+
+    private func setupEdgePagingGesture() {
+        edgePagingPanGesture.delegate = self
+        edgePagingPanGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(edgePagingPanGesture)
     }
 
     private func setupLoadingIndicators() {
@@ -210,8 +235,9 @@ extension ActivityDetailPageViewController {
         view.addSubview(reactionButtonsView)
 
         reactionButtonsView.snp.makeConstraints {
-            $0.leading.trailing.bottom.equalToSuperview()
-            $0.top.equalTo(view.safeAreaLayoutGuide.snp.bottom).offset(-72)
+            $0.leading.trailing.equalToSuperview()
+            $0.bottom.equalTo(view.safeAreaLayoutGuide)
+            $0.height.equalTo(72)
         }
 
         // 반응 버튼 이벤트 연결
@@ -293,8 +319,21 @@ extension ActivityDetailPageViewController {
     }
 
     private func handleReactionLongPressed(_ reactionType: ReactionType) {
+        guard !isLoadingReactionUsersBottomSheet,
+              !(presentedViewController is ReactionUsersBottomSheetViewController) else {
+            return
+        }
+
+        isLoadingReactionUsersBottomSheet = true
+
         Task { [weak self] in
-            guard let self = self, let currentDetailVC = self.currentDetailVC else { return }
+            guard let self = self else { return }
+            defer {
+                Task { @MainActor [weak self] in
+                    self?.isLoadingReactionUsersBottomSheet = false
+                }
+            }
+            guard let currentDetailVC = self.currentDetailVC else { return }
 
             do {
                 // Fetch reaction summary
@@ -317,7 +356,7 @@ extension ActivityDetailPageViewController {
                         )
                     }
 
-                    self.present(bottomSheet, animated: true)
+                    self.present(bottomSheet, animated: false)
                 }
             } catch let appError as AppError {
                 await MainActor.run {
@@ -328,6 +367,44 @@ extension ActivityDetailPageViewController {
                     currentDetailVC.viewModel.error = .unknown(error)
                 }
             }
+        }
+    }
+
+    @objc private func handleEdgePagingPan(_ gesture: UIPanGestureRecognizer) {
+        switch gesture.state {
+        case .began:
+            lockedPagingDirection = pagingDirection(for: gesture)
+
+        case .changed:
+            if lockedPagingDirection == nil {
+                lockedPagingDirection = pagingDirection(for: gesture)
+            }
+
+            guard let direction = lockedPagingDirection,
+                  !isTransitioning,
+                  canPage(direction) else { return }
+
+            let translationY = gesture.translation(in: view).y
+            let passedThreshold: Bool
+
+            switch direction {
+            case .previous:
+                passedThreshold = translationY >= pagingTriggerThreshold
+            case .next:
+                passedThreshold = translationY <= -pagingTriggerThreshold
+            }
+
+            if passedThreshold {
+                performPageTransition(direction)
+            }
+
+        case .ended, .cancelled, .failed:
+            if !isTransitioning {
+                lockedPagingDirection = nil
+            }
+
+        default:
+            break
         }
     }
 }
@@ -341,6 +418,91 @@ extension ActivityDetailPageViewController {
         detailVC.coordinator = coordinator
 
         return detailVC
+    }
+
+    private func targetRecordId(for direction: PagingDirection) -> Int? {
+        switch direction {
+        case .previous:
+            return currentDetailVC?.viewModel.prevRecordId
+        case .next:
+            return currentDetailVC?.viewModel.nextRecordId
+        }
+    }
+
+    private func canPage(_ direction: PagingDirection) -> Bool {
+        guard let currentDetailVC = currentDetailVC,
+              targetRecordId(for: direction) != nil else { return false }
+
+        switch direction {
+        case .previous:
+            return currentDetailVC.canPageToPrevious
+        case .next:
+            return currentDetailVC.canPageToNext
+        }
+    }
+
+    private func pagingDirection(for gesture: UIPanGestureRecognizer) -> PagingDirection? {
+        let velocity = gesture.velocity(in: view)
+        guard abs(velocity.y) > abs(velocity.x) else { return nil }
+
+        if velocity.y > 0 {
+            return .previous
+        } else if velocity.y < 0 {
+            return .next
+        }
+
+        return nil
+    }
+
+    private func performPageTransition(_ direction: PagingDirection) {
+        guard !isTransitioning,
+              canPage(direction),
+              let targetRecordId = targetRecordId(for: direction) else { return }
+
+        isTransitioning = true
+        lockedPagingDirection = direction
+        setLoadingIndicatorVisible(true, for: direction)
+
+        let nextDetailVC = createDetailViewController(for: targetRecordId)
+
+        pageViewController.setViewControllers(
+            [nextDetailVC],
+            direction: direction.pageDirection,
+            animated: true
+        ) { [weak self, weak nextDetailVC] completed in
+            guard let self = self else { return }
+
+            if completed, let nextDetailVC = nextDetailVC {
+                self.currentDetailVC = nextDetailVC
+                self.currentRecordId = nextDetailVC.viewModel.activityRecordId
+            }
+
+            self.setLoadingIndicatorVisible(false, for: direction)
+            self.isTransitioning = false
+            self.lockedPagingDirection = nil
+        }
+    }
+
+    private func setLoadingIndicatorVisible(_ visible: Bool, for direction: PagingDirection) {
+        let activeIndicator: UIActivityIndicatorView
+        let inactiveIndicator: UIActivityIndicatorView
+
+        switch direction {
+        case .previous:
+            activeIndicator = topLoadingIndicator
+            inactiveIndicator = bottomLoadingIndicator
+        case .next:
+            activeIndicator = bottomLoadingIndicator
+            inactiveIndicator = topLoadingIndicator
+        }
+
+        inactiveIndicator.stopAnimating()
+
+        if visible {
+            activeIndicator.startAnimating()
+        } else {
+            activeIndicator.stopAnimating()
+        }
     }
 }
 
@@ -376,23 +538,7 @@ extension ActivityDetailPageViewController: UIPageViewControllerDelegate {
     func pageViewController(
         _ pageViewController: UIPageViewController,
         willTransitionTo pendingViewControllers: [UIViewController]) {
-        // 페이징 전환 시작 - 내부 스크롤 로직 비활성화
-        isTransitioning = true
-
-        if let detailVC = pendingViewControllers.first as? ActivityDetailViewController {
-            let recordId = detailVC.viewModel.activityRecordId
-
-            if let currentVC = currentDetailVC,
-               recordId == currentVC.viewModel.prevRecordId {
-                topLoadingIndicator.startAnimating()
-                isLoadingPrev = true
-            }
-            else if let currentVC = currentDetailVC,
-                    recordId == currentVC.viewModel.nextRecordId {
-                bottomLoadingIndicator.startAnimating()
-                isLoadingNext = true
-            }
-        }
+        // Interactive paging is disabled. Programmatic transitions are handled by performPageTransition(_:).
     }
 
     func pageViewController(
@@ -400,52 +546,26 @@ extension ActivityDetailPageViewController: UIPageViewControllerDelegate {
         didFinishAnimating finished: Bool,
         previousViewControllers: [UIViewController],
         transitionCompleted completed: Bool) {
-        // 페이징 전환 완료 - 내부 스크롤 로직 재활성화
-        isTransitioning = false
-
-        if completed {
-            if let detailVC = pageViewController.viewControllers?.first as? ActivityDetailViewController {
-                currentDetailVC = detailVC
-                currentRecordId = detailVC.viewModel.activityRecordId
-            }
-        }
-
-        if isLoadingPrev {
-            topLoadingIndicator.stopAnimating()
-            isLoadingPrev = false
-        }
-        if isLoadingNext {
-            bottomLoadingIndicator.stopAnimating()
-            isLoadingNext = false
-        }
+        // Interactive paging is disabled. Programmatic transitions are handled by performPageTransition(_:).
     }
 }
 
-// MARK: - UIScrollViewDelegate
+// MARK: - UIGestureRecognizerDelegate
 
-extension ActivityDetailPageViewController: UIScrollViewDelegate {
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        guard scrollView === pageScrollView else { return }
+extension ActivityDetailPageViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard gestureRecognizer === edgePagingPanGesture else { return true }
+        guard !isTransitioning,
+              let panGesture = gestureRecognizer as? UIPanGestureRecognizer,
+              let direction = pagingDirection(for: panGesture) else { return false }
 
-        // 페이징 전환 중에는 스크롤 로직 실행 안 함 (view hierarchy 충돌 방지)
-        guard !isTransitioning else { return }
+        return canPage(direction)
+    }
 
-        let offsetY = scrollView.contentOffset.y
-        let frameHeight = scrollView.frame.height
-
-        // 위로 스와이프 (다음 글로 가기 시도)
-        if offsetY > frameHeight {
-            if let currentVC = currentDetailVC, !currentVC.canPageToNext {
-                // 아직 콘텐츠가 더 남아있다면, 부모의 스크롤 위치를 고정하고 콘텐츠를 스크롤시킴
-                scrollView.contentOffset.y = frameHeight
-            }
-        }
-        // 아래로 스와이프 (이전 글로 가기 시도)
-        else if offsetY < frameHeight {
-            if let currentVC = currentDetailVC, !currentVC.canPageToPrevious {
-                // 아직 최상단이 아니라면, 부모의 스크롤 위치를 고정하고 콘텐츠를 스크롤시킴
-                scrollView.contentOffset.y = frameHeight
-            }
-        }
+    func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+    ) -> Bool {
+        return gestureRecognizer === edgePagingPanGesture
     }
 }

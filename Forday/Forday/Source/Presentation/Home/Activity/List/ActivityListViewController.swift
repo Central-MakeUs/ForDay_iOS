@@ -99,7 +99,6 @@ extension ActivityListViewController {
         FirebaseAnalyticsService.shared.log(.activityAddEntryClicked(entryPoint: .activityListPlus, hobbyName: hobbyName))
 
         let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: hobbyName)
-        inputVC.aiCallRemaining = aiCallRemaining
 
         if let content = aiRecommendedContent {
             inputVC.aiRecommendedContent = content

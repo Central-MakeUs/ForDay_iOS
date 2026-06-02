@@ -24,7 +24,6 @@ class HobbyActivityInputView: UIView {
     private let recommendationLabel = UILabel()
     private let flowLayoutView = FlowLayoutView()
     private let saveButton = UIButton()
-    private var aiToastView: AIRecommendationInputToastView?
 
     private var activityFields: [ActivityInputField] = []
     private let maxFields = 3
@@ -34,7 +33,6 @@ class HobbyActivityInputView: UIView {
     var onAddButtonTapped: (() -> Void)?
     var onDeleteButtonTapped: ((Int) -> Void)?
     var onRecommendationButtonTapped: ((String) -> Void)?
-    var onAIToastTapped: (() -> Void)?
     var onActivitiesChanged: (() -> Void)?
     
     // Initialization
@@ -281,37 +279,6 @@ extension HobbyActivityInputView {
             addButton.isHidden = lastField.getText().isEmpty
         } else {
             addButton.isHidden = false
-        }
-    }
-
-    func showAIRecommendationToast(aiCallRemaining: Bool = true) {
-        // 이미 토스트가 있으면 제거
-        aiToastView?.removeFromSuperview()
-
-        let toast = AIRecommendationInputToastView()
-        toast.configure(with: "포데이 AI 추천 활동 보기")
-
-        // Set tap callback
-        toast.onTap = { [weak self] in
-            self?.onAIToastTapped?()
-        }
-
-        // Add to view
-        addSubview(toast)
-        toast.snp.makeConstraints {
-            $0.centerX.equalToSuperview()
-            $0.bottom.equalTo(saveButton.snp.top).offset(-30)
-        }
-
-        aiToastView = toast
-    }
-
-    func hideAIRecommendationToast() {
-        UIView.animate(withDuration: 0.2) {
-            self.aiToastView?.alpha = 0
-        } completion: { _ in
-            self.aiToastView?.removeFromSuperview()
-            self.aiToastView = nil
         }
     }
 }

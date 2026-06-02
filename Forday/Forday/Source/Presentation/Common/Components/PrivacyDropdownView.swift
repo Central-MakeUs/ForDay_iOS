@@ -207,12 +207,12 @@ class PrivacyDropdownCell: UITableViewCell {
     private func updateSelectionUI(selected: Bool) {
         if selected {
             selectedBackgroundContainerView.isHidden = false
-            privacyLabel.applyTypography(.header14)
-            privacyLabel.textColor = .neutral800
+            privacyLabel.applyTypography(.label14)
+            privacyLabel.textColor = .neutral600
         } else {
             selectedBackgroundContainerView.isHidden = true
-            privacyLabel.applyTypography(.body14)
-            privacyLabel.textColor = .neutral500
+            privacyLabel.applyTypography(.label14)
+            privacyLabel.textColor = .neutral600
         }
     }
 

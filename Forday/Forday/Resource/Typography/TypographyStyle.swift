@@ -109,14 +109,14 @@ extension TypographyStyle {
     
     // body
     
-    /// body 16px 120%
+    /// body 16px 140%
     static let body16 = TypographyStyle(
         font: UIFont(name: FontName.pretendardMedium.rawValue, size: 16) ?? .systemFont(ofSize: 16, weight: .medium),
         lineHeight: 16 * 1.4,
         letterSpacing: 0
     )
     
-    /// body 14px 120%
+    /// body 14px 140%
     static let body14 = TypographyStyle(
         font: UIFont(name: FontName.pretendardMedium.rawValue, size: 14) ?? .systemFont(ofSize: 14, weight: .medium),
         lineHeight: 14 * 1.4,

@@ -23,7 +23,6 @@ class HobbyActivityInputViewController: UIViewController {
     var onActivityCreated: (() -> Void)?
 
     // AI Recommendation
-    var aiCallRemaining = true  // AI 호출 가능 여부
     var aiRecommendedContent: String?  // AI 추천 활동 내용 (select 모드에서 전달받음, aiRecommended: true)
     
     // Initialization
@@ -66,9 +65,6 @@ class HobbyActivityInputViewController: UIViewController {
             activityInputView.fillLastFieldWithAIRecommendation(content)
             validateActivities()
             aiRecommendedContent = nil  // 한 번만 적용
-        } else {
-            // Show AI recommendation toast (prefill이 없을 때만)
-            activityInputView.showAIRecommendationToast(aiCallRemaining: aiCallRemaining)
         }
     }
 }
@@ -105,10 +101,6 @@ extension HobbyActivityInputViewController {
 
         activityInputView.onRecommendationButtonTapped = { [weak self] text in
             self?.fillLastFieldWithRecommendation(text)
-        }
-
-        activityInputView.onAIToastTapped = { [weak self] in
-            self?.handleAIToastTapped()
         }
 
         activityInputView.onActivitiesChanged = { [weak self] in
@@ -216,31 +208,6 @@ extension HobbyActivityInputViewController {
 
     private func showError(_ message: String) {
         ToastView.showError(message: message)
-    }
-
-    private func handleAIToastTapped() {
-        // Analytics: 포데이 AI 추천 활동 보기 클릭
-        FirebaseAnalyticsService.shared.log(.hobbyInputViewAIRecommendationsClick)
-
-        // Hide toast
-        activityInputView.hideAIRecommendationToast()
-
-        // Show AI recommendation loading
-        showAIRecommendationFlow()
-    }
-
-    private func showAIRecommendationFlow() {
-        // Fullscreen AI 추천 활동 선택 화면 표시
-        let containerVC = AIRecommendationContainerViewController(hobbyId: hobbyId, hobbyName: hobbyName)
-
-        containerVC.onActivitySelected = { [weak self] content in
-            guard let self = self else { return }
-            // Fill the last text field with AI content (aiRecommended: true)
-            self.activityInputView.fillLastFieldWithAIRecommendation(content)
-            self.validateActivities()
-        }
-
-        present(containerVC, animated: true)
     }
 }
 

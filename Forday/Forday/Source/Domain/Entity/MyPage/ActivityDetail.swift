@@ -14,6 +14,8 @@ struct ActivityDetail {
     let activityId: Int
     let activityContent: String
     let imageUrl: String
+    let imageWidth: Int?
+    let imageHeight: Int?
     let sticker: String
     let createdAt: String
     let memo: String
@@ -63,6 +65,8 @@ extension ActivityDetail {
             activityId: 1,
             activityContent: "아침 러닝 10km",
             imageUrl: "https://picsum.photos/300/300",
+            imageWidth: 300,
+            imageHeight: 300,
             sticker: "sticker_awesome_big",
             createdAt: "2026.01.15",
             memo: "오늘은 날씨가 좋아서 기분 좋게 달렸어요!",
@@ -85,6 +89,8 @@ extension ActivityDetail {
             activityId: 2,
             activityContent: "저녁 요가 60분",
             imageUrl: "https://picsum.photos/300/300",
+            imageWidth: 300,
+            imageHeight: 300,
             sticker: "sticker_great_big",
             createdAt: "2026.01.20",
             memo: "스트레칭 위주로 진행했습니다.",
@@ -107,6 +113,8 @@ extension ActivityDetail {
             activityId: 3,
             activityContent: "기타 연습 2시간",
             imageUrl: "https://picsum.photos/300/300",
+            imageWidth: 300,
+            imageHeight: 300,
             sticker: "sticker_amazing_big",
             createdAt: "2026.01.25",
             memo: "새로운 곡을 배웠어요. 어려웠지만 재미있었습니다!",
@@ -129,6 +137,8 @@ extension ActivityDetail {
             activityId: 4,
             activityContent: "독서 1시간",
             imageUrl: "https://picsum.photos/300/300",
+            imageWidth: 300,
+            imageHeight: 300,
             sticker: "sticker_fighting_big",
             createdAt: "2026.01.28",
             memo: "",

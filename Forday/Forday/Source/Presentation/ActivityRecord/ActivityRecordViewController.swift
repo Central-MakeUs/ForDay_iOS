@@ -157,6 +157,7 @@ extension ActivityRecordViewController {
         // 배경 탭하여 드롭다운 닫기
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped))
         tapGesture.cancelsTouchesInView = false
+        tapGesture.delegate = self
         view.addGestureRecognizer(tapGesture)
 
         // 메모 텍스트뷰
@@ -707,6 +708,26 @@ extension ActivityRecordViewController: UITextViewDelegate {
 
         // 플레이스홀더 표시/숨김
         recordView.updateMemoPlaceholder(isHidden: !text.isEmpty)
+    }
+}
+
+// UIGestureRecognizerDelegate
+
+extension ActivityRecordViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        guard let touchedView = touch.view else { return true }
+        let excludedViews = [
+            recordView.privacyButton,
+            recordView.activityDropdownButton,
+            privacyDropdownView,
+            activityDropdownView
+        ].compactMap { $0 }
+
+        guard !excludedViews.contains(where: { touchedView.isDescendant(of: $0) }) else {
+            return false
+        }
+
+        return true
     }
 }
 

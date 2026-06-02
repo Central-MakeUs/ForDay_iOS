@@ -18,10 +18,8 @@ final class ReactionUsersBottomSheetViewController: UIViewController {
     private let containerView = UIView()
     private let titleLabel = UILabel()
     private let tabBar = ReactionTabBar()
-    private let pageViewController = UIPageViewController(
-        transitionStyle: .scroll,
-        navigationOrientation: .horizontal
-    )
+    private let pagesScrollView = UIScrollView()
+    private let pagesStackView = UIStackView()
 
     private var listViewControllers: [ReactionUsersListViewController] = []
 
@@ -30,12 +28,19 @@ final class ReactionUsersBottomSheetViewController: UIViewController {
     private var cancellables = Set<AnyCancellable>()
     private let recordId: Int
     private var summaryResponse: ReactionSummaryResponse?
+    private var hasAnimatedIn = false
+    private var currentPageIndex = 0
+    private var pendingTabs: [(ReactionType?, ReactionTabData)] = []
 
     // Sheet height states
     private let minHeight: CGFloat = 322
     private let maxHeight: CGFloat = 668
     private var currentHeight: CGFloat = 322
     private var containerHeightConstraint: Constraint?
+    private lazy var sheetPanGesture = UIPanGestureRecognizer(
+        target: self,
+        action: #selector(handlePan(_:))
+    )
 
     // Callback for loading more users
     var onLoadMore: ((ReactionType?, Int?) -> AnyPublisher<ReactionTabData, Error>)?
@@ -63,8 +68,20 @@ final class ReactionUsersBottomSheetViewController: UIViewController {
         setupBindings()
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        guard !hasAnimatedIn else { return }
+        prepareInitialPresentationState()
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+
+        buildPagesIfNeeded()
+
+        guard !hasAnimatedIn else { return }
+        hasAnimatedIn = true
         animateIn()
     }
 
@@ -76,8 +93,9 @@ final class ReactionUsersBottomSheetViewController: UIViewController {
         // Configure tab bar
         tabBar.configure(with: response.reactionSummary)
 
-        // Create list view controllers for each tab
-        let tabs: [(ReactionType?, ReactionTabData)] = [
+        clearListViewControllers()
+
+        pendingTabs = [
             (nil, response.tabs.all),
             (.awesome, response.tabs.awesome),
             (.great, response.tabs.great),
@@ -85,19 +103,28 @@ final class ReactionUsersBottomSheetViewController: UIViewController {
             (.fighting, response.tabs.fighting)
         ]
 
-        listViewControllers = tabs.map { type, data in
+        currentPageIndex = 0
+        buildPagesIfNeeded()
+    }
+
+    private func buildPagesIfNeeded() {
+        guard listViewControllers.isEmpty,
+              !pendingTabs.isEmpty,
+              isViewLoaded,
+              view.window != nil else { return }
+
+        listViewControllers = pendingTabs.map { type, data in
             let vc = ReactionUsersListViewController(reactionType: type)
             vc.configure(with: data)
             vc.onLoadMore = { [weak self] reactionType, lastReactionId in
                 self?.loadMoreUsers(for: reactionType, lastReactionId: lastReactionId)
             }
+            addListViewController(vc)
             return vc
         }
 
-        // Set initial page
-        if let firstVC = listViewControllers.first {
-            pageViewController.setViewControllers([firstVC], direction: .forward, animated: false)
-        }
+        currentPageIndex = 0
+        pagesScrollView.setContentOffset(.zero, animated: false)
     }
 
     private func loadMoreUsers(for reactionType: ReactionType?, lastReactionId: Int?) {
@@ -135,12 +162,34 @@ final class ReactionUsersBottomSheetViewController: UIViewController {
             .store(in: &cancellables)
     }
 
+    private func addListViewController(_ viewController: ReactionUsersListViewController) {
+        addChild(viewController)
+        pagesStackView.addArrangedSubview(viewController.view)
+        viewController.didMove(toParent: self)
+
+        viewController.view.snp.makeConstraints {
+            $0.width.equalTo(pagesScrollView.snp.width)
+        }
+    }
+
+    private func clearListViewControllers() {
+        listViewControllers.forEach { viewController in
+            viewController.willMove(toParent: nil)
+            viewController.view.removeFromSuperview()
+            viewController.removeFromParent()
+        }
+        listViewControllers.removeAll()
+    }
+
     // MARK: - Animations
 
-    private func animateIn() {
+    private func prepareInitialPresentationState() {
+        view.layoutIfNeeded()
         dimmerView.alpha = 0
         containerView.transform = CGAffineTransform(translationX: 0, y: minHeight)
+    }
 
+    private func animateIn() {
         UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
             self.dimmerView.alpha = 1
             self.containerView.transform = .identity
@@ -183,6 +232,22 @@ extension ReactionUsersBottomSheetViewController {
             $0.textColor = .neutral900
             $0.textAlignment = .center
         }
+
+        pagesScrollView.do {
+            $0.isPagingEnabled = true
+            $0.showsHorizontalScrollIndicator = false
+            $0.showsVerticalScrollIndicator = false
+            $0.alwaysBounceVertical = false
+            $0.delaysContentTouches = false
+            $0.delegate = self
+        }
+
+        pagesStackView.do {
+            $0.axis = .horizontal
+            $0.spacing = 0
+            $0.alignment = .fill
+            $0.distribution = .fill
+        }
     }
 
     private func setupLayout() {
@@ -191,10 +256,8 @@ extension ReactionUsersBottomSheetViewController {
 
         containerView.addSubview(titleLabel)
         containerView.addSubview(tabBar)
-
-        addChild(pageViewController)
-        containerView.addSubview(pageViewController.view)
-        pageViewController.didMove(toParent: self)
+        containerView.addSubview(pagesScrollView)
+        pagesScrollView.addSubview(pagesStackView)
 
         dimmerView.snp.makeConstraints {
             $0.edges.equalToSuperview()
@@ -216,10 +279,15 @@ extension ReactionUsersBottomSheetViewController {
             $0.height.equalTo(40)
         }
 
-        pageViewController.view.snp.makeConstraints {
+        pagesScrollView.snp.makeConstraints {
             $0.top.equalTo(tabBar.snp.bottom).offset(20)
             $0.leading.trailing.equalToSuperview()
             $0.bottom.equalToSuperview().offset(-34)  // Home indicator space
+        }
+
+        pagesStackView.snp.makeConstraints {
+            $0.edges.equalTo(pagesScrollView.contentLayoutGuide)
+            $0.height.equalTo(pagesScrollView.frameLayoutGuide)
         }
     }
 
@@ -229,31 +297,39 @@ extension ReactionUsersBottomSheetViewController {
         dimmerView.addGestureRecognizer(dimmerTap)
 
         // Pan gesture for dragging
-        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
-        panGesture.delegate = self
-        containerView.addGestureRecognizer(panGesture)
+        sheetPanGesture.cancelsTouchesInView = false
+        sheetPanGesture.delegate = self
+        containerView.addGestureRecognizer(sheetPanGesture)
     }
 
     private func setupBindings() {
         // Tab selection
         tabBar.tabSelected
             .sink { [weak self] index in
-                guard let self = self,
-                      index < self.listViewControllers.count,
-                      let currentVC = self.pageViewController.viewControllers?.first,
-                      let currentIndex = self.listViewControllers.firstIndex(of: currentVC as! ReactionUsersListViewController)
-                else { return }
+                print("🟣 [ReactionBottomSheet] tabSelected received index=\(index)")
 
-                let direction: UIPageViewController.NavigationDirection = index > currentIndex ? .forward : .reverse
-                let targetVC = self.listViewControllers[index]
+                guard let self = self else {
+                    print("🟣 [ReactionBottomSheet] ignored - self released")
+                    return
+                }
 
-                self.pageViewController.setViewControllers([targetVC], direction: direction, animated: true)
+                self.buildPagesIfNeeded()
+
+                guard index < self.listViewControllers.count else {
+                    print("🟣 [ReactionBottomSheet] ignored - pages not ready index=\(index), count=\(self.listViewControllers.count), pending=\(self.pendingTabs.count), isViewLoaded=\(self.isViewLoaded), hasWindow=\(self.view.window != nil)")
+                    return
+                }
+
+                guard index != self.currentPageIndex else {
+                    print("🟣 [ReactionBottomSheet] ignored - already current index=\(index)")
+                    self.tabBar.selectTab(at: index)
+                    return
+                }
+
+                print("🟣 [ReactionBottomSheet] move request from=\(self.currentPageIndex) to=\(index), width=\(self.pagesScrollView.bounds.width), offsetX=\(self.pagesScrollView.contentOffset.x)")
+                self.setCurrentPage(index, animated: false)
             }
             .store(in: &cancellables)
-
-        // Page view controller delegate
-        pageViewController.delegate = self
-        pageViewController.dataSource = self
     }
 
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
@@ -265,6 +341,7 @@ extension ReactionUsersBottomSheetViewController {
             // Update height based on drag
             let newHeight = currentHeight - translation.y
             let clampedHeight = max(minHeight, min(maxHeight, newHeight))
+            currentHeight = clampedHeight
             containerHeightConstraint?.update(offset: clampedHeight)
             gesture.setTranslation(.zero, in: view)
 
@@ -302,46 +379,82 @@ extension ReactionUsersBottomSheetViewController {
             self.view.layoutIfNeeded()
         }
     }
+
+    private func setCurrentPage(_ index: Int, animated: Bool) {
+        guard index >= 0,
+              index < listViewControllers.count else { return }
+
+        view.layoutIfNeeded()
+        let offsetX = pagesScrollView.bounds.width * CGFloat(index)
+        print("🟣 [ReactionBottomSheet] setCurrentPage index=\(index), targetOffsetX=\(offsetX), beforeOffsetX=\(pagesScrollView.contentOffset.x)")
+        pagesScrollView.setContentOffset(CGPoint(x: offsetX, y: 0), animated: animated)
+        currentPageIndex = index
+        tabBar.selectTab(at: index)
+        print("🟣 [ReactionBottomSheet] setCurrentPage done index=\(index), afterOffsetX=\(pagesScrollView.contentOffset.x)")
+    }
 }
 
-// MARK: - UIPageViewControllerDelegate, UIPageViewControllerDataSource
+// MARK: - UIScrollViewDelegate
 
-extension ReactionUsersBottomSheetViewController: UIPageViewControllerDelegate, UIPageViewControllerDataSource {
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
-        guard let currentVC = viewController as? ReactionUsersListViewController,
-              let currentIndex = listViewControllers.firstIndex(of: currentVC),
-              currentIndex > 0 else {
-            return nil
-        }
-        return listViewControllers[currentIndex - 1]
+extension ReactionUsersBottomSheetViewController: UIScrollViewDelegate {
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        guard !decelerate else { return }
+        updateSelectedTabFromScroll(scrollView)
     }
 
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
-        guard let currentVC = viewController as? ReactionUsersListViewController,
-              let currentIndex = listViewControllers.firstIndex(of: currentVC),
-              currentIndex < listViewControllers.count - 1 else {
-            return nil
-        }
-        return listViewControllers[currentIndex + 1]
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        updateSelectedTabFromScroll(scrollView)
     }
 
-    func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
-        guard completed,
-              let currentVC = pageViewController.viewControllers?.first as? ReactionUsersListViewController,
-              let currentIndex = listViewControllers.firstIndex(of: currentVC) else {
-            return
-        }
+    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        updateSelectedTabFromScroll(scrollView)
+    }
 
-        // Update tab bar selection
-        tabBar.selectTab(at: currentIndex)
+    private func updateSelectedTabFromScroll(_ scrollView: UIScrollView) {
+        guard scrollView === pagesScrollView,
+              scrollView.bounds.width > 0 else { return }
+
+        let pageIndex = Int(round(scrollView.contentOffset.x / scrollView.bounds.width))
+        guard pageIndex >= 0,
+              pageIndex < listViewControllers.count,
+              pageIndex != currentPageIndex else { return }
+
+        currentPageIndex = pageIndex
+        tabBar.selectTab(at: pageIndex)
     }
 }
 
 // MARK: - UIGestureRecognizerDelegate
 
 extension ReactionUsersBottomSheetViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        guard gestureRecognizer === sheetPanGesture else { return true }
+
+        if touch.view?.isDescendant(of: tabBar) == true {
+            return false
+        }
+
+        if touch.view is UIControl {
+            return false
+        }
+
+        let touchPoint = touch.location(in: containerView)
+        return !tabBar.frame.contains(touchPoint)
+    }
+
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard gestureRecognizer === sheetPanGesture else { return true }
+
+        let velocity = sheetPanGesture.velocity(in: view)
+        return abs(velocity.y) > abs(velocity.x)
+    }
+
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        // Allow pan gesture and scroll view gestures to work together
-        return true
+        guard gestureRecognizer === sheetPanGesture || otherGestureRecognizer === sheetPanGesture else {
+            return false
+        }
+
+        let velocity = sheetPanGesture.velocity(in: view)
+        return abs(velocity.y) > abs(velocity.x)
     }
 }
