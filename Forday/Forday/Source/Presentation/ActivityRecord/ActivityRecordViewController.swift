@@ -20,7 +20,6 @@ class ActivityRecordViewController: UIViewController {
     private let viewModel: ActivityRecordViewModel
     private let hobbyName: String
     private var cancellables = Set<AnyCancellable>()
-    private var activityDropdownView: ActivityDropdownView?
     private var privacyDropdownView: PrivacyDropdownView?
     private var didSubmitSuccessfully = false
 
@@ -59,7 +58,6 @@ class ActivityRecordViewController: UIViewController {
         if !viewModel.isEditMode {
             fetchHobbyChips()
         }
-        fetchActivities()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -112,33 +110,13 @@ extension ActivityRecordViewController {
         recordView.stickerCollectionView.delegate = self
         recordView.stickerCollectionView.dataSource = self
 
-        // 활동 드롭다운 버튼
-        recordView.activityDropdownButton.addTarget(
-            self,
-            action: #selector(activityDropdownButtonTapped),
-            for: .touchUpInside
-        )
+        // 메모 추천 문장 설정
+        setupMemoSuggestions()
 
-        // 취미활동 추가하기 버튼 (활동이 없을 때)
-        recordView.addActivityButton.addTarget(
-            self,
-            action: #selector(addActivityButtonTapped),
-            for: .touchUpInside
-        )
-
-        // 사진 추가 버튼
-        recordView.photoAddButton.addTarget(
-            self,
-            action: #selector(photoAddButtonTapped),
-            for: .touchUpInside
-        )
-
-        // 사진 삭제
-        recordView.photoDeleteButton.addTarget(
-            self,
-            action: #selector(photoDeleteButtonTapped),
-            for: .touchUpInside
-        )
+        // 사진 CollectionView
+        recordView.photoCollectionView.delegate = self
+        recordView.photoCollectionView.dataSource = self
+        setupPhotoCollectionViewDragDrop()
 
         // 공개범위 드롭다운 버튼
         recordView.privacyButton.addTarget(
@@ -162,6 +140,21 @@ extension ActivityRecordViewController {
 
         // 메모 텍스트뷰
         recordView.memoTextView.delegate = self
+
+        // 활동명 입력 필드
+        recordView.activityNameTextField.delegate = self
+        recordView.activityNameTextField.addTarget(
+            self,
+            action: #selector(activityNameTextFieldDidChange),
+            for: .editingChanged
+        )
+
+        // 이전 활동리스트 버튼
+        recordView.previousActivityButton.addTarget(
+            self,
+            action: #selector(previousActivityButtonTapped),
+            for: .touchUpInside
+        )
     }
 
     private func bind() {
@@ -170,24 +163,19 @@ extension ActivityRecordViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.recordView.hobbyChipCollectionView.reloadData()
+                // wrap 레이아웃 높이 업데이트
+                DispatchQueue.main.async {
+                    self?.recordView.updateHobbyChipCollectionViewHeight()
+                }
             }
             .store(in: &cancellables)
 
-        // 선택된 취미 칩 변경 시 활동 목록 새로고침
+        // 선택된 취미 칩 변경 시 CollectionView 업데이트
         viewModel.$selectedHobbyId
             .dropFirst() // 초기값 무시
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.recordView.hobbyChipCollectionView.reloadData()
-                self?.fetchActivities()
-            }
-            .store(in: &cancellables)
-
-        // 활동 선택
-        viewModel.$selectedActivity
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] activity in
-                self?.recordView.updateActivityTitle(activity?.content)
             }
             .store(in: &cancellables)
 
@@ -202,19 +190,11 @@ extension ActivityRecordViewController {
             }
             .store(in: &cancellables)
 
-        // 선택된 이미지
-        viewModel.$selectedImage
+        // 선택된 이미지들
+        viewModel.$selectedImages
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] image in
-                self?.recordView.updatePhotoImage(image)
-            }
-            .store(in: &cancellables)
-
-        // 활동 목록 변경 시 UI 업데이트
-        viewModel.$activities
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] activities in
-                self?.recordView.showAddActivityButton(activities.isEmpty)
+            .sink { [weak self] _ in
+                self?.recordView.photoCollectionView.reloadData()
             }
             .store(in: &cancellables)
 
@@ -231,6 +211,10 @@ extension ActivityRecordViewController {
         if viewModel.isEditMode {
             // 수정 모드: 버튼 텍스트 변경
             recordView.setSubmitButtonTitle("수정완료")
+
+            // 활동명 설정
+            recordView.activityNameTextField.text = viewModel.activityName
+            recordView.updateActivityNameCount(viewModel.activityName.count)
 
             // 메모 설정
             recordView.memoTextView.text = viewModel.memo
@@ -268,17 +252,6 @@ extension ActivityRecordViewController {
         }
     }
 
-    private func fetchActivities() {
-        Task { [weak self] in
-            guard let self = self else { return }
-            do {
-                try await self.viewModel.fetchActivityList()
-            } catch {
-                print("❌ 활동 목록 로드 실패: \(error)")
-            }
-        }
-    }
-
     private func showPhotoAddBottomSheet() {
         let bottomSheet = PhotoAddBottomSheetViewController()
         bottomSheet.modalPresentationStyle = .overFullScreen
@@ -294,6 +267,27 @@ extension ActivityRecordViewController {
         }
 
         present(bottomSheet, animated: false)
+    }
+
+    /// 활동 추가 팝업 표시
+    /// - Note: TODO - API 연결 필요. 현재는 로컬에서만 추가됨
+    private func showHobbyAddPopup() {
+        let popup = TextInputPopupViewController(
+            title: "취미 입력",
+            placeholder: "취미를 입력해주세요",
+            maxCharacterCount: 20
+        )
+
+        popup.modalPresentationStyle = .overFullScreen
+        popup.modalTransitionStyle = .crossDissolve
+
+        popup.onSubmit = { [weak self] text in
+            guard let self = self else { return }
+            // 로컬에서 취미 칩 추가 및 선택
+            self.viewModel.addLocalHobbyChip(name: text)
+        }
+
+        present(popup, animated: true)
     }
 
     private func checkCameraPermissionAndPresent() {
@@ -357,49 +351,9 @@ extension ActivityRecordViewController {
         dismiss(animated: true)
     }
 
-    @objc private func activityDropdownButtonTapped() {
-        if activityDropdownView != nil {
-            dismissActivityDropdown()
-        } else {
-            showActivityDropdown()
-        }
-    }
-
-    @objc private func addActivityButtonTapped() {
-        // 현재 화면 dismiss 후 HobbyActivityInputViewController 표시
-        let hobbyId = viewModel.currentHobbyId
-        let currentHobbyName = hobbyName
-        let presentingVC = presentingViewController
-
-        dismiss(animated: true) {
-            guard let presenter = presentingVC else { return }
-
-            let inputVC = HobbyActivityInputViewController(hobbyId: hobbyId, hobbyName: currentHobbyName)
-            inputVC.onActivityCreated = { [weak inputVC] in
-                // 활동 생성 완료 시 dismiss
-                inputVC?.dismiss(animated: true)
-            }
-
-            let nav = BaseNavigationController(rootViewController: inputVC)
-            nav.modalPresentationStyle = .fullScreen
-            presenter.present(nav, animated: true)
-        }
-    }
-
     @objc private func backgroundTapped() {
         view.endEditing(true)
-        dismissActivityDropdown()
         dismissPrivacyDropdown()
-    }
-
-    @objc private func photoDeleteButtonTapped() {
-        deletePhoto()
-    }
-
-    @objc private func photoAddButtonTapped() {
-        // 이미지가 이미 있으면 아무 동작 안 함
-        guard viewModel.selectedImage == nil else { return }
-        showPhotoAddBottomSheet()
     }
 
     @objc private func privacyButtonTapped() {
@@ -408,6 +362,30 @@ extension ActivityRecordViewController {
         } else {
             showPrivacyDropdown()
         }
+    }
+
+    @objc private func activityNameTextFieldDidChange(_ textField: UITextField) {
+        let text = textField.text ?? ""
+        viewModel.updateActivityName(text)
+        recordView.updateActivityNameCount(text.count)
+    }
+
+    @objc private func previousActivityButtonTapped() {
+        showPreviousActivityListBottomSheet()
+    }
+
+    private func showPreviousActivityListBottomSheet() {
+        let bottomSheet = PreviousActivityListBottomSheetViewController()
+
+        bottomSheet.onActivitySelected = { [weak self] activity in
+            guard let self = self else { return }
+            // 선택한 활동명을 입력 필드에 설정
+            self.recordView.activityNameTextField.text = activity.name
+            self.viewModel.updateActivityName(activity.name)
+            self.recordView.updateActivityNameCount(activity.name.count)
+        }
+
+        present(bottomSheet, animated: false)
     }
 
     @objc private func submitButtonTapped() {
@@ -431,7 +409,7 @@ extension ActivityRecordViewController {
                     if !self.viewModel.isEditMode {
                         // TODO: entryPoint를 ActivityRecordViewController에 전달하여 정확한 진입점 로그
                         let activityName = self.viewModel.selectedActivity?.content ?? ""
-                        let hasPhoto = self.viewModel.selectedImage != nil
+                        let hasPhoto = !self.viewModel.selectedImages.isEmpty
                         let hasMemo = !self.viewModel.memo.isEmpty
                         FirebaseAnalyticsService.shared.log(.recordCreated(
                             entryPoint: .gnbRecord, // 임시: 실제 진입점 전달 필요
@@ -495,24 +473,6 @@ extension ActivityRecordViewController {
     }
 
 
-    private func showActivityDropdown() {
-        guard activityDropdownView == nil else { return }
-
-        let dropdown = ActivityDropdownView(activities: viewModel.activities)
-        dropdown.onActivitySelected = { [weak self] activity in
-            self?.viewModel.selectActivity(activity)
-            self?.dismissActivityDropdown()
-        }
-
-        dropdown.show(in: view, below: recordView.activityDropdownButton)
-        activityDropdownView = dropdown
-    }
-
-    private func dismissActivityDropdown() {
-        activityDropdownView?.dismiss()
-        activityDropdownView = nil
-    }
-
     private func showPrivacyDropdown() {
         guard privacyDropdownView == nil else { return }
 
@@ -538,8 +498,12 @@ extension ActivityRecordViewController {
     }
 
     private func presentPhotoPicker() {
+        // 남은 선택 가능 개수 계산
+        let remainingSlots = ActivityRecordViewModel.maxPhotoCount - viewModel.selectedImages.count
+        guard remainingSlots > 0 else { return }
+
         var configuration = PHPickerConfiguration()
-        configuration.selectionLimit = 1
+        configuration.selectionLimit = remainingSlots
         configuration.filter = .images
 
         let picker = PHPickerViewController(configuration: configuration)
@@ -547,11 +511,11 @@ extension ActivityRecordViewController {
         present(picker, animated: true)
     }
 
-    private func deletePhoto() {
+    private func deletePhoto(at index: Int) {
         Task { [weak self] in
             guard let self = self else { return }
             do {
-                try await self.viewModel.removeImageFromUI()
+                try await self.viewModel.removeImage(at: index)
             } catch {
                 await MainActor.run { [weak self] in
                     print("❌ 이미지 삭제 실패: \(error)")
@@ -564,6 +528,32 @@ extension ActivityRecordViewController {
         }
     }
 
+    private func setupPhotoCollectionViewDragDrop() {
+        // 길게 눌러서 드래그
+        let longPressGesture = UILongPressGestureRecognizer(
+            target: self,
+            action: #selector(handleLongPressGesture(_:))
+        )
+        recordView.photoCollectionView.addGestureRecognizer(longPressGesture)
+    }
+
+    @objc private func handleLongPressGesture(_ gesture: UILongPressGestureRecognizer) {
+        let collectionView = recordView.photoCollectionView
+
+        switch gesture.state {
+        case .began:
+            guard let indexPath = collectionView.indexPathForItem(at: gesture.location(in: collectionView)),
+                  indexPath.item < viewModel.selectedImages.count else { return }  // PhotoAddCell 제외
+            collectionView.beginInteractiveMovementForItem(at: indexPath)
+        case .changed:
+            collectionView.updateInteractiveMovementTargetPosition(gesture.location(in: collectionView))
+        case .ended:
+            collectionView.endInteractiveMovement()
+        default:
+            collectionView.cancelInteractiveMovement()
+        }
+    }
+
 }
 
 // UICollectionView
@@ -572,7 +562,13 @@ extension ActivityRecordViewController: UICollectionViewDelegate, UICollectionVi
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if collectionView == recordView.hobbyChipCollectionView {
-            return viewModel.displayedHobbyChips.count
+            // 취미 칩 개수 + 추가 버튼 (수정 모드가 아닐 때만)
+            let chipCount = viewModel.displayedHobbyChips.count
+            return viewModel.isEditMode ? chipCount : chipCount + 1
+        } else if collectionView == recordView.photoCollectionView {
+            // 사진 개수 + 추가 버튼 (5장 미만일 때만 추가 버튼 표시)
+            let photoCount = viewModel.selectedImages.count
+            return photoCount < ActivityRecordViewModel.maxPhotoCount ? photoCount + 1 : photoCount
         } else {
             return viewModel.stickers.count
         }
@@ -580,6 +576,17 @@ extension ActivityRecordViewController: UICollectionViewDelegate, UICollectionVi
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if collectionView == recordView.hobbyChipCollectionView {
+            let chipCount = viewModel.displayedHobbyChips.count
+
+            // 마지막 아이템이고 수정 모드가 아닐 때 → 추가 버튼
+            if indexPath.item == chipCount && !viewModel.isEditMode {
+                guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "HobbyAddChipCell", for: indexPath) as? HobbyAddChipCell else {
+                    return UICollectionViewCell()
+                }
+                return cell
+            }
+
+            // 취미 칩 셀
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "HobbyChipCell", for: indexPath) as? HobbyChipCell else {
                 return UICollectionViewCell()
             }
@@ -587,6 +594,30 @@ extension ActivityRecordViewController: UICollectionViewDelegate, UICollectionVi
             let hobbyChip = viewModel.displayedHobbyChips[indexPath.item]
             let isSelected = hobbyChip.hobbyId == viewModel.selectedHobbyId
             cell.configure(with: hobbyChip, isSelected: isSelected)
+
+            return cell
+        } else if collectionView == recordView.photoCollectionView {
+            let photoCount = viewModel.selectedImages.count
+
+            // 마지막 아이템이고 5장 미만일 때 → 추가 버튼
+            if indexPath.item == photoCount && photoCount < ActivityRecordViewModel.maxPhotoCount {
+                guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoAddCell", for: indexPath) as? PhotoAddCell else {
+                    return UICollectionViewCell()
+                }
+                cell.configure(currentCount: photoCount)
+                return cell
+            }
+
+            // 사진 셀
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoCell", for: indexPath) as? PhotoCell else {
+                return UICollectionViewCell()
+            }
+
+            let image = viewModel.selectedImages[indexPath.item]
+            cell.configure(with: image)
+            cell.onDeleteTapped = { [weak self] in
+                self?.deletePhoto(at: indexPath.item)
+            }
 
             return cell
         } else {
@@ -606,8 +637,22 @@ extension ActivityRecordViewController: UICollectionViewDelegate, UICollectionVi
             // 수정 모드에서는 취미 변경 불가
             guard !viewModel.isEditMode else { return }
 
+            let chipCount = viewModel.displayedHobbyChips.count
+
+            // + 버튼 탭 → 활동 추가 팝업 표시
+            if indexPath.item == chipCount {
+                showHobbyAddPopup()
+                return
+            }
+
             let hobbyChip = viewModel.displayedHobbyChips[indexPath.item]
             viewModel.selectHobbyChip(hobbyChip)
+        } else if collectionView == recordView.photoCollectionView {
+            let photoCount = viewModel.selectedImages.count
+            // 추가 버튼 탭
+            if indexPath.item == photoCount && photoCount < ActivityRecordViewModel.maxPhotoCount {
+                showPhotoAddBottomSheet()
+            }
         } else {
             let sticker = viewModel.stickers[indexPath.item]
             viewModel.selectSticker(sticker)
@@ -618,11 +663,47 @@ extension ActivityRecordViewController: UICollectionViewDelegate, UICollectionVi
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         if collectionView == recordView.stickerCollectionView {
             return CGSize(width: 64, height: 64)
+        } else if collectionView == recordView.photoCollectionView {
+            return CGSize(width: 56, height: 56)  // 52 + 삭제 버튼 여백
+        } else if collectionView == recordView.hobbyChipCollectionView {
+            let chipCount = viewModel.displayedHobbyChips.count
+
+            // + 버튼 크기
+            if indexPath.item == chipCount && !viewModel.isEditMode {
+                return HobbyAddChipCell.cellSize
+            }
+
+            // Hobby chip: Cell이 텍스트 길이에 따라 크기 계산
+            let hobbyChip = viewModel.displayedHobbyChips[indexPath.item]
+            return HobbyChipCell.size(for: hobbyChip)
         }
 
-        // Hobby chip: Cell이 텍스트 길이에 따라 크기 계산
-        let hobbyChip = viewModel.displayedHobbyChips[indexPath.item]
-        return HobbyChipCell.size(for: hobbyChip)
+        return CGSize.zero
+    }
+
+    // MARK: - Photo CollectionView Reordering
+
+    func collectionView(_ collectionView: UICollectionView, canMoveItemAt indexPath: IndexPath) -> Bool {
+        guard collectionView == recordView.photoCollectionView else { return false }
+        // PhotoAddCell은 이동 불가
+        return indexPath.item < viewModel.selectedImages.count
+    }
+
+    func collectionView(_ collectionView: UICollectionView, moveItemAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        guard collectionView == recordView.photoCollectionView else { return }
+        // PhotoAddCell 위치로는 이동 불가
+        guard destinationIndexPath.item < viewModel.selectedImages.count else { return }
+        viewModel.moveImage(from: sourceIndexPath.item, to: destinationIndexPath.item)
+    }
+
+    func collectionView(_ collectionView: UICollectionView, targetIndexPathForMoveOfItemFromOriginalIndexPath originalIndexPath: IndexPath, atCurrentIndexPath currentIndexPath: IndexPath, toProposedIndexPath proposedIndexPath: IndexPath) -> IndexPath {
+        guard collectionView == recordView.photoCollectionView else { return proposedIndexPath }
+        // PhotoAddCell 위치로 이동 방지
+        let maxIndex = viewModel.selectedImages.count - 1
+        if proposedIndexPath.item > maxIndex {
+            return IndexPath(item: maxIndex, section: 0)
+        }
+        return proposedIndexPath
     }
 }
 
@@ -632,30 +713,47 @@ extension ActivityRecordViewController: PHPickerViewControllerDelegate, UIImageP
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
 
-        guard let result = results.first else { return }
+        guard !results.isEmpty else { return }
 
-        result.itemProvider.loadObject(ofClass: UIImage.self) { [weak self] object, error in
+        // 다중 이미지 로드
+        Task { [weak self] in
             guard let self = self else { return }
 
-            if let error = error {
-                print("❌ 이미지 로드 실패: \(error)")
-                return
-            }
+            var loadedImages: [UIImage] = []
 
-            guard let image = object as? UIImage else {
-                print("❌ 이미지 변환 실패")
-                return
-            }
-
-            // 이미지 업로드
-            Task { [weak self] in
-                guard let self = self else { return }
-                do {
-                    try await self.viewModel.uploadImage(image)
-                    print("✅ 이미지 업로드 성공")
-                } catch {
-                    print("❌ 이미지 업로드 실패: \(error)")
+            for result in results {
+                if let image = await self.loadImage(from: result) {
+                    loadedImages.append(image)
                 }
+            }
+
+            guard !loadedImages.isEmpty else { return }
+
+            do {
+                try await self.viewModel.addImages(loadedImages)
+                print("✅ \(loadedImages.count)개 이미지 추가 성공")
+            } catch {
+                print("❌ 이미지 추가 실패: \(error)")
+            }
+        }
+    }
+
+    private func loadImage(from result: PHPickerResult) async -> UIImage? {
+        await withCheckedContinuation { continuation in
+            result.itemProvider.loadObject(ofClass: UIImage.self) { object, error in
+                if let error = error {
+                    print("❌ 이미지 로드 실패: \(error)")
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                guard let image = object as? UIImage else {
+                    print("❌ 이미지 변환 실패")
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                continuation.resume(returning: image)
             }
         }
     }
@@ -672,14 +770,14 @@ extension ActivityRecordViewController: PHPickerViewControllerDelegate, UIImageP
             return
         }
 
-        // 이미지 업로드
+        // 이미지 추가
         Task { [weak self] in
             guard let self = self else { return }
             do {
-                try await self.viewModel.uploadImage(image)
-                print("✅ 카메라 이미지 업로드 성공")
+                try await self.viewModel.addImages([image])
+                print("✅ 카메라 이미지 추가 성공")
             } catch {
-                print("❌ 카메라 이미지 업로드 실패: \(error)")
+                print("❌ 카메라 이미지 추가 실패: \(error)")
             }
         }
     }
@@ -689,25 +787,139 @@ extension ActivityRecordViewController: PHPickerViewControllerDelegate, UIImageP
     }
 }
 
+// Memo Suggestions
+
+extension ActivityRecordViewController {
+    private func setupMemoSuggestions() {
+        // TODO: 서버 API 연동 예정 - 현재 임시 문자열 배열 사용
+        let suggestions = [
+            "오늘도 한 챕터",
+            "읽었다!",
+            "집중 완료",
+            "오늘의 문장 발견"
+        ]
+        recordView.memoSuggestionView.updateSuggestions(suggestions)
+
+        // 추천 문장 선택 콜백 설정
+        recordView.memoSuggestionView.onSuggestionSelected = { [weak self] suggestion in
+            self?.insertSuggestionAtCursor(suggestion)
+        }
+    }
+
+    /// 커서 위치에 추천 문장 삽입
+    /// - Parameter suggestion: 삽입할 추천 문장
+    private func insertSuggestionAtCursor(_ suggestion: String) {
+        let textView = recordView.memoTextView
+        let currentText = textView.text ?? ""
+        let maxLength = 100
+
+        // 현재 커서 위치 가져오기
+        guard let selectedRange = textView.selectedTextRange else {
+            // 커서가 없으면 맨 끝에 삽입
+            appendSuggestionToEnd(suggestion, currentText: currentText, maxLength: maxLength)
+            return
+        }
+
+        let cursorPosition = textView.offset(from: textView.beginningOfDocument, to: selectedRange.start)
+
+        // 삽입할 텍스트 준비 (앞에 텍스트가 있고, 공백이 아니면 공백 추가)
+        var textToInsert = suggestion
+        if cursorPosition > 0 {
+            let index = currentText.index(currentText.startIndex, offsetBy: cursorPosition - 1)
+            let charBefore = currentText[index]
+            if !charBefore.isWhitespace {
+                textToInsert = " " + suggestion
+            }
+        }
+
+        // 최대 글자수 제한 처리
+        let availableLength = maxLength - currentText.count
+        if availableLength <= 0 {
+            return // 더 이상 입력 불가
+        }
+
+        if textToInsert.count > availableLength {
+            textToInsert = String(textToInsert.prefix(availableLength))
+        }
+
+        // 텍스트 삽입
+        textView.replace(selectedRange, withText: textToInsert)
+
+        // ViewModel 및 UI 업데이트
+        let newText = textView.text ?? ""
+        viewModel.updateMemo(newText)
+        recordView.updateMemoCount(newText.count)
+        recordView.updateMemoPlaceholder(isHidden: !newText.isEmpty)
+    }
+
+    private func appendSuggestionToEnd(_ suggestion: String, currentText: String, maxLength: Int) {
+        let textView = recordView.memoTextView
+
+        // 삽입할 텍스트 준비 (앞에 텍스트가 있고, 공백이 아니면 공백 추가)
+        var textToInsert = suggestion
+        if !currentText.isEmpty {
+            let lastChar = currentText.last!
+            if !lastChar.isWhitespace {
+                textToInsert = " " + suggestion
+            }
+        }
+
+        // 최대 글자수 제한 처리
+        let availableLength = maxLength - currentText.count
+        if availableLength <= 0 {
+            return
+        }
+
+        if textToInsert.count > availableLength {
+            textToInsert = String(textToInsert.prefix(availableLength))
+        }
+
+        // 텍스트 추가
+        textView.text = currentText + textToInsert
+
+        // ViewModel 및 UI 업데이트
+        let newText = textView.text ?? ""
+        viewModel.updateMemo(newText)
+        recordView.updateMemoCount(newText.count)
+        recordView.updateMemoPlaceholder(isHidden: !newText.isEmpty)
+    }
+}
+
 // UITextViewDelegate
 
 extension ActivityRecordViewController: UITextViewDelegate {
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        let currentText = textView.text ?? ""
+        guard let stringRange = Range(range, in: currentText) else { return false }
+        let updatedText = currentText.replacingCharacters(in: stringRange, with: text)
+
+        // 100자 제한: 초과하면 입력 차단
+        return updatedText.count <= 100
+    }
+
     func textViewDidChange(_ textView: UITextView) {
         let text = textView.text ?? ""
 
-        // 100자 제한
-        if text.count > 100 {
-            let limitedText = String(text.prefix(100))
-            textView.text = limitedText
-            viewModel.updateMemo(limitedText)
-            recordView.updateMemoCount(100)
-        } else {
-            viewModel.updateMemo(text)
-            recordView.updateMemoCount(text.count)
-        }
+        viewModel.updateMemo(text)
+        recordView.updateMemoCount(text.count)
 
         // 플레이스홀더 표시/숨김
         recordView.updateMemoPlaceholder(isHidden: !text.isEmpty)
+    }
+}
+
+// UITextFieldDelegate
+
+extension ActivityRecordViewController: UITextFieldDelegate {
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        guard textField == recordView.activityNameTextField else { return true }
+
+        let currentText = textField.text ?? ""
+        guard let stringRange = Range(range, in: currentText) else { return false }
+        let updatedText = currentText.replacingCharacters(in: stringRange, with: string)
+
+        // 20자 제한
+        return updatedText.count <= 20
     }
 }
 
@@ -718,9 +930,7 @@ extension ActivityRecordViewController: UIGestureRecognizerDelegate {
         guard let touchedView = touch.view else { return true }
         let excludedViews = [
             recordView.privacyButton,
-            recordView.activityDropdownButton,
-            privacyDropdownView,
-            activityDropdownView
+            privacyDropdownView
         ].compactMap { $0 }
 
         guard !excludedViews.contains(where: { touchedView.isDescendant(of: $0) }) else {
