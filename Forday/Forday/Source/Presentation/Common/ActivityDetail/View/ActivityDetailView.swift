@@ -160,9 +160,7 @@ final class ActivityDetailView: UIView {
             stickerImageView.isHidden = false
             memoStickerImageView.isHidden = true
         } else {
-            currentImageAspectRatio = nil
-            imageContainerView.isHidden = true
-            stickerImageView.isHidden = true
+            resetImageLayout()
             // 이미지 없을 때는 메모 안(또는 날짜 아래)에 스티커 표시
             memoStickerImageView.isHidden = false
         }
@@ -233,7 +231,10 @@ final class ActivityDetailView: UIView {
         guard let imageWidth,
               let imageHeight,
               imageWidth > 0,
-              imageHeight > 0 else { return }
+              imageHeight > 0 else {
+            resetImageLayout()
+            return
+        }
 
         updateImageHeight(imageWidth: CGFloat(imageWidth), imageHeight: CGFloat(imageHeight))
     }
@@ -257,6 +258,16 @@ final class ActivityDetailView: UIView {
 
         imageView.snp.updateConstraints {
             $0.height.equalTo(calculatedHeight)
+        }
+    }
+
+    private func resetImageLayout() {
+        currentImageAspectRatio = nil
+        imageContainerView.isHidden = true
+        stickerImageView.isHidden = true
+        imageView.image = nil
+        imageView.snp.updateConstraints {
+            $0.height.equalTo(0)
         }
     }
 

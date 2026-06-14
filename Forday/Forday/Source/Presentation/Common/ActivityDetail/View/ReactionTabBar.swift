@@ -55,13 +55,17 @@ final class ReactionTabBar: UIView {
             ("", summary.amazing, .Reaction.amazing),
             ("", summary.fighting, .Reaction.fighting)
         ]
-        let debugBackgroundColors: [UIColor] = [
+        #if DEBUG
+        let debugBackgroundColors: [UIColor?] = [
             UIColor.systemRed.withAlphaComponent(0.18),
             UIColor.systemOrange.withAlphaComponent(0.18),
             UIColor.systemYellow.withAlphaComponent(0.24),
             UIColor.systemGreen.withAlphaComponent(0.18),
             UIColor.systemBlue.withAlphaComponent(0.18)
         ]
+        #else
+        let debugBackgroundColors = Array<UIColor?>(repeating: nil, count: tabs.count)
+        #endif
 
         for (index, tab) in tabs.enumerated() {
             let button = ReactionTabButton(
