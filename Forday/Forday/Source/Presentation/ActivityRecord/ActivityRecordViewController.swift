@@ -396,11 +396,20 @@ extension ActivityRecordViewController {
         Task { [weak self] in
             guard let self = self else { return }
             do {
-                let result = try await self.viewModel.submitActivityRecord()
+                // 수정 모드: V1 API 사용, 생성 모드: V2 API 사용
+                let activityRecordId: Int
+                if self.viewModel.isEditMode {
+                    let result = try await self.viewModel.submitActivityRecord()
+                    activityRecordId = result.activityRecordId
+                    print("✅ 활동 기록 수정 성공: \(result.message)")
+                } else {
+                    let result = try await self.viewModel.submitActivityRecordV2()
+                    activityRecordId = result.activityRecordId
+                    print("✅ 활동 기록 작성 성공: \(result.activityContent)")
+                }
+
                 await MainActor.run { [weak self] in
                     guard let self = self else { return }
-                    let actionType = self.viewModel.isEditMode ? "수정" : "작성"
-                    print("✅ 활동 기록 \(actionType) 성공: \(result.message)")
 
                     // 제출 성공 플래그 설정 (이미지 삭제 방지)
                     self.didSubmitSuccessfully = true
@@ -408,7 +417,7 @@ extension ActivityRecordViewController {
                     // Analytics: 기록 작성 완료 (수정 모드가 아닐 때만)
                     if !self.viewModel.isEditMode {
                         // TODO: entryPoint를 ActivityRecordViewController에 전달하여 정확한 진입점 로그
-                        let activityName = self.viewModel.selectedActivity?.content ?? ""
+                        let activityName = self.viewModel.selectedActivity?.content ?? self.viewModel.activityName
                         let hasPhoto = !self.viewModel.selectedImages.isEmpty
                         let hasMemo = !self.viewModel.memo.isEmpty
                         FirebaseAnalyticsService.shared.log(.recordCreated(
@@ -430,7 +439,7 @@ extension ActivityRecordViewController {
                         // 기록 완료 후 상세 화면으로 전환
                         let nickname = self.coordinator?.getCurrentNickname() ?? "회원"
                         self.coordinator?.showActivityDetailAfterRecord(
-                            activityRecordId: result.activityRecordId,
+                            activityRecordId: activityRecordId,
                             nickname: nickname,
                             from: self
                         )

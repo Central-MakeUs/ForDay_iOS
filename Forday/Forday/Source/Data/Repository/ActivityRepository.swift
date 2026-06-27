@@ -72,6 +72,38 @@ final class ActivityRepository: ActivityRepositoryInterface {
         return response.toDomain()
     }
 
+    func createActivityRecordV2(
+        hobbyId: Int,
+        activityId: Int?,
+        activityContent: String?,
+        sticker: String,
+        images: [RecordImageInput],
+        visibility: Privacy,
+        memo: String?,
+        activityContentValid: Bool
+    ) async throws -> ActivityRecordV2 {
+        let dtoImages = images.map {
+            DTO.ImageInput(
+                imageUrl: $0.imageUrl,
+                imageOrder: $0.imageOrder,
+                imageWidth: $0.imageWidth,
+                imageHeight: $0.imageHeight
+            )
+        }
+        let request = DTO.CreateActivityRecordV2Request(
+            hobbyId: hobbyId,
+            activityId: activityId,
+            activityContent: activityContent,
+            sticker: sticker,
+            images: dtoImages,
+            visibility: visibility.rawValue,
+            memo: memo,
+            activityContentValid: activityContentValid
+        )
+        let response = try await activityService.createActivityRecordV2(request: request)
+        return response.toDomain()
+    }
+
     // MARK: - Result Enum Pattern: Repository interprets business states
 
     func fetchStickerBoard(hobbyId: Int?, page: Int?, size: Int?) async throws -> StickerBoardResult {
