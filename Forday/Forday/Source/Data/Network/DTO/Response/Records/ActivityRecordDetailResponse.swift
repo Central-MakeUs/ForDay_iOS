@@ -156,15 +156,26 @@ extension DTO {
 
 extension DTO.ActivityRecordDetailResponse {
     func toDomain() -> ActivityDetail {
+        // V1/V2 API: 단일 imageUrl을 images 배열로 변환
+        var images: [ActivityDetailImage] = []
+        if let imageUrl = data.imageUrl, !imageUrl.isEmpty {
+            images.append(ActivityDetailImage(
+                imageId: 0,  // V1/V2에서는 imageId가 없음
+                imageUrl: imageUrl,
+                imageOrder: 1,
+                imageWidth: data.imageWidth ?? 0,
+                imageHeight: data.imageHeight ?? 0,
+                isThumbnail: true
+            ))
+        }
+
         return ActivityDetail(
             activityRecordId: data.activityRecordId,
             hobbyId: data.hobbyId,
             hobbyName: data.hobbyName,
             activityId: data.activityId ?? 0,
             activityContent: data.activityContent,
-            imageUrl: data.imageUrl ?? "",  // Handle optional imageUrl with empty string fallback
-            imageWidth: data.imageWidth,
-            imageHeight: data.imageHeight,
+            images: images,
             sticker: data.sticker,
             createdAt: data.createdAt,
             memo: data.memo ?? "",

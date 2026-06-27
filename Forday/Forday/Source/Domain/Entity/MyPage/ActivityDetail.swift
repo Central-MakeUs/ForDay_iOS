@@ -13,9 +13,7 @@ struct ActivityDetail {
     let hobbyName: String
     let activityId: Int
     let activityContent: String
-    let imageUrl: String
-    let imageWidth: Int?
-    let imageHeight: Int?
+    let images: [ActivityDetailImage]
     let sticker: String
     let createdAt: String
     let memo: String
@@ -27,6 +25,35 @@ struct ActivityDetail {
     let userReaction: ReactionStatus
     let prevRecordId: Int?  // 이전 기록 ID (페이징용)
     let nextRecordId: Int?  // 다음 기록 ID (페이징용)
+
+    // MARK: - Computed Properties (대표 이미지)
+
+    /// 대표 이미지 URL (thumbnail 이미지 또는 첫 번째 이미지)
+    var imageUrl: String {
+        let thumbnailImage = images.first { $0.isThumbnail } ?? images.first
+        return thumbnailImage?.imageUrl ?? ""
+    }
+
+    /// 대표 이미지 너비
+    var imageWidth: Int? {
+        let thumbnailImage = images.first { $0.isThumbnail } ?? images.first
+        return thumbnailImage?.imageWidth
+    }
+
+    /// 대표 이미지 높이
+    var imageHeight: Int? {
+        let thumbnailImage = images.first { $0.isThumbnail } ?? images.first
+        return thumbnailImage?.imageHeight
+    }
+}
+
+struct ActivityDetailImage {
+    let imageId: Int
+    let imageUrl: String
+    let imageOrder: Int
+    let imageWidth: Int
+    let imageHeight: Int
+    let isThumbnail: Bool
 }
 
 struct ActivityDetailUserInfo {
@@ -56,6 +83,40 @@ extension ActivityDetailUserInfo {
     }
 }
 
+extension ActivityDetailImage {
+    static var preview: ActivityDetailImage {
+        ActivityDetailImage(
+            imageId: 1,
+            imageUrl: "https://picsum.photos/300/300",
+            imageOrder: 1,
+            imageWidth: 300,
+            imageHeight: 300,
+            isThumbnail: true
+        )
+    }
+
+    static var previewMultiple: [ActivityDetailImage] {
+        [
+            ActivityDetailImage(
+                imageId: 1,
+                imageUrl: "https://picsum.photos/300/300",
+                imageOrder: 1,
+                imageWidth: 300,
+                imageHeight: 300,
+                isThumbnail: true
+            ),
+            ActivityDetailImage(
+                imageId: 2,
+                imageUrl: "https://picsum.photos/400/300",
+                imageOrder: 2,
+                imageWidth: 400,
+                imageHeight: 300,
+                isThumbnail: false
+            )
+        ]
+    }
+}
+
 extension ActivityDetail {
     static var preview: ActivityDetail {
         ActivityDetail(
@@ -64,9 +125,7 @@ extension ActivityDetail {
             hobbyName: "러닝",
             activityId: 1,
             activityContent: "아침 러닝 10km",
-            imageUrl: "https://picsum.photos/300/300",
-            imageWidth: 300,
-            imageHeight: 300,
+            images: [.preview],
             sticker: "sticker_awesome_big",
             createdAt: "2026.01.15",
             memo: "오늘은 날씨가 좋아서 기분 좋게 달렸어요!",
@@ -88,9 +147,7 @@ extension ActivityDetail {
             hobbyName: "요가",
             activityId: 2,
             activityContent: "저녁 요가 60분",
-            imageUrl: "https://picsum.photos/300/300",
-            imageWidth: 300,
-            imageHeight: 300,
+            images: [.preview],
             sticker: "sticker_great_big",
             createdAt: "2026.01.20",
             memo: "스트레칭 위주로 진행했습니다.",
@@ -112,9 +169,7 @@ extension ActivityDetail {
             hobbyName: "음악 듣기",
             activityId: 3,
             activityContent: "기타 연습 2시간",
-            imageUrl: "https://picsum.photos/300/300",
-            imageWidth: 300,
-            imageHeight: 300,
+            images: ActivityDetailImage.previewMultiple,
             sticker: "sticker_amazing_big",
             createdAt: "2026.01.25",
             memo: "새로운 곡을 배웠어요. 어려웠지만 재미있었습니다!",
@@ -136,9 +191,7 @@ extension ActivityDetail {
             hobbyName: "독서",
             activityId: 4,
             activityContent: "독서 1시간",
-            imageUrl: "https://picsum.photos/300/300",
-            imageWidth: 300,
-            imageHeight: 300,
+            images: [.preview],
             sticker: "sticker_fighting_big",
             createdAt: "2026.01.28",
             memo: "",

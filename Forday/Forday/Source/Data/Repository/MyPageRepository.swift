@@ -29,7 +29,8 @@ final class MyPageRepository: MyPageRepositoryInterface {
     }
 
     func fetchActivityDetail(activityRecordId: Int) async throws -> ActivityDetail {
-        let response = try await recordsService.fetchRecordDetail(recordId: activityRecordId)
+        // V3 API 사용 (다중 이미지 지원)
+        let response = try await recordsService.fetchRecordDetailV3(recordId: activityRecordId)
         return response.toDomain()
     }
 
