@@ -68,10 +68,10 @@ final class ActivityDetailView: UIView {
     private let privacyLabel = UILabel()
     private let privacyChevronImageView = UIImageView()
 
-    // Image container (with padding)
-    private let imageContainerView = UIView()
-    let imageView = UIImageView()
-    let stickerImageView = UIImageView()
+    // Image carousel (다중 이미지 지원)
+    private let imageCarouselView = ImageCarouselView()
+    private var currentImages: [ActivityDetailImage] = []
+    private var stickerType: StickerType?
 
     // Memo container (with background)
     private let memoContainerView = UIView()
@@ -109,7 +109,8 @@ final class ActivityDetailView: UIView {
 
     func configure(with detail: ActivityDetail) {
         // Determine layout type
-        hasImage = !detail.imageUrl.isEmpty
+        currentImages = detail.images
+        hasImage = !detail.images.isEmpty
         let hasMemo = !detail.memo.isEmpty
 
         if hasImage {
@@ -133,9 +134,10 @@ final class ActivityDetailView: UIView {
         hobbyNameLabel.setTextWithTypography(displayHobbyName, style: .label12)
 
         // Load sticker image
-        if let stickerType = StickerType(fileName: detail.sticker) {
-            stickerImageView.image = stickerType.image
-            memoStickerImageView.image = stickerType.image
+        if let loadedStickerType = StickerType(fileName: detail.sticker) {
+            self.stickerType = loadedStickerType
+            imageCarouselView.stickerImage = loadedStickerType.image
+            memoStickerImageView.image = loadedStickerType.image
         }
 
         // Configure title (at top) and date
@@ -152,15 +154,15 @@ final class ActivityDetailView: UIView {
             memoContainerView.isHidden = true
         }
 
-        // Configure image
+        // Configure image carousel
         if hasImage {
+            imageCarouselView.configure(with: detail.images)
             updateImageHeight(imageWidth: detail.imageWidth, imageHeight: detail.imageHeight)
-            loadImage(from: detail.imageUrl)
-            imageContainerView.isHidden = false
-            stickerImageView.isHidden = false
+            imageCarouselView.isHidden = false
             memoStickerImageView.isHidden = true
         } else {
             resetImageLayout()
+            imageCarouselView.isHidden = true
             // 이미지 없을 때는 메모 안(또는 날짜 아래)에 스티커 표시
             memoStickerImageView.isHidden = false
         }
@@ -218,15 +220,6 @@ final class ActivityDetailView: UIView {
         privacyLabel.setTextWithTypography(privacyTitle, style: .label14)
     }
 
-    private func loadImage(from urlString: String) {
-        imageView.setImage(with: urlString) { [weak self] result in
-            guard case let .success(imageResult) = result else { return }
-
-            let imageSize = imageResult.image.size
-            self?.updateImageHeight(imageWidth: imageSize.width, imageHeight: imageSize.height)
-        }
-    }
-
     private func updateImageHeight(imageWidth: Int?, imageHeight: Int?) {
         guard let imageWidth,
               let imageHeight,
@@ -249,24 +242,21 @@ final class ActivityDetailView: UIView {
     private func updateImageHeightForCurrentWidth() {
         guard let currentImageAspectRatio else { return }
 
-        let containerWidth = max(imageContainerView.bounds.width, bounds.width, window?.bounds.width ?? UIScreen.main.bounds.width)
+        let containerWidth = max(imageCarouselView.bounds.width, bounds.width, window?.bounds.width ?? UIScreen.main.bounds.width)
         let imageWidth = containerWidth - 40 // 좌우 패딩 20씩
         guard imageWidth > 0 else { return }
 
         let calculatedHeight = imageWidth * currentImageAspectRatio
-        guard abs(imageView.bounds.height - calculatedHeight) > 0.5 else { return }
 
-        imageView.snp.updateConstraints {
-            $0.height.equalTo(calculatedHeight)
+        imageCarouselView.snp.updateConstraints {
+            $0.height.equalTo(calculatedHeight + 24) // 이미지 높이 + 페이지 인디케이터(8) + 간격(16)
         }
     }
 
     private func resetImageLayout() {
         currentImageAspectRatio = nil
-        imageContainerView.isHidden = true
-        stickerImageView.isHidden = true
-        imageView.image = nil
-        imageView.snp.updateConstraints {
+        imageCarouselView.isHidden = true
+        imageCarouselView.snp.updateConstraints {
             $0.height.equalTo(0)
         }
     }
@@ -277,7 +267,7 @@ final class ActivityDetailView: UIView {
         case .withImage:
             // 이미지가 있을 때: 이미지 아래에 날짜
             dateLabel.snp.remakeConstraints {
-                $0.top.equalTo(imageContainerView.snp.bottom).offset(16)
+                $0.top.equalTo(imageCarouselView.snp.bottom).offset(16)
                 $0.leading.equalToSuperview().offset(20)
                 $0.trailing.lessThanOrEqualTo(privacyBadgeView.snp.leading).offset(-8)
             }
@@ -413,21 +403,6 @@ extension ActivityDetailView {
             $0.contentMode = .scaleAspectFit
         }
 
-        imageContainerView.do {
-            $0.backgroundColor = .clear
-        }
-
-        imageView.do {
-            $0.contentMode = .scaleAspectFit
-            $0.clipsToBounds = true
-            $0.backgroundColor = .bg003
-            $0.layer.cornerRadius = 12
-        }
-
-        stickerImageView.do {
-            $0.contentMode = .scaleAspectFit
-        }
-
         memoStickerImageView.do {
             $0.contentMode = .scaleAspectFit
         }
@@ -487,7 +462,7 @@ extension ActivityDetailView {
         contentView.addSubview(userInfoView)
         contentView.addSubview(hobbyNameContainerView)
         contentView.addSubview(titleLabel)
-        contentView.addSubview(imageContainerView)
+        contentView.addSubview(imageCarouselView)
         contentView.addSubview(dateLabel)
         contentView.addSubview(privacyBadgeView)
         contentView.addSubview(memoContainerView)
@@ -496,8 +471,6 @@ extension ActivityDetailView {
         hobbyNameContainerView.addSubview(hobbyNameLabel)
         privacyBadgeView.addSubview(privacyLabel)
         privacyBadgeView.addSubview(privacyChevronImageView)
-        imageContainerView.addSubview(imageView)
-        imageView.addSubview(stickerImageView)
 
         userInfoView.snp.makeConstraints {
             $0.top.equalToSuperview().offset(16)
@@ -524,27 +497,15 @@ extension ActivityDetailView {
             $0.trailing.equalToSuperview().offset(-20)
         }
 
-        imageContainerView.snp.makeConstraints {
+        imageCarouselView.snp.makeConstraints {
             $0.top.equalTo(titleLabel.snp.bottom).offset(16)
-            $0.leading.trailing.equalToSuperview()
-        }
-
-        imageView.snp.makeConstraints {
-            $0.top.equalToSuperview()
             $0.leading.equalToSuperview().offset(20)
             $0.trailing.equalToSuperview().offset(-20)
-            $0.height.equalTo(300)
-            $0.bottom.equalToSuperview()
-        }
-
-        stickerImageView.snp.makeConstraints {
-            $0.trailing.equalToSuperview().offset(-16)
-            $0.bottom.equalToSuperview().offset(-16)
-            $0.size.equalTo(80)
+            $0.height.equalTo(324) // 기본 높이 (300 + 페이지 인디케이터 24)
         }
 
         dateLabel.snp.makeConstraints {
-            $0.top.equalTo(imageContainerView.snp.bottom).offset(16)
+            $0.top.equalTo(imageCarouselView.snp.bottom).offset(16)
             $0.leading.equalToSuperview().offset(20)
             $0.trailing.lessThanOrEqualTo(privacyBadgeView.snp.leading).offset(-8)
         }
@@ -638,5 +599,15 @@ extension ActivityDetailView {
         }
 
         updateScrollViewConstraints()
+    }
+
+    /// 첫 번째 이미지 URL 반환 (공유용)
+    var firstImageUrl: String? {
+        return currentImages.first?.imageUrl
+    }
+
+    /// 모든 이미지 반환
+    var allImages: [ActivityDetailImage] {
+        return currentImages
     }
 }
