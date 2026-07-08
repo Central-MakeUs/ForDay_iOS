@@ -12,7 +12,7 @@ import Alamofire
 enum RecordsTarget {
     case fetchRecordDetail(recordId: Int)                                   // v1: 단일 조회
     case fetchRecordDetailV2(recordId: Int, context: ActivityDetailContext) // v2: 페이징 조회 (context 필수)
-    case fetchRecordDetailV3(recordId: Int)                                 // v3: 다중 이미지
+    case fetchRecordDetailV3(recordId: Int, context: ActivityDetailContext?) // v3: 다중 이미지
     case updateRecord(recordId: Int, request: DTO.UpdateRecordRequest)
     case deleteRecord(recordId: Int)
     case addReaction(recordId: Int, reactionType: ReactionType)
@@ -33,7 +33,7 @@ extension RecordsTarget: BaseTargetType {
             return RecordsAPI.fetchRecordDetail(recordId).endpoint
         case .fetchRecordDetailV2(let recordId, _):
             return RecordsAPI.fetchRecordDetailV2(recordId).endpoint
-        case .fetchRecordDetailV3(let recordId):
+        case .fetchRecordDetailV3(let recordId, _):
             return RecordsAPI.fetchRecordDetailV3(recordId).endpoint
         case .updateRecord(let recordId, _):
             return RecordsAPI.updateRecord(recordId: recordId).endpoint
@@ -83,7 +83,15 @@ extension RecordsTarget: BaseTargetType {
 
     var task: Moya.Task {
         switch self {
-        case .fetchRecordDetail, .fetchRecordDetailV3:
+        case .fetchRecordDetail:
+            return .requestPlain
+        case .fetchRecordDetailV3(_, let context):
+            if let context = context {
+                return .requestParameters(
+                    parameters: context.toQueryParameters(),
+                    encoding: URLEncoding.queryString
+                )
+            }
             return .requestPlain
         case .fetchRecordDetailV2(_, let context):
             return .requestParameters(
