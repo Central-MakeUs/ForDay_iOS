@@ -248,13 +248,19 @@ extension PreviousActivityListBottomSheetViewController {
 
         // Submit button action
         submitButton.addTarget(self, action: #selector(submitButtonTapped), for: .touchUpInside)
+    }
+
+    private func setupPanGestureIfNeeded() {
+        // 기존 Pan 제스처 제거
+        containerView.gestureRecognizers?
+            .filter { $0 is UIPanGestureRecognizer }
+            .forEach { containerView.removeGestureRecognizer($0) }
 
         // Pan gesture for dragging (only if more than 5 items)
-        if activities.count > Constants.maxVisibleItems {
-            let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
-            panGesture.delegate = self
-            containerView.addGestureRecognizer(panGesture)
-        }
+        guard activities.count > Constants.maxVisibleItems else { return }
+        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+        panGesture.delegate = self
+        containerView.addGestureRecognizer(panGesture)
     }
 
     private func loadMockData() {
@@ -282,6 +288,7 @@ extension PreviousActivityListBottomSheetViewController {
         updateSheetHeight()
         collectionView.reloadData()
         updateSubmitButtonState()
+        setupPanGestureIfNeeded()
     }
 
     private func calculateSheetHeight() -> CGFloat {
@@ -340,6 +347,7 @@ extension PreviousActivityListBottomSheetViewController {
             let newHeight = currentHeight - translation.y
             let clampedHeight = max(minHeight, min(maxHeight, newHeight))
             containerHeightConstraint?.update(offset: clampedHeight)
+            view.layoutIfNeeded()
             gesture.setTranslation(.zero, in: view)
 
         case .ended:

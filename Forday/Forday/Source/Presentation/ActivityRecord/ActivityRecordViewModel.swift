@@ -34,6 +34,8 @@ class ActivityRecordViewModel {
     /// - TODO: API 수정 후 다중 이미지 업로드 지원 예정. 현재는 첫 번째 이미지만 S3에 업로드됨
     @Published var selectedImages: [UIImage] = []
     @Published var isUploading: Bool = false
+    /// 메모 입력 추천 키워드 목록
+    @Published var memoSuggestions: [String] = []
 
     /// 최대 사진 개수
     static let maxPhotoCount = 5
@@ -94,6 +96,7 @@ class ActivityRecordViewModel {
     private let deleteImageUseCase: DeleteImageUseCase
     private let createActivityRecordUseCase: CreateActivityRecordUseCase
     private let updateActivityRecordUseCase: UpdateActivityRecordUseCase
+    private let fetchKeyboardKeywordsUseCase: FetchKeyboardKeywordsUseCase
 
     private let hobbyId: Int
     private let activityDetail: ActivityDetail?
@@ -122,7 +125,8 @@ class ActivityRecordViewModel {
         uploadImageUseCase: UploadImageUseCase = UploadImageUseCase(),
         deleteImageUseCase: DeleteImageUseCase = DeleteImageUseCase(),
         createActivityRecordUseCase: CreateActivityRecordUseCase = CreateActivityRecordUseCase(),
-        updateActivityRecordUseCase: UpdateActivityRecordUseCase = UpdateActivityRecordUseCase()
+        updateActivityRecordUseCase: UpdateActivityRecordUseCase = UpdateActivityRecordUseCase(),
+        fetchKeyboardKeywordsUseCase: FetchKeyboardKeywordsUseCase = FetchKeyboardKeywordsUseCase()
     ) {
         self.hobbyId = hobbyId
         self.activityDetail = activityDetail
@@ -133,6 +137,7 @@ class ActivityRecordViewModel {
         self.deleteImageUseCase = deleteImageUseCase
         self.createActivityRecordUseCase = createActivityRecordUseCase
         self.updateActivityRecordUseCase = updateActivityRecordUseCase
+        self.fetchKeyboardKeywordsUseCase = fetchKeyboardKeywordsUseCase
         self.selectedHobbyId = hobbyId
         bind()
         loadExistingData()
@@ -154,9 +159,19 @@ class ActivityRecordViewModel {
             privacy = privacyType
         }
 
-        // Set original image URL (수정 모드에서 기존 이미지 URL 저장)
+        // Set original image URL (수정 모드에서 기존 이미지 URL 저장 - V1 호환용)
         if !detail.imageUrl.isEmpty {
             originalImageUrl = detail.imageUrl
+        }
+
+        // V2: 기존 이미지들을 uploadedImages에 저장 (imageOrder 순으로 정렬)
+        let sortedImages = detail.images.sorted { $0.imageOrder < $1.imageOrder }
+        uploadedImages = sortedImages.map { image in
+            UploadedImageInfo(
+                url: image.imageUrl,
+                width: image.imageWidth,
+                height: image.imageHeight
+            )
         }
 
         // 수정 모드: 현재 취미 칩만 생성
@@ -171,19 +186,32 @@ class ActivityRecordViewModel {
         // We'll match them by activityId and sticker filename
     }
 
-    /// 수정 모드에서 기존 이미지를 Kingfisher로 로드
-    func loadOriginalImage() async {
-        guard let imageUrl = originalImageUrl,
-              let url = URL(string: imageUrl) else { return }
+    /// 수정 모드에서 기존 이미지들을 Kingfisher로 로드 (다중 이미지 지원)
+    func loadOriginalImages() async {
+        guard !uploadedImages.isEmpty else { return }
 
-        do {
-            let result = try await KingfisherManager.shared.retrieveImage(with: url)
-            await MainActor.run {
-                self.selectedImages = [result.image]
+        var loadedImages: [UIImage] = []
+
+        for imageInfo in uploadedImages {
+            guard let url = URL(string: imageInfo.url) else { continue }
+
+            do {
+                let result = try await KingfisherManager.shared.retrieveImage(with: url)
+                loadedImages.append(result.image)
+            } catch {
+                print("❌ 기존 이미지 로드 실패: \(error)")
             }
-        } catch {
-            print("❌ 기존 이미지 로드 실패: \(error)")
         }
+
+        await MainActor.run {
+            self.selectedImages = loadedImages
+        }
+    }
+
+    /// 수정 모드에서 기존 이미지를 Kingfisher로 로드 (V1 호환용 - deprecated)
+    @available(*, deprecated, message: "Use loadOriginalImages() instead")
+    func loadOriginalImage() async {
+        await loadOriginalImages()
     }
 
     // Methods
@@ -275,6 +303,37 @@ class ActivityRecordViewModel {
 
     func selectActivity(_ activity: Activity) {
         selectedActivity = activity
+    }
+
+    /// 선택된 취미에 맞는 키보드 키워드(메모 추천 문장)를 조회합니다.
+    /// - Parameter hobbyName: 취미 이름
+    /// - Note: 기본 제공 취미만 키워드를 조회하며, 커스텀 취미는 빈 배열 반환
+    func fetchKeyboardKeywords(for hobbyName: String) async {
+        print("🔍 [KeyboardKeywords] hobbyName: '\(hobbyName)'")
+
+        // 기본 제공 취미가 아니면 빈 배열
+        guard let hobbyInfoId = HobbyInfoMapper.getHobbyInfoId(for: hobbyName) else {
+            print("⚠️ [KeyboardKeywords] 기본 취미 아님 - hobbyInfoId 없음")
+            await MainActor.run {
+                self.memoSuggestions = []
+            }
+            return
+        }
+
+        print("✅ [KeyboardKeywords] hobbyInfoId: \(hobbyInfoId)")
+
+        do {
+            let keywords = try await fetchKeyboardKeywordsUseCase.execute(hobbyInfoId: hobbyInfoId)
+            print("✅ [KeyboardKeywords] 조회 성공: \(keywords.count)개 키워드")
+            await MainActor.run {
+                self.memoSuggestions = keywords.map { $0.keyword }
+            }
+        } catch {
+            print("❌ [KeyboardKeywords] 조회 실패: \(error)")
+            await MainActor.run {
+                self.memoSuggestions = []
+            }
+        }
     }
 
     func selectPrivacy(_ selectedPrivacy: Privacy) {
@@ -490,7 +549,7 @@ class ActivityRecordViewModel {
                 hobbyId: hobbyId,
                 activityRecordId: recordId,
                 activityContent: updateResult.activityContent,
-                imageUrl: updateResult.imageUrl,
+                imageUrl: updateResult.images.first?.imageUrl,
                 sticker: updateResult.sticker,
                 memo: updateResult.memo,
                 extensionCheckRequired: false  // Not applicable for updates
@@ -532,6 +591,44 @@ class ActivityRecordViewModel {
             )
         }
 
+        // 수정 모드인 경우
+        if isEditMode {
+            guard let activityDetail = activityDetail else {
+                throw ActivityRecordError.missingRequiredFields
+            }
+
+            let recordId = activityDetail.activityRecordId
+
+            // 활동 변경 여부 확인: selectedActivity가 있고 기존 activityId와 다르면 변경
+            let newActivityId: Int? = {
+                if let selected = selectedActivity, selected.activityId != activityDetail.activityId {
+                    return selected.activityId
+                }
+                return nil  // nil이면 서버에서 기존 활동 유지
+            }()
+
+            let updateResult = try await updateActivityRecordUseCase.execute(
+                recordId: recordId,
+                activityId: newActivityId,
+                sticker: stickerFileName,
+                memo: memo.isEmpty ? nil : memo,
+                images: imageInputs,
+                visibility: privacy
+            )
+
+            // UpdateRecordResult를 ActivityRecordV2로 변환
+            return ActivityRecordV2(
+                activityRecordId: updateResult.activityRecordId ?? recordId,
+                hobbyName: activityDetail.hobbyName,
+                activityContent: updateResult.activityContent,
+                sticker: updateResult.sticker,
+                memo: updateResult.memo,
+                visibility: updateResult.visibility,
+                images: updateResult.images
+            )
+        }
+
+        // 새 기록 생성 모드
         // activityId가 있으면 기존 활동 사용, 없으면 activityName으로 새 활동 생성
         let activityId = selectedActivity?.activityId
         let activityContent: String? = (activityId == nil) ? activityName : nil
@@ -542,7 +639,7 @@ class ActivityRecordViewModel {
         }
 
         let result = try await createActivityRecordUseCase.executeV2(
-            hobbyId: hobbyId,
+            hobbyId: selectedHobbyId ?? hobbyId,
             activityId: activityId,
             activityContent: activityContent,
             sticker: stickerFileName,

@@ -52,12 +52,22 @@ class ActivityRecordViewController: UIViewController {
         super.viewDidLoad()
         setupNavigationBar()
         setupActions()
+        setupKeyboardObservers()
         bind()
         setupForEditMode()
         // 수정 모드가 아닐 때만 취미 칩 목록 가져오기 (수정 모드는 현재 취미만 표시)
         if !viewModel.isEditMode {
             fetchHobbyChips()
         }
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updateStickerSize()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -170,12 +180,21 @@ extension ActivityRecordViewController {
             }
             .store(in: &cancellables)
 
-        // 선택된 취미 칩 변경 시 CollectionView 업데이트
+        // 선택된 취미 칩 변경 시 CollectionView 업데이트 + 키워드 재조회
         viewModel.$selectedHobbyId
             .dropFirst() // 초기값 무시
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.recordView.hobbyChipCollectionView.reloadData()
+            .sink { [weak self] selectedHobbyId in
+                guard let self = self else { return }
+                self.recordView.hobbyChipCollectionView.reloadData()
+
+                // 선택된 취미의 이름으로 키워드 재조회
+                if let hobbyId = selectedHobbyId,
+                   let hobbyChip = self.viewModel.hobbyChips.first(where: { $0.hobbyId == hobbyId }) {
+                    Task {
+                        await self.viewModel.fetchKeyboardKeywords(for: hobbyChip.hobbyName)
+                    }
+                }
             }
             .store(in: &cancellables)
 
@@ -249,6 +268,76 @@ extension ActivityRecordViewController {
             } catch {
                 print("❌ 취미 칩 목록 로드 실패: \(error)")
             }
+        }
+    }
+
+    private func updateStickerSize() {
+        let stickerCount = CGFloat(viewModel.stickers.count)
+        guard stickerCount > 0 else { return }
+
+        let spacing: CGFloat = 12
+        let totalSpacing = spacing * (stickerCount - 1)
+        let availableWidth = recordView.stickerCollectionView.bounds.width - totalSpacing
+        let stickerSize = floor(availableWidth / stickerCount)
+
+        // CollectionView 높이를 스티커 크기에 맞게 업데이트
+        recordView.updateStickerCollectionViewHeight(stickerSize)
+    }
+
+    private func setupKeyboardObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillShow(_:)),
+            name: UIResponder.keyboardWillShowNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillHide(_:)),
+            name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
+    }
+
+    @objc private func keyboardWillShow(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let keyboardFrame = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
+              let duration = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else {
+            return
+        }
+
+        // 키보드 높이에서 safeArea 하단 여백과 submitButton 높이를 고려
+        let keyboardHeight = keyboardFrame.height
+        let bottomInset = keyboardHeight - view.safeAreaInsets.bottom
+
+        UIView.animate(withDuration: duration) {
+            self.recordView.scrollView.contentInset.bottom = bottomInset
+            self.recordView.scrollView.verticalScrollIndicatorInsets.bottom = bottomInset
+        }
+
+        // 현재 포커스된 텍스트 필드/뷰가 보이도록 스크롤
+        if recordView.memoTextView.isFirstResponder {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                let rect = self.recordView.memoTextView.convert(self.recordView.memoTextView.bounds, to: self.recordView.scrollView)
+                self.recordView.scrollView.scrollRectToVisible(rect, animated: true)
+            }
+        } else if recordView.activityNameTextField.isFirstResponder {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                let rect = self.recordView.activityNameTextField.convert(self.recordView.activityNameTextField.bounds, to: self.recordView.scrollView)
+                self.recordView.scrollView.scrollRectToVisible(rect, animated: true)
+            }
+        }
+    }
+
+    @objc private func keyboardWillHide(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let duration = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else {
+            return
+        }
+
+        UIView.animate(withDuration: duration) {
+            self.recordView.scrollView.contentInset.bottom = 0
+            self.recordView.scrollView.verticalScrollIndicatorInsets.bottom = 0
         }
     }
 
@@ -671,7 +760,14 @@ extension ActivityRecordViewController: UICollectionViewDelegate, UICollectionVi
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         if collectionView == recordView.stickerCollectionView {
-            return CGSize(width: 64, height: 64)
+            // 화면 너비에 맞게 스티커 크기 동적 계산
+            let stickerCount = CGFloat(viewModel.stickers.count)
+            let horizontalPadding: CGFloat = 20 * 2  // 좌우 패딩
+            let spacing: CGFloat = 12  // 셀 간격
+            let totalSpacing = spacing * (stickerCount - 1)
+            let availableWidth = collectionView.bounds.width - totalSpacing
+            let stickerSize = floor(availableWidth / stickerCount)
+            return CGSize(width: stickerSize, height: stickerSize)
         } else if collectionView == recordView.photoCollectionView {
             return CGSize(width: 56, height: 56)  // 52 + 삭제 버튼 여백
         } else if collectionView == recordView.hobbyChipCollectionView {
@@ -800,18 +896,28 @@ extension ActivityRecordViewController: PHPickerViewControllerDelegate, UIImageP
 
 extension ActivityRecordViewController {
     private func setupMemoSuggestions() {
-        // TODO: 서버 API 연동 예정 - 현재 임시 문자열 배열 사용
-        let suggestions = [
-            "오늘도 한 챕터",
-            "읽었다!",
-            "집중 완료",
-            "오늘의 문장 발견"
-        ]
-        recordView.memoSuggestionView.updateSuggestions(suggestions)
-
         // 추천 문장 선택 콜백 설정
         recordView.memoSuggestionView.onSuggestionSelected = { [weak self] suggestion in
             self?.insertSuggestionAtCursor(suggestion)
+        }
+
+        // ViewModel의 memoSuggestions 바인딩
+        viewModel.$memoSuggestions
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] suggestions in
+                self?.recordView.memoSuggestionView.updateSuggestions(suggestions)
+            }
+            .store(in: &cancellables)
+
+        // 키보드 키워드 API 호출
+        fetchKeyboardKeywords()
+    }
+
+    private func fetchKeyboardKeywords() {
+        print("🔍 [VC] fetchKeyboardKeywords 호출 - hobbyName: '\(hobbyName)'")
+        Task { [weak self] in
+            guard let self = self else { return }
+            await self.viewModel.fetchKeyboardKeywords(for: self.hobbyName)
         }
     }
 
@@ -829,15 +935,21 @@ extension ActivityRecordViewController {
             return
         }
 
-        let cursorPosition = textView.offset(from: textView.beginningOfDocument, to: selectedRange.start)
+        let utf16CursorPosition = textView.offset(from: textView.beginningOfDocument, to: selectedRange.start)
 
         // 삽입할 텍스트 준비 (앞에 텍스트가 있고, 공백이 아니면 공백 추가)
         var textToInsert = suggestion
-        if cursorPosition > 0 {
-            let index = currentText.index(currentText.startIndex, offsetBy: cursorPosition - 1)
-            let charBefore = currentText[index]
-            if !charBefore.isWhitespace {
-                textToInsert = " " + suggestion
+        if utf16CursorPosition > 0 {
+            // UTF-16 오프셋을 String.Index로 안전하게 변환
+            let utf16View = currentText.utf16
+            let utf16Index = utf16View.index(utf16View.startIndex, offsetBy: utf16CursorPosition - 1, limitedBy: utf16View.endIndex)
+            if let utf16Index = utf16Index,
+               let charIndex = utf16Index.samePosition(in: currentText),
+               charIndex < currentText.endIndex {
+                let charBefore = currentText[charIndex]
+                if !charBefore.isWhitespace {
+                    textToInsert = " " + suggestion
+                }
             }
         }
 

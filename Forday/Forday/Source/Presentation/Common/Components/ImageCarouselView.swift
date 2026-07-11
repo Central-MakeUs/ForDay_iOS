@@ -47,6 +47,7 @@ final class ImageCarouselView: UIView {
 
     func configure(with images: [ActivityDetailImage]) {
         self.images = images
+        self.currentIndex = 0
 
         // 기존 이미지 뷰 제거
         imageViews.forEach { $0.removeFromSuperview() }
@@ -70,6 +71,9 @@ final class ImageCarouselView: UIView {
         pageControl.numberOfPages = images.count
         pageControl.currentPage = 0
         pageControl.isHidden = images.count <= 1
+
+        // 스크롤 위치 초기화
+        scrollView.contentOffset = .zero
 
         // 스티커를 맨 위로 올리기
         bringSubviewToFront(stickerImageView)

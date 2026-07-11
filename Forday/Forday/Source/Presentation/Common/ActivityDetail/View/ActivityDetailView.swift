@@ -158,7 +158,7 @@ final class ActivityDetailView: UIView {
         if hasImage {
             imageCarouselView.configure(with: detail.images)
             updateImageHeight(imageWidth: detail.imageWidth, imageHeight: detail.imageHeight)
-            imageCarouselView.isHidden = false
+            // isHidden은 configure(with:) 및 updateImageHeight에서 처리됨
             memoStickerImageView.isHidden = true
         } else {
             resetImageLayout()
