@@ -107,6 +107,12 @@ final class ActivityService {
         return try await provider.request(.createActivityRecord(activityId: activityId, request: request))
     }
 
+    // MARK: - 활동 기록 작성 (V2)
+
+    func createActivityRecordV2(request: DTO.CreateActivityRecordV2Request) async throws -> DTO.CreateActivityRecordV2Response {
+        return try await provider.request(.createActivityRecordV2(request: request))
+    }
+
     // MARK: - 취미 관리
 
     func fetchHobbySettings(hobbyStatus: String?) async throws -> DTO.HobbySettingsResponse {

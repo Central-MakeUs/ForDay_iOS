@@ -129,25 +129,21 @@ final class ReactionUsersBottomSheetViewController: UIViewController {
 
     private func loadMoreUsers(for reactionType: ReactionType?, lastReactionId: Int?) {
         guard let onLoadMore = onLoadMore else { return }
+        let index = tabIndex(for: reactionType)
 
         onLoadMore(reactionType, lastReactionId)
             .receive(on: DispatchQueue.main)
             .sink(
-                receiveCompletion: { completion in
+                receiveCompletion: { [weak self] completion in
                     if case .failure(let error) = completion {
-                        print("❌ Failed to load more users: \(error)")
+                        guard let self = self,
+                              index < self.listViewControllers.count else { return }
+                        let appError = (error as? AppError) ?? .unknown(error)
+                        self.listViewControllers[index].finishLoadingMore(with: appError)
                     }
                 },
                 receiveValue: { [weak self] tabData in
                     guard let self = self else { return }
-
-                    // Find the index of the tab
-                    let index: Int
-                    if let type = reactionType {
-                        index = [ReactionType.awesome, .great, .amazing, .fighting].firstIndex(of: type)! + 1
-                    } else {
-                        index = 0
-                    }
 
                     // Append new users to the corresponding list VC
                     if index < self.listViewControllers.count {
@@ -160,6 +156,14 @@ final class ReactionUsersBottomSheetViewController: UIViewController {
                 }
             )
             .store(in: &cancellables)
+    }
+
+    private func tabIndex(for reactionType: ReactionType?) -> Int {
+        guard let reactionType,
+              let reactionIndex = [ReactionType.awesome, .great, .amazing, .fighting].firstIndex(of: reactionType) else {
+            return 0
+        }
+        return reactionIndex + 1
     }
 
     private func addListViewController(_ viewController: ReactionUsersListViewController) {

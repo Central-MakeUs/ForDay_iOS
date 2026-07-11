@@ -30,6 +30,8 @@ class HomeView: UIView {
     let hobbyListContainerView = UIView()
     let hobbyListScrollView = UIScrollView()
     let hobbyListStackView = UIStackView()
+    private let hobbyListGradientOverlay = UIView()
+    private var hobbyListGradientLayer: CAGradientLayer?
     let hamburgerButton = UIButton()
 
     // My Activity Section
@@ -75,6 +77,7 @@ class HomeView: UIView {
 
         // 그라데이션 레이어 프레임 업데이트
         addActivityButtonGradientLayer?.frame = addActivityButton.bounds
+        hobbyListGradientLayer?.frame = hobbyListGradientOverlay.bounds
     }
 }
 
@@ -131,6 +134,31 @@ extension HomeView {
             $0.spacing = 8
             $0.alignment = .center
             $0.distribution = .equalSpacing
+        }
+
+        hobbyListGradientOverlay.do {
+            $0.isUserInteractionEnabled = false
+
+            // Blur 효과 추가
+            let blurEffect = UIBlurEffect(style: .light)
+            let blurView = UIVisualEffectView(effect: blurEffect)
+            blurView.alpha = 0.7
+            $0.addSubview(blurView)
+            blurView.snp.makeConstraints { $0.edges.equalToSuperview() }
+
+            // 그라데이션 레이어 설정
+            let gradientLayer = CAGradientLayer()
+            // Figma: rgba(245, 236, 231, 0) → rgb(253, 234, 227)
+            gradientLayer.colors = [
+                UIColor(red: 245/255, green: 236/255, blue: 231/255, alpha: 0).cgColor,
+                UIColor(red: 253/255, green: 234/255, blue: 227/255, alpha: 1).cgColor
+            ]
+            // 71.49도 각도 → startPoint/endPoint 변환
+            gradientLayer.startPoint = CGPoint(x: 0, y: 0.5)
+            gradientLayer.endPoint = CGPoint(x: 1, y: 0.3)
+            gradientLayer.locations = [0.15, 0.5]
+            $0.layer.insertSublayer(gradientLayer, at: 0)
+            hobbyListGradientLayer = gradientLayer
         }
 
         hamburgerButton.do {
@@ -250,8 +278,9 @@ extension HomeView {
         headerView.addSubview(settingsButton)
         headerView.addSubview(notificationButton)
 
-        // Hobby List Container
+        // Hobby List Container (순서: 스크롤뷰 → 그라데이션 → 버튼)
         hobbyListContainerView.addSubview(hobbyListScrollView)
+        hobbyListContainerView.addSubview(hobbyListGradientOverlay)
         hobbyListContainerView.addSubview(hamburgerButton)
         hobbyListScrollView.addSubview(hobbyListStackView)
 
@@ -325,6 +354,13 @@ extension HomeView {
         hobbyListStackView.snp.makeConstraints {
             $0.edges.equalToSuperview()
             $0.height.equalToSuperview()
+        }
+
+        // 그라데이션 오버레이 (화면 오른쪽 끝에 붙어서 햄버거 버튼 배경으로 깔림)
+        hobbyListGradientOverlay.snp.makeConstraints {
+            $0.trailing.equalToSuperview()
+            $0.top.bottom.equalToSuperview()
+            $0.width.equalTo(90)
         }
 
         hamburgerButton.snp.makeConstraints {

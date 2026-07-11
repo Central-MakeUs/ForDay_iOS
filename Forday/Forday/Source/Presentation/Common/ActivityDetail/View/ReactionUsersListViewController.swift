@@ -9,6 +9,7 @@ import UIKit
 import SnapKit
 import Then
 import Combine
+import Foundation
 
 /// 특정 리액션 타입 또는 전체의 유저 목록을 표시하는 ViewController
 final class ReactionUsersListViewController: UIViewController {
@@ -77,6 +78,11 @@ final class ReactionUsersListViewController: UIViewController {
         guard isViewLoaded else { return }
         updateEmptyState()
         reloadTableViewIfPossible()
+    }
+
+    func finishLoadingMore(with error: AppError) {
+        isLoadingMore = false
+        ToastView.showError(message: error.userMessage)
     }
 
     private func updateEmptyState() {

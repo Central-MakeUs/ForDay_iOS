@@ -29,12 +29,14 @@ final class MyPageRepository: MyPageRepositoryInterface {
     }
 
     func fetchActivityDetail(activityRecordId: Int) async throws -> ActivityDetail {
-        let response = try await recordsService.fetchRecordDetail(recordId: activityRecordId)
+        // V3 API 사용 (다중 이미지 지원)
+        let response = try await recordsService.fetchRecordDetailV3(recordId: activityRecordId)
         return response.toDomain()
     }
 
     func fetchActivityDetailV2(activityRecordId: Int, context: ActivityDetailContext) async throws -> ActivityDetail {
-        let response = try await recordsService.fetchRecordDetailV2(recordId: activityRecordId, context: context)
+        // V3 API 사용 (다중 이미지 지원)
+        let response = try await recordsService.fetchRecordDetailV3(recordId: activityRecordId, context: context)
         return response.toDomain()
     }
 

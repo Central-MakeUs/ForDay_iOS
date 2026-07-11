@@ -30,6 +30,13 @@ final class RecordsService {
         return try await provider.request(.fetchRecordDetailV2(recordId: recordId, context: context))
     }
 
+    // MARK: - 활동 기록 상세 조회 (v3 - 다중 이미지)
+
+    /// 활동 기록 상세 정보를 가져옵니다 (v3 - images 배열).
+    func fetchRecordDetailV3(recordId: Int, context: ActivityDetailContext? = nil) async throws -> DTO.ActivityRecordDetailV3Response {
+        return try await provider.request(.fetchRecordDetailV3(recordId: recordId, context: context))
+    }
+
     // MARK: - 활동 기록 수정
 
     /// 활동 기록을 수정합니다.

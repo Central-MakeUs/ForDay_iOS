@@ -150,6 +150,7 @@ final class StoriesViewModel {
     @MainActor
     func loadStories(reset: Bool = false) async {
         guard !isLoading else { return }
+        guard !(reset && isLoadingMore) else { return }
         let loadingStartedAt = Date()
 
         if reset {

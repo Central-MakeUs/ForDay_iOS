@@ -72,6 +72,7 @@ final class ActivityDetailPageViewController: UIViewController {
     private let bottomLoadingIndicator = UIActivityIndicatorView(style: .medium)
 
     private let pagingTriggerThreshold: CGFloat = 80
+    private let edgePagingActivationInset: CGFloat = 120
     private var lockedPagingDirection: PagingDirection?
 
     // 페이징 전환 중 플래그 (제스처 충돌 방지용)
@@ -441,6 +442,26 @@ extension ActivityDetailPageViewController {
         }
     }
 
+    private func canBeginPagingGesture(
+        _ gesture: UIPanGestureRecognizer,
+        direction: PagingDirection
+    ) -> Bool {
+        guard canPage(direction) else { return false }
+
+        let locationY = gesture.location(in: view).y
+        let safeTop = view.safeAreaInsets.top
+        let safeBottomStart = view.bounds.height - view.safeAreaInsets.bottom
+
+        switch direction {
+        case .previous:
+            guard locationY <= safeTop + edgePagingActivationInset else { return false }
+        case .next:
+            guard locationY >= safeBottomStart - edgePagingActivationInset else { return false }
+        }
+
+        return true
+    }
+
     private func pagingDirection(for gesture: UIPanGestureRecognizer) -> PagingDirection? {
         let velocity = gesture.velocity(in: view)
         guard abs(velocity.y) > abs(velocity.x) else { return nil }
@@ -559,7 +580,7 @@ extension ActivityDetailPageViewController: UIGestureRecognizerDelegate {
               let panGesture = gestureRecognizer as? UIPanGestureRecognizer,
               let direction = pagingDirection(for: panGesture) else { return false }
 
-        return canPage(direction)
+        return canBeginPagingGesture(panGesture, direction: direction)
     }
 
     func gestureRecognizer(
