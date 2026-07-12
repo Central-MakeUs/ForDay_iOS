@@ -9,10 +9,11 @@ import Foundation
 
 struct UpdateRecordResult {
     let message: String
+    let activityRecordId: Int?
     let activityId: Int
     let activityContent: String
     let sticker: String
     let memo: String?
-    let imageUrl: String?
     let visibility: String
+    let images: [ActivityRecordImage]
 }

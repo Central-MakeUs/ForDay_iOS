@@ -10,4 +10,5 @@ import Foundation
 struct DeleteRecordResult {
     let message: String
     let recordId: Int
+    let deleteImageUrls: [String]?
 }

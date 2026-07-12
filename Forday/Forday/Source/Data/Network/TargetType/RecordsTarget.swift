@@ -14,7 +14,9 @@ enum RecordsTarget {
     case fetchRecordDetailV2(recordId: Int, context: ActivityDetailContext) // v2: 페이징 조회 (context 필수)
     case fetchRecordDetailV3(recordId: Int, context: ActivityDetailContext?) // v3: 다중 이미지
     case updateRecord(recordId: Int, request: DTO.UpdateRecordRequest)
+    case updateRecordV2(recordId: Int, request: DTO.UpdateRecordV2Request)
     case deleteRecord(recordId: Int)
+    case deleteRecordV2(recordId: Int)
     case addReaction(recordId: Int, reactionType: ReactionType)
     case deleteReaction(recordId: Int, reactionType: ReactionType)
     case fetchReactionUsers(recordId: Int, reactionType: ReactionType, lastUserId: String?, size: Int)
@@ -23,6 +25,7 @@ enum RecordsTarget {
     case addScrap(recordId: Int)
     case deleteScrap(recordId: Int)
     case reportRecord(recordId: Int, request: DTO.ReportRecordRequest)
+    case fetchKeyboardKeywords(hobbyInfoId: Int)
 }
 
 extension RecordsTarget: BaseTargetType {
@@ -37,8 +40,12 @@ extension RecordsTarget: BaseTargetType {
             return RecordsAPI.fetchRecordDetailV3(recordId).endpoint
         case .updateRecord(let recordId, _):
             return RecordsAPI.updateRecord(recordId: recordId).endpoint
+        case .updateRecordV2(let recordId, _):
+            return RecordsAPI.updateRecordV2(recordId: recordId).endpoint
         case .deleteRecord(let recordId):
             return RecordsAPI.deleteRecord(recordId).endpoint
+        case .deleteRecordV2(let recordId):
+            return RecordsAPI.deleteRecordV2(recordId).endpoint
         case .addReaction(let recordId, _):
             return RecordsAPI.addReaction(recordId: recordId).endpoint
         case .deleteReaction(let recordId, _):
@@ -55,16 +62,18 @@ extension RecordsTarget: BaseTargetType {
             return RecordsAPI.deleteScrap(recordId: recordId).endpoint
         case .reportRecord(let recordId, _):
             return RecordsAPI.reportRecord(recordId: recordId).endpoint
+        case .fetchKeyboardKeywords:
+            return RecordsAPI.fetchKeyboardKeywords.endpoint
         }
     }
 
     var method: Moya.Method {
         switch self {
-        case .fetchRecordDetail, .fetchRecordDetailV2, .fetchRecordDetailV3:
+        case .fetchRecordDetail, .fetchRecordDetailV2, .fetchRecordDetailV3, .fetchKeyboardKeywords:
             return .get
-        case .updateRecord:
+        case .updateRecord, .updateRecordV2:
             return .put
-        case .deleteRecord:
+        case .deleteRecord, .deleteRecordV2:
             return .delete
         case .addReaction:
             return .post
@@ -100,7 +109,9 @@ extension RecordsTarget: BaseTargetType {
             )
         case .updateRecord(_, let request):
             return .requestJSONEncodable(request)
-        case .deleteRecord:
+        case .updateRecordV2(_, let request):
+            return .requestJSONEncodable(request)
+        case .deleteRecord, .deleteRecordV2:
             return .requestPlain
         case .addReaction(_, let reactionType):
             let request = DTO.AddReactionRequest(reactionType: reactionType.rawValue)
@@ -152,6 +163,11 @@ extension RecordsTarget: BaseTargetType {
             return .requestPlain
         case .reportRecord(_, let request):
             return .requestJSONEncodable(request)
+        case .fetchKeyboardKeywords(let hobbyInfoId):
+            return .requestParameters(
+                parameters: ["hobbyInfoId": hobbyInfoId],
+                encoding: URLEncoding.queryString
+            )
         }
     }
 
