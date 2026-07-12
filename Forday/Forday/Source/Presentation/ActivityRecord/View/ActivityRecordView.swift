@@ -14,7 +14,7 @@ class ActivityRecordView: UIView {
     
     // Properties
 
-//    private let scrollView = UIScrollView()
+    let scrollView = UIScrollView()
     private let contentView = UIView()
 
     // 취미 칩 선택
@@ -61,6 +61,7 @@ class ActivityRecordView: UIView {
     // MARK: - CollectionView Height Constraint
 
     private var hobbyChipHeightConstraint: Constraint?
+    private var stickerHeightConstraint: Constraint?
 
     // Initialization
 
@@ -101,6 +102,12 @@ class ActivityRecordView: UIView {
 extension ActivityRecordView {
     private func style() {
         backgroundColor = .neutralWhite
+
+        scrollView.do {
+            $0.showsVerticalScrollIndicator = false
+            $0.alwaysBounceVertical = true
+            $0.keyboardDismissMode = .interactive
+        }
 
         // 취미 칩 선택 (wrap layout)
         hobbyChipCollectionView.do {
@@ -280,7 +287,9 @@ extension ActivityRecordView {
     }
     
     private func layout() {
-        addSubview(contentView)
+        addSubview(scrollView)
+        addSubview(submitButton)  // submitButton은 스크롤 밖에 고정
+        scrollView.addSubview(contentView)
 
         contentView.addSubview(hobbyChipCollectionView)
         contentView.addSubview(singleHobbyChipContainer)
@@ -301,15 +310,21 @@ extension ActivityRecordView {
         contentView.addSubview(privacyLabel)
         contentView.addSubview(privacyButton)
         contentView.addSubview(privacyDescriptionLabel)
-        contentView.addSubview(submitButton)
-        
+
         memoContainerView.addSubview(memoTextView)
         memoContainerView.addSubview(memoPlaceholderLabel)
         memoContainerView.addSubview(memoCountLabel)
-        
-        // ContentView
+
+        // ScrollView
+        scrollView.snp.makeConstraints {
+            $0.top.leading.trailing.equalTo(safeAreaLayoutGuide)
+            $0.bottom.equalTo(submitButton.snp.top).offset(-16)
+        }
+
+        // ContentView (ScrollView 내부)
         contentView.snp.makeConstraints {
-            $0.edges.equalTo(layoutMarginsGuide)
+            $0.edges.equalToSuperview()
+            $0.width.equalToSuperview()
         }
 
         // 취미 칩 (CollectionView) - wrap layout, 동적 높이
@@ -374,7 +389,7 @@ extension ActivityRecordView {
         stickerCollectionView.snp.makeConstraints {
             $0.top.equalTo(stickerLabel.snp.bottom).offset(12)
             $0.leading.trailing.equalToSuperview().inset(20)
-            $0.height.equalTo(80)
+            stickerHeightConstraint = $0.height.equalTo(80).constraint  // 초기값, 동적으로 업데이트
         }
 
         // 취미 사진
@@ -430,13 +445,13 @@ extension ActivityRecordView {
         privacyDescriptionLabel.snp.makeConstraints {
             $0.top.equalTo(privacyLabel.snp.bottom).offset(8)
             $0.leading.equalToSuperview().offset(20)
+            $0.bottom.equalToSuperview().offset(-24)  // contentView 하단 여백
         }
 
-        // 작성완료 버튼
+        // 작성완료 버튼 (스크롤 밖, 화면 하단 고정)
         submitButton.snp.makeConstraints {
-            $0.leading.equalToSuperview().offset(16)
-            $0.trailing.equalToSuperview().offset(-16)
-            $0.bottom.equalToSuperview().offset(-16)
+            $0.leading.trailing.equalToSuperview().inset(16)
+            $0.bottom.equalTo(safeAreaLayoutGuide).offset(-16)
         }
     }
 }
@@ -503,6 +518,11 @@ extension ActivityRecordView {
         hobbyChipCollectionView.layoutIfNeeded()
         let contentHeight = hobbyChipCollectionView.collectionViewLayout.collectionViewContentSize.height
         hobbyChipHeightConstraint?.update(offset: max(32, contentHeight))
+    }
+
+    /// 스티커 CollectionView 높이를 스티커 크기에 맞게 업데이트
+    func updateStickerCollectionViewHeight(_ height: CGFloat) {
+        stickerHeightConstraint?.update(offset: height)
     }
 }
 
