@@ -37,18 +37,32 @@ final class RecordsService {
         return try await provider.request(.fetchRecordDetailV3(recordId: recordId, context: context))
     }
 
-    // MARK: - 활동 기록 수정
+    // MARK: - 활동 기록 수정 (v1)
 
-    /// 활동 기록을 수정합니다.
+    /// 활동 기록을 수정합니다 (v1 - 단일 이미지).
     func updateRecord(recordId: Int, request: DTO.UpdateRecordRequest) async throws -> DTO.UpdateRecordResponse {
         return try await provider.request(.updateRecord(recordId: recordId, request: request))
     }
 
-    // MARK: - 활동 기록 삭제
+    // MARK: - 활동 기록 수정 (v2)
 
-    /// 활동 기록을 삭제합니다.
+    /// 활동 기록을 수정합니다 (v2 - 다중 이미지).
+    func updateRecordV2(recordId: Int, request: DTO.UpdateRecordV2Request) async throws -> DTO.UpdateRecordV2Response {
+        return try await provider.request(.updateRecordV2(recordId: recordId, request: request))
+    }
+
+    // MARK: - 활동 기록 삭제 (v1)
+
+    /// 활동 기록을 삭제합니다 (v1).
     func deleteRecord(recordId: Int) async throws -> DTO.DeleteRecordResponse {
         return try await provider.request(.deleteRecord(recordId: recordId))
+    }
+
+    // MARK: - 활동 기록 삭제 (v2)
+
+    /// 활동 기록을 삭제합니다 (v2).
+    func deleteRecordV2(recordId: Int) async throws -> DTO.DeleteRecordV2Response {
+        return try await provider.request(.deleteRecordV2(recordId: recordId))
     }
 
     // MARK: - 활동 기록 반응 추가
@@ -129,5 +143,14 @@ final class RecordsService {
     func reportRecord(recordId: Int, reason: ReportReasonType) async throws -> DTO.ReportRecordResponse {
         let request = DTO.ReportRecordRequest(reason: reason.rawValue)
         return try await provider.request(.reportRecord(recordId: recordId, request: request))
+    }
+
+    // MARK: - 취미별 키보드 키워드 조회
+
+    /// 취미 유형에 맞는 키보드 키워드 목록을 가져옵니다.
+    /// - Parameter hobbyInfoId: 취미 정보 ID
+    /// - Returns: 키보드 키워드 응답
+    func fetchKeyboardKeywords(hobbyInfoId: Int) async throws -> DTO.KeyboardKeywordsResponse {
+        return try await provider.request(.fetchKeyboardKeywords(hobbyInfoId: hobbyInfoId))
     }
 }

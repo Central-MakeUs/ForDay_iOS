@@ -64,9 +64,6 @@ final class ActivityDetailView: UIView {
 
     // Date label
     let dateLabel = UILabel()
-    private let privacyBadgeView = UIView()
-    private let privacyLabel = UILabel()
-    private let privacyChevronImageView = UIImageView()
 
     // Image carousel (다중 이미지 지원)
     private let imageCarouselView = ImageCarouselView()
@@ -143,7 +140,6 @@ final class ActivityDetailView: UIView {
         // Configure title (at top) and date
         titleLabel.setTextWithTypography(detail.activityContent, style: .header20)
         dateLabel.setTextWithTypography(detail.createdAt, style: .label14)
-        updatePrivacyBadge(with: detail)
 
         // Configure memo
         if hasMemo {
@@ -202,24 +198,6 @@ final class ActivityDetailView: UIView {
         }
     }
 
-    private func updatePrivacyBadge(with detail: ActivityDetail) {
-        guard detail.recordOwner else {
-            privacyBadgeView.isHidden = true
-            return
-        }
-
-        privacyBadgeView.isHidden = false
-        let privacyTitle = Privacy(rawValue: detail.visibility)?.title ?? {
-            switch detail.visibility {
-            case "FRIENDS_ONLY":
-                return Privacy.friend.title
-            default:
-                return Privacy.public.title
-            }
-        }()
-        privacyLabel.setTextWithTypography(privacyTitle, style: .label14)
-    }
-
     private func updateImageHeight(imageWidth: Int?, imageHeight: Int?) {
         guard let imageWidth,
               let imageHeight,
@@ -269,7 +247,7 @@ final class ActivityDetailView: UIView {
             dateLabel.snp.remakeConstraints {
                 $0.top.equalTo(imageCarouselView.snp.bottom).offset(16)
                 $0.leading.equalToSuperview().offset(20)
-                $0.trailing.lessThanOrEqualTo(privacyBadgeView.snp.leading).offset(-8)
+                $0.trailing.lessThanOrEqualToSuperview().offset(-20)
             }
             // 메모 텍스트
             contentLabel.snp.remakeConstraints {
@@ -289,7 +267,7 @@ final class ActivityDetailView: UIView {
             dateLabel.snp.remakeConstraints {
                 $0.top.equalTo(titleLabel.snp.bottom).offset(8)
                 $0.leading.equalToSuperview().offset(20)
-                $0.trailing.lessThanOrEqualTo(privacyBadgeView.snp.leading).offset(-8)
+                $0.trailing.lessThanOrEqualToSuperview().offset(-20)
             }
             // 메모 텍스트
             contentLabel.snp.remakeConstraints {
@@ -315,7 +293,7 @@ final class ActivityDetailView: UIView {
             dateLabel.snp.remakeConstraints {
                 $0.top.equalTo(titleLabel.snp.bottom).offset(24)
                 $0.leading.equalToSuperview().offset(20)
-                $0.trailing.lessThanOrEqualTo(privacyBadgeView.snp.leading).offset(-8)
+                $0.trailing.lessThanOrEqualToSuperview().offset(-20)
             }
             memoStickerImageView.snp.remakeConstraints {
                 $0.top.equalTo(dateLabel.snp.bottom).offset(24)
@@ -387,22 +365,6 @@ extension ActivityDetailView {
             $0.textColor = .neutral600
         }
 
-        privacyBadgeView.do {
-            $0.backgroundColor = .clear
-            $0.isHidden = true
-        }
-
-        privacyLabel.do {
-            $0.textColor = .neutral600
-            $0.textAlignment = .right
-        }
-
-        privacyChevronImageView.do {
-            $0.image = .Icon.chevronDown
-            $0.tintColor = .neutral600
-            $0.contentMode = .scaleAspectFit
-        }
-
         memoStickerImageView.do {
             $0.contentMode = .scaleAspectFit
         }
@@ -464,13 +426,10 @@ extension ActivityDetailView {
         contentView.addSubview(titleLabel)
         contentView.addSubview(imageCarouselView)
         contentView.addSubview(dateLabel)
-        contentView.addSubview(privacyBadgeView)
         contentView.addSubview(memoContainerView)
         contentView.addSubview(memoStickerImageView)
 
         hobbyNameContainerView.addSubview(hobbyNameLabel)
-        privacyBadgeView.addSubview(privacyLabel)
-        privacyBadgeView.addSubview(privacyChevronImageView)
 
         userInfoView.snp.makeConstraints {
             $0.top.equalToSuperview().offset(16)
@@ -507,23 +466,7 @@ extension ActivityDetailView {
         dateLabel.snp.makeConstraints {
             $0.top.equalTo(imageCarouselView.snp.bottom).offset(16)
             $0.leading.equalToSuperview().offset(20)
-            $0.trailing.lessThanOrEqualTo(privacyBadgeView.snp.leading).offset(-8)
-        }
-
-        privacyBadgeView.snp.makeConstraints {
-            $0.trailing.equalToSuperview().offset(-20)
-            $0.centerY.equalTo(dateLabel)
-        }
-
-        privacyLabel.snp.makeConstraints {
-            $0.leading.verticalEdges.equalToSuperview()
-        }
-
-        privacyChevronImageView.snp.makeConstraints {
-            $0.leading.equalTo(privacyLabel.snp.trailing).offset(4)
-            $0.trailing.equalToSuperview()
-            $0.centerY.equalTo(privacyLabel)
-            $0.size.equalTo(16)
+            $0.trailing.lessThanOrEqualToSuperview().offset(-20)
         }
 
         memoContainerView.addSubview(contentLabel)

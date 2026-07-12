@@ -53,7 +53,8 @@ class StickerCell: UICollectionViewCell {
         
         stickerImageView.snp.makeConstraints {
             $0.center.equalToSuperview()
-            $0.width.height.equalTo(40)
+            // 셀 크기의 62.5% (기존 64셀에서 40이었으므로 비율 유지)
+            $0.width.height.equalToSuperview().multipliedBy(0.625)
         }
     }
     

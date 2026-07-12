@@ -29,5 +29,6 @@ protocol ActivityRepositoryInterface {
         activityContentValid: Bool
     ) async throws -> ActivityRecordV2
     func fetchStickerBoard(hobbyId: Int?, page: Int?, size: Int?) async throws -> StickerBoardResult
+    func fetchKeyboardKeywords(hobbyInfoId: Int) async throws -> [KeyboardKeyword]
 }
 

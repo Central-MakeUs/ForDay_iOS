@@ -9,11 +9,13 @@
 import Foundation
 
 final class ActivityRepository: ActivityRepositoryInterface {
-    
+
     private let activityService: ActivityService
-    
-    init(activityService: ActivityService = ActivityService()) {
+    private let recordsService: RecordsService
+
+    init(activityService: ActivityService = ActivityService(), recordsService: RecordsService = RecordsService()) {
         self.activityService = activityService
+        self.recordsService = recordsService
     }
 
     func fetchOthersActivities(hobbyId: Int) async throws -> OthersActivityResult {
@@ -128,5 +130,10 @@ final class ActivityRepository: ActivityRepositoryInterface {
             // 네트워크 에러 등은 throw
             throw error
         }
+    }
+
+    func fetchKeyboardKeywords(hobbyInfoId: Int) async throws -> [KeyboardKeyword] {
+        let response = try await recordsService.fetchKeyboardKeywords(hobbyInfoId: hobbyInfoId)
+        return response.toDomain()
     }
 }
