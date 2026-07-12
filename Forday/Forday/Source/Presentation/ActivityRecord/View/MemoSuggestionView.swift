@@ -19,7 +19,7 @@ class MemoSuggestionView: UIView {
     var onSuggestionSelected: ((String) -> Void)?
 
     /// 추천 문장 목록
-    /// - TODO: 서버 API 연동 예정 - 현재 임시 문자열 배열 사용
+    /// - Note: GET /api/v2/records/keyboard-keywords API를 통해 취미별 키워드 조회
     private var suggestions: [String] = []
 
     // MARK: - UI Components
